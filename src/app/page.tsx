@@ -15,7 +15,10 @@ import { FinalCTA } from "@/components/home/FinalCTA";
 
 export default function HomePage() {
   return (
-    <>
+    /* Wrap in a single flow — gradient transitions between sections
+       are handled via CSS .section-tinted / .section-tinted-2 classes
+       applied inside each component */
+    <div className="relative">
       <Hero />
       <MarqueeStrip />
       <AiSearchSimulation />
@@ -30,6 +33,6 @@ export default function HomePage() {
       <Pricing />
       <Testimonials />
       <FinalCTA />
-    </>
+    </div>
   );
 }

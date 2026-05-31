@@ -2,22 +2,48 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Play, Globe2, Brain, TrendingUp, Sparkles } from "lucide-react";
+import { useTheme } from "next-themes";
 
 const aiPlatforms = ["ChatGPT", "Gemini", "Claude", "Perplexity", "Google AI"];
 
-const floatingBubbles = [
-  { text: "Best solar company in Nairobi?", delay: 0, x: "-4%", y: "32%" },
-  { text: "Top law firms in East Africa?", delay: 1.5, x: "77%", y: "22%" },
-  { text: "AI-powered HR software Kenya?", delay: 3, x: "78%", y: "64%" },
+const stats = [
+  { icon: Globe2,    value: "80%",  label: "of buyers now use AI for research" },
+  { icon: Brain,     value: "3×",   label: "more leads from AI-cited brands" },
+  { icon: TrendingUp,value: "92%",  label: "B2B decisions start with an AI query" },
 ];
 
-const stats = [
-  { icon: Globe2, value: "80%", label: "of buyers now use AI for research" },
-  { icon: Brain, value: "3×", label: "more leads from AI-cited brands" },
-  { icon: TrendingUp, value: "92%", label: "B2B decisions start with an AI query" },
+const floatingBubbles = [
+  { text: "Best solar company in Nairobi?",   delay: 0,   side: "left",  top: "38%" },
+  { text: "Top law firms in East Africa?",    delay: 1.6, side: "right", top: "28%" },
+  { text: "AI-powered HR software Kenya?",    delay: 3.2, side: "right", top: "62%" },
 ];
+
+function HeroLogo() {
+  const { resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
+  const isDark = mounted && resolvedTheme === "dark";
+  return (
+    <Image
+      src="/Logo.png"
+      alt="TechFind International Consulting"
+      width={320}
+      height={86}
+      priority
+      className={`h-20 md:h-24 lg:h-28 w-auto object-contain animate-logo-reveal logo-hero-glow ${
+        isDark ? "brightness-0 invert" : ""
+      }`}
+      style={{
+        filter: isDark
+          ? "brightness(0) invert(1) drop-shadow(0 8px 32px rgba(124,58,237,0.4))"
+          : "drop-shadow(0 6px 24px rgba(124,58,237,0.18)) drop-shadow(0 2px 6px rgba(37,99,235,0.10))",
+      }}
+    />
+  );
+}
 
 export function Hero() {
   const [platformIndex, setPlatformIndex] = useState(0);
@@ -30,32 +56,33 @@ export function Hero() {
         setPlatformIndex((i) => (i + 1) % aiPlatforms.length);
         setVisible(true);
       }, 280);
-    }, 2200);
+    }, 2400);
     return () => clearInterval(id);
   }, []);
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-20">
-      {/* Ambient background */}
-      <div className="absolute inset-0 grid-bg" />
-      <div className="orb orb-accent animate-orb absolute -top-40 -left-40 w-[600px] h-[600px] opacity-60" />
-      <div className="orb orb-blue animate-orb-2 absolute -bottom-40 -right-40 w-[500px] h-[500px] opacity-50" />
-      <div className="orb orb-cyan animate-orb-3 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-72 h-72 opacity-30" />
+    <section className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-20 section-tinted">
 
-      {/* Floating query bubbles */}
+      {/* ── Ambient background ── */}
+      <div className="absolute inset-0 grid-bg" />
+      <div className="orb orb-accent animate-orb  absolute -top-40 -left-32  w-[700px] h-[700px] opacity-40" />
+      <div className="orb orb-blue  animate-orb-2 absolute -bottom-40 -right-32 w-[500px] h-[500px] opacity-30" />
+      <div className="orb orb-cyan  animate-orb-3 absolute top-1/3 right-1/4   w-[300px] h-[300px] opacity-20" />
+
+      {/* ── Floating query bubbles ── */}
       {floatingBubbles.map((b, i) => (
         <motion.div
           key={i}
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.4 + i * 0.3, duration: 0.6 }}
+          transition={{ delay: 1.6 + i * 0.3, duration: 0.6 }}
           className="absolute hidden xl:block"
-          style={{ left: b.x, top: b.y }}
+          style={b.side === "left" ? { left: "3%", top: b.top } : { right: "3%", top: b.top }}
         >
           <motion.div
             animate={{ y: [0, -8, 0] }}
             transition={{ duration: 4 + i, repeat: Infinity, ease: "easeInOut", delay: b.delay }}
-            className="surface rounded-2xl px-4 py-3 max-w-[210px] shadow-[var(--shadow-md)]"
+            className="surface rounded-2xl px-4 py-3 max-w-[200px] shadow-[var(--shadow-md)]"
           >
             <div className="flex items-start gap-2">
               <Sparkles className="w-3.5 h-3.5 text-[var(--accent)] mt-0.5 shrink-0" />
@@ -65,26 +92,53 @@ export function Hero() {
         </motion.div>
       ))}
 
-      <div className="relative z-10 max-w-5xl mx-auto px-6 text-center">
-        {/* Badge */}
+      <div className="relative z-10 max-w-5xl mx-auto px-6 flex flex-col items-center text-center">
+
+        {/* ══════════════════════════════════════
+            LOGO — THE CENTREPIECE
+        ══════════════════════════════════════ */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, scale: 0.88, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          className="mb-8 relative"
+        >
+          {/* Halo ring behind logo */}
+          <div
+            className="absolute inset-0 rounded-full blur-3xl scale-150 animate-pulse-glow pointer-events-none"
+            style={{ background: "radial-gradient(ellipse, var(--accent-glow) 0%, transparent 70%)" }}
+          />
+          <HeroLogo />
+        </motion.div>
+
+        {/* ── Divider line ── */}
+        <motion.div
+          initial={{ scaleX: 0, opacity: 0 }}
+          animate={{ scaleX: 1, opacity: 1 }}
+          transition={{ delay: 0.5, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="w-24 h-px mb-8 origin-center"
+          style={{ background: "linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent)" }}
+        />
+
+        {/* ── Badge ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          className="inline-block mb-8"
+          transition={{ delay: 0.6, duration: 0.5 }}
+          className="inline-block mb-6"
         >
           <span className="section-label">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-            The Future of Business Discovery is Here
+            Africa&apos;s First AI Engine Optimization Agency
           </span>
         </motion.div>
 
-        {/* Headline */}
+        {/* ── Main headline ── */}
         <motion.h1
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-          className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-4 leading-[0.95] text-[var(--text)]"
+          transition={{ delay: 0.75, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+          className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4 leading-[1.0] text-[var(--text)]"
           style={{ fontFamily: "var(--font-outfit)" }}
         >
           Get Your Business
@@ -92,18 +146,18 @@ export function Hero() {
           <span className="gradient-text">Recommended by AI.</span>
         </motion.h1>
 
-        {/* Platform rotator */}
+        {/* ── Platform rotator ── */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 0.45 }}
-          className="flex items-center justify-center gap-3 mb-6 h-8"
+          transition={{ delay: 0.9 }}
+          className="flex items-center justify-center gap-3 mb-5 h-8"
         >
           <span className="text-sm text-[var(--muted)]">Appearing on</span>
           <motion.span
             key={platformIndex}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -8 }}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -6 }}
             transition={{ duration: 0.22 }}
             className="text-sm font-semibold text-[var(--accent)] surface px-3 py-1 rounded-full"
           >
@@ -111,22 +165,22 @@ export function Hero() {
           </motion.span>
         </motion.div>
 
-        {/* Subheadline */}
+        {/* ── Subheadline ── */}
         <motion.p
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.25 }}
+          transition={{ delay: 1.0, duration: 0.7 }}
           className="text-lg md:text-xl text-[var(--muted)] max-w-2xl mx-auto leading-relaxed mb-10"
         >
           TechFind Consulting helps brands rank, appear, and get cited across ChatGPT,
-          Gemini, Claude, Perplexity, and Google AI search experiences.
+          Gemini, Claude, Perplexity, and Google AI — globally.
         </motion.p>
 
-        {/* CTAs */}
+        {/* ── CTAs ── */}
         <motion.div
-          initial={{ opacity: 0, y: 16 }}
+          initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.7, delay: 0.35 }}
+          transition={{ delay: 1.1, duration: 0.7 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
           <Link href="/ai-visibility-audit" className="btn-primary group">
@@ -139,12 +193,12 @@ export function Hero() {
           </Link>
         </motion.div>
 
-        {/* Stats */}
+        {/* ── Stats ── */}
         <motion.div
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.5 }}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto"
+          transition={{ delay: 1.25, duration: 0.8 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto w-full"
         >
           {stats.map(({ icon: Icon, value, label }, i) => (
             <motion.div
@@ -156,7 +210,7 @@ export function Hero() {
               <Icon className="w-5 h-5 text-[var(--accent)] mx-auto mb-2.5 group-hover:text-[var(--highlight)] transition-colors" />
               <div
                 className="text-2xl font-bold gradient-text mb-1"
-                style={{ fontFamily: "var(--font-space)" }}
+                style={{ fontFamily: "var(--font-geist)" }}
               >
                 {value}
               </div>
@@ -166,18 +220,19 @@ export function Hero() {
         </motion.div>
       </div>
 
-      {/* Scroll cue */}
+      {/* ── Scroll cue ── */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2 }}
+        transition={{ delay: 2.2 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
-        <span className="text-[10px] font-medium tracking-widest uppercase text-[var(--muted)] opacity-50">Scroll</span>
+        <span className="text-[10px] font-medium tracking-widest uppercase text-[var(--muted)] opacity-40">Scroll</span>
         <motion.div
           animate={{ y: [0, 7, 0] }}
           transition={{ duration: 1.6, repeat: Infinity }}
-          className="w-px h-8 bg-gradient-to-b from-[var(--accent)] to-transparent opacity-40"
+          className="w-px h-8 opacity-30"
+          style={{ background: "linear-gradient(to bottom, var(--accent), transparent)" }}
         />
       </motion.div>
     </section>

@@ -405,3 +405,77 @@ body {
 .scroll-progress {
   transition: none;
 }
+
+/* ─────────────────────────────────────────────
+   GRADIENT SECTION TRANSITIONS
+   Bleed a soft gradient wash from one section
+   into the next — eliminates hard breaks.
+───────────────────────────────────────────── */
+.section-fade-bottom::after {
+  content: "";
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to bottom, transparent, var(--bg));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.section-fade-top::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 120px;
+  background: linear-gradient(to top, transparent, var(--bg));
+  pointer-events: none;
+  z-index: 2;
+}
+
+/* Tinted section — alternates reading rhythm */
+.section-tinted {
+  background: linear-gradient(
+    180deg,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--accent) 3%, var(--bg)) 50%,
+    var(--bg) 100%
+  );
+}
+
+.section-tinted-2 {
+  background: linear-gradient(
+    180deg,
+    var(--bg) 0%,
+    color-mix(in srgb, var(--accent-2) 3%, var(--bg)) 50%,
+    var(--bg) 100%
+  );
+}
+
+/* ─────────────────────────────────────────────
+   HERO LOGO CENTREPIECE
+───────────────────────────────────────────── */
+.logo-hero-glow {
+  filter: drop-shadow(0 8px 32px rgba(124, 58, 237, 0.18))
+          drop-shadow(0 2px 8px rgba(37, 99, 235, 0.12));
+}
+
+.dark .logo-hero-glow {
+  filter: brightness(0) invert(1)
+          drop-shadow(0 8px 32px rgba(124, 58, 237, 0.35))
+          drop-shadow(0 2px 8px rgba(255, 255, 255, 0.15));
+}
+
+/* Logo reveal animation */
+@keyframes logo-reveal {
+  0%   { opacity: 0; transform: scale(0.9) translateY(12px); filter: blur(8px); }
+  100% { opacity: 1; transform: scale(1) translateY(0px);    filter: blur(0px); }
+}
+.animate-logo-reveal {
+  animation: logo-reveal 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* Shimmer sweep across the logo */
+@keyframes logo-shimmer {
+  0%   { background-position: -200% center; }
+  100% { background-position: 200% center; }
+}
+

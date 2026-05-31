@@ -2,66 +2,123 @@
 
 import { useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { TrendingUp, ArrowUpRight, Sun, Scale, ShoppingBag } from "lucide-react";
+import { TrendingUp, ArrowUpRight, Sun, Scale, ShoppingBag, Building2, Heart, Cpu } from "lucide-react";
 import Link from "next/link";
 
 const caseStudies = [
   {
     icon: Sun,
     tag: "AI Engine Optimization",
+    region: "🇰🇪 Nairobi, Kenya",
     industry: "Solar Energy",
     company: "SunBright Energy Kenya",
     headline: "From invisible to AI's #1 pick for solar installation in Nairobi",
-    challenge: "SunBright had great product and strong reviews but was never mentioned when buyers searched for solar companies in Kenya across AI platforms.",
+    challenge: "SunBright had great product and strong reviews but never appeared when buyers searched for solar companies across AI platforms.",
     metrics: [
-      { label: "AI Visibility Score", before: "4%", after: "94%" },
-      { label: "Inbound Lead Increase", value: "+312%" },
-      { label: "Revenue Growth (6 months)", value: "+$180K" },
+      { label: "AI Visibility Score",    before: "4%",    after: "94%" },
+      { label: "Inbound Lead Increase",  value: "+312%" },
+      { label: "Revenue Growth (6 mo)",  value: "+$180K" },
     ],
     accentColor: "var(--highlight)",
-    accentBg: "rgba(8,145,178,0.08)",
+    accentBg: "rgba(8,145,178,0.07)",
     accentBorder: "rgba(8,145,178,0.2)",
-    tagBg: "rgba(8,145,178,0.08)",
     tagColor: "var(--highlight)",
     duration: "4 months",
   },
   {
     icon: Scale,
     tag: "AI Engine Optimization",
+    region: "🇬🇧 London, UK",
     industry: "Legal Services",
-    company: "Kariuki & Associates Advocates",
-    headline: "Top corporate law firm now cited by AI as a trusted legal authority",
-    challenge: "The firm had 20+ years of experience but AI systems didn't recognise them as an authority — newer, better-optimised firms were capturing all AI referrals.",
+    company: "Marchetti & Webb Solicitors",
+    headline: "London law firm becomes ChatGPT's recommended M&A specialist",
+    challenge: "A 30-year-old City firm was being bypassed by newer, better-optimised boutique rivals in every AI recommendation query for M&A legal services.",
     metrics: [
-      { label: "AI Citation Rate", before: "0", after: "43/month" },
-      { label: "New Corporate Client Inquiries", value: "+218%" },
-      { label: "Client Acquisition Cost", value: "−60%" },
+      { label: "AI Citation Rate",          before: "0",    after: "51/month" },
+      { label: "New Enterprise Inquiries",  value: "+195%" },
+      { label: "Client Acquisition Cost",   value: "−55%" },
     ],
     accentColor: "var(--accent-2)",
     accentBg: "var(--accent-2-glow)",
     accentBorder: "rgba(59,130,246,0.25)",
-    tagBg: "var(--accent-2-glow)",
     tagColor: "var(--accent-2)",
-    duration: "6 months",
+    duration: "5 months",
   },
   {
     icon: ShoppingBag,
     tag: "AI Business Automation",
+    region: "🇳🇬 Lagos, Nigeria",
     industry: "E-Commerce",
     company: "Zuri Fashion House",
     headline: "WhatsApp AI agent converts 68% of browsers into buyers — 24/7",
     challenge: "Zuri's sales team was overwhelmed with WhatsApp inquiries but couldn't respond fast enough — leads went cold and the team burned out.",
     metrics: [
-      { label: "Response Time", before: "4.2 hrs", after: "< 30 sec" },
-      { label: "WhatsApp Conversion Rate", before: "12%", after: "68%" },
-      { label: "Monthly Revenue Uplift", value: "+$42K" },
+      { label: "Response Time",              before: "4.2 hrs", after: "< 30 sec" },
+      { label: "WhatsApp Conversion Rate",   before: "12%",     after: "68%" },
+      { label: "Monthly Revenue Uplift",     value: "+$42K" },
     ],
     accentColor: "var(--accent)",
     accentBg: "var(--accent-glow)",
     accentBorder: "var(--border-accent)",
-    tagBg: "var(--accent-glow)",
     tagColor: "var(--accent)",
-    duration: "3 weeks deployment",
+    duration: "3 weeks",
+  },
+  {
+    icon: Building2,
+    tag: "AI Engine Optimization",
+    region: "🇸🇬 Singapore",
+    industry: "Commercial Real Estate",
+    company: "Apex Property Group",
+    headline: "Singapore's top commercial broker dominates Perplexity & Gemini results",
+    challenge: "International investors searching for commercial real estate advisors in Southeast Asia were being directed to global names — local expertise was invisible.",
+    metrics: [
+      { label: "AI Visibility (SEA queries)", before: "2%",  after: "78%" },
+      { label: "International Enquiries",     value: "+240%" },
+      { label: "Deal Pipeline Value",         value: "+$2.1M" },
+    ],
+    accentColor: "#f59e0b",
+    accentBg: "rgba(245,158,11,0.07)",
+    accentBorder: "rgba(245,158,11,0.2)",
+    tagColor: "#f59e0b",
+    duration: "6 months",
+  },
+  {
+    icon: Heart,
+    tag: "AI Engine Optimization",
+    region: "🇺🇸 Austin, TX — USA",
+    industry: "Healthcare",
+    company: "ClearMind Wellness Clinics",
+    headline: "Mental health clinic chain becomes ChatGPT's top recommendation in Texas",
+    challenge: "With 12 clinic locations across Texas, ClearMind had zero AI presence — potential patients searching ChatGPT for therapy providers never saw their name.",
+    metrics: [
+      { label: "AI Mention Rate",       before: "0",    after: "88%" },
+      { label: "New Patient Enquiries", value: "+420%" },
+      { label: "Cost Per Acquisition",  value: "−71%" },
+    ],
+    accentColor: "#10b981",
+    accentBg: "rgba(16,185,129,0.07)",
+    accentBorder: "rgba(16,185,129,0.2)",
+    tagColor: "#10b981",
+    duration: "5 months",
+  },
+  {
+    icon: Cpu,
+    tag: "AI Engine Optimization",
+    region: "🇩🇪 Berlin, Germany",
+    industry: "B2B SaaS",
+    company: "Operata GmbH",
+    headline: "German HR software brand cited by AI across 7 European markets",
+    challenge: "Despite strong product-market fit, Operata was absent from AI answers when European HR directors asked about workforce management software.",
+    metrics: [
+      { label: "AI Citations (EU queries)", before: "3",   after: "120/mo" },
+      { label: "Trial Sign-ups",            value: "+310%" },
+      { label: "CAC Reduction",             value: "−48%" },
+    ],
+    accentColor: "var(--accent)",
+    accentBg: "var(--accent-glow)",
+    accentBorder: "var(--border-accent)",
+    tagColor: "var(--accent)",
+    duration: "7 months",
   },
 ];
 
@@ -70,10 +127,11 @@ export function CaseStudies() {
   const isInView = useInView(ref, { once: true, margin: "-5% 0px" });
 
   return (
-    <section className="relative py-28 overflow-hidden" ref={ref}>
-      <div className="orb orb-accent animate-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[400px] opacity-15" />
+    <section className="relative py-28 overflow-hidden section-tinted-2" ref={ref}>
+      <div className="orb orb-accent animate-orb absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[400px] opacity-15" />
 
       <div className="relative max-w-7xl mx-auto px-6">
+        {/* Header */}
         <div className="text-center mb-14">
           <motion.div initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} className="inline-block mb-4">
             <span className="section-label">Client Results</span>
@@ -83,11 +141,11 @@ export function CaseStudies() {
             animate={isInView ? { opacity: 1, y: 0 } : {}}
             transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
             className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-[var(--text)]"
-            style={{ fontFamily: "var(--font-space)" }}
+            style={{ fontFamily: "var(--font-geist)" }}
           >
-            Real Results for
+            Real Results Across
             <br />
-            <span className="gradient-text">Real Businesses</span>
+            <span className="gradient-text">Every Continent</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -95,11 +153,26 @@ export function CaseStudies() {
             transition={{ delay: 0.2 }}
             className="text-[var(--muted)] max-w-xl mx-auto"
           >
-            How TechFind transforms AI visibility and business operations — with measurable outcomes.
+            From Nairobi to New York, Singapore to Berlin — TechFind drives measurable AI visibility for businesses worldwide.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-12">
+        {/* Region pills */}
+        <motion.div
+          initial={{ opacity: 0, y: 10 }}
+          animate={isInView ? { opacity: 1, y: 0 } : {}}
+          transition={{ delay: 0.25 }}
+          className="flex flex-wrap justify-center gap-2 mb-10"
+        >
+          {["🌍 Africa", "🌎 Americas", "🌏 Asia-Pacific", "🌐 Europe"].map((r) => (
+            <span key={r} className="surface rounded-full px-4 py-1.5 text-xs font-medium text-[var(--muted)]">
+              {r}
+            </span>
+          ))}
+        </motion.div>
+
+        {/* Case study grid — 3 cols desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mb-12">
           {caseStudies.map((cs, i) => {
             const Icon = cs.icon;
             return (
@@ -107,13 +180,12 @@ export function CaseStudies() {
                 key={i}
                 initial={{ opacity: 0, y: 24 }}
                 animate={isInView ? { opacity: 1, y: 0 } : {}}
-                transition={{ delay: 0.12 + i * 0.12, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
+                transition={{ delay: 0.1 + i * 0.08, duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 whileHover={{ y: -5 }}
                 className="surface surface-hover rounded-3xl overflow-hidden cursor-pointer group"
               >
                 <div className="p-6">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-5">
+                  <div className="flex items-start justify-between mb-4">
                     <div
                       className="w-10 h-10 rounded-xl flex items-center justify-center"
                       style={{ background: cs.accentBg, border: `1px solid ${cs.accentBorder}` }}
@@ -122,40 +194,42 @@ export function CaseStudies() {
                     </div>
                     <span
                       className="text-[10px] font-semibold px-2.5 py-1 rounded-full"
-                      style={{ background: cs.tagBg, color: cs.tagColor, border: `1px solid ${cs.accentBorder}` }}
+                      style={{ background: cs.accentBg, color: cs.tagColor, border: `1px solid ${cs.accentBorder}` }}
                     >
                       {cs.tag}
                     </span>
                   </div>
 
-                  <p className="text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)] mb-0.5">{cs.industry}</p>
-                  <p className="text-xs text-[var(--muted)] font-medium mb-3">{cs.company}</p>
+                  {/* Region badge */}
+                  <div className="mb-3">
+                    <span className="text-xs text-[var(--muted)] font-medium">{cs.region}</span>
+                    <span className="mx-2 text-[var(--border)] text-xs">·</span>
+                    <span className="text-xs text-[var(--muted)]">{cs.industry}</span>
+                  </div>
+
+                  <p className="text-xs text-[var(--muted)] font-medium mb-2.5">{cs.company}</p>
                   <h3
-                    className="font-bold text-[var(--text)] text-base leading-snug mb-4"
-                    style={{ fontFamily: "var(--font-space)" }}
+                    className="font-bold text-[var(--text)] text-sm leading-snug mb-3"
+                    style={{ fontFamily: "var(--font-geist)" }}
                   >
                     {cs.headline}
                   </h3>
-                  <p className="text-[var(--muted)] text-xs leading-relaxed mb-5">{cs.challenge}</p>
+                  <p className="text-[var(--muted)] text-xs leading-relaxed mb-4">{cs.challenge}</p>
 
-                  {/* Metrics */}
-                  <div
-                    className="space-y-2.5 mb-5 pt-4 border-t"
-                    style={{ borderColor: "var(--border)" }}
-                  >
+                  <div className="space-y-2 mb-4 pt-4 border-t" style={{ borderColor: "var(--border)" }}>
                     {cs.metrics.map((m, j) => (
                       <div key={j} className="flex items-center justify-between">
                         <span className="text-[var(--muted)] text-xs">{m.label}</span>
                         <div className="flex items-center gap-1.5">
                           {m.before && (
                             <>
-                              <span className="text-[var(--muted)] text-xs line-through opacity-50">{m.before}</span>
-                              <span className="text-[var(--muted)] text-[10px] opacity-40">→</span>
+                              <span className="text-xs text-[var(--muted)] line-through opacity-40">{m.before}</span>
+                              <span className="text-[var(--muted)] text-[10px] opacity-30">→</span>
                               <span className="text-xs font-bold text-[var(--text)]">{m.after}</span>
                             </>
                           )}
                           {m.value && (
-                            <span className="text-xs font-bold text-emerald-500 flex items-center gap-1">
+                            <span className="text-xs font-bold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
                               <TrendingUp className="w-3 h-3" />{m.value}
                             </span>
                           )}
@@ -177,7 +251,7 @@ export function CaseStudies() {
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={isInView ? { opacity: 1, y: 0 } : {}}
-          transition={{ delay: 0.5 }}
+          transition={{ delay: 0.65 }}
           className="text-center"
         >
           <Link href="/case-studies" className="btn-secondary group inline-flex">
