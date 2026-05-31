@@ -30,7 +30,7 @@ export function InsightsPage() {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
             className="text-5xl md:text-7xl font-bold tracking-tight mb-6 text-[var(--text)]"
-            style={{ fontFamily: "var(--font-space)" }}
+            style={{ fontFamily: "var(--font-outfit)" }}
           >
             AEO <span className="gradient-text">Insights</span>
           </motion.h1>

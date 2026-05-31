@@ -32,7 +32,7 @@ export function ContactPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
               className="text-5xl md:text-6xl font-bold tracking-tight mb-4 text-[var(--text)]"
-              style={{ fontFamily: "var(--font-space)" }}
+              style={{ fontFamily: "var(--font-outfit)" }}
             >
               Start Your AI
               <br />

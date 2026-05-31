@@ -68,8 +68,12 @@
   --color-accent-2:   var(--accent-2);
   --color-highlight:  var(--highlight);
 
-  --font-sans:    var(--font-inter);
-  --font-display: var(--font-space);
+  /* DM Sans → body copy, buttons, labels, nav links */
+  --font-sans:    var(--font-dm-sans);
+  /* Geist → section headings, card titles, stats, navbar brand */
+  --font-space:   var(--font-geist);
+  /* Outfit → hero display text, big CTAs (applied directly in components) */
+  --font-display: var(--font-outfit);
 }
 
 /* ─────────────────────────────────────────────
@@ -86,6 +90,7 @@ html {
 }
 
 body {
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
   background-color: var(--bg);
   color: var(--text);
   overflow-x: hidden;
@@ -131,8 +136,14 @@ body {
 /* ─────────────────────────────────────────────
    TYPOGRAPHY UTILITIES
 ───────────────────────────────────────────── */
+/* Hero-level display text → Outfit */
 .font-display {
-  font-family: var(--font-space), 'Space Grotesk', sans-serif;
+  font-family: var(--font-outfit), 'Outfit', sans-serif;
+}
+
+/* Section headings, card titles, stats → Geist */
+.font-heading {
+  font-family: var(--font-geist), 'Geist', system-ui, sans-serif;
 }
 
 /* Gradient text — adapts to theme */
@@ -191,7 +202,7 @@ body {
   border-radius: 9999px;
   background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
   color: #fff;
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-weight: 600;
   font-size: 0.9375rem;
   line-height: 1;
@@ -224,7 +235,7 @@ body {
   border-radius: 9999px;
   background: transparent;
   color: var(--text);
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
   font-weight: 500;
   font-size: 0.9375rem;
   border: 1px solid var(--border);
@@ -254,7 +265,7 @@ body {
   border: 1px solid var(--border-accent);
   padding: 0.375rem 0.875rem;
   border-radius: 9999px;
-  font-family: var(--font-inter), sans-serif;
+  font-family: var(--font-dm-sans), system-ui, sans-serif;
 }
 
 /* ─────────────────────────────────────────────

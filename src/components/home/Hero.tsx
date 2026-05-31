@@ -85,7 +85,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
           className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight mb-4 leading-[0.95] text-[var(--text)]"
-          style={{ fontFamily: "var(--font-space)" }}
+          style={{ fontFamily: "var(--font-outfit)" }}
         >
           Get Your Business
           <br />
