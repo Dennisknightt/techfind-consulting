@@ -10,91 +10,71 @@ import { useTheme } from "next-themes";
 const aiPlatforms = ["ChatGPT", "Gemini", "Claude", "Perplexity", "Google AI"];
 
 const stats = [
-  { icon: Globe2,     value: "80%", label: "of buyers now use AI for research" },
+  { icon: Globe2,     value: "80%", label: "of buyers use AI for research" },
   { icon: Brain,      value: "3×",  label: "more leads from AI-cited brands" },
-  { icon: TrendingUp, value: "92%", label: "B2B decisions start with an AI query" },
+  { icon: TrendingUp, value: "92%", label: "B2B decisions start with AI" },
 ];
 
 const floatingBubbles = [
-  { text: "Best solar company in Nairobi?",  delay: 0,   side: "left",  top: "38%" },
-  { text: "Top law firms in East Africa?",   delay: 1.6, side: "right", top: "28%" },
-  { text: "AI-powered HR software Kenya?",   delay: 3.2, side: "right", top: "62%" },
+  { text: "Best solar company in Nairobi?",  delay: 0,   side: "left",  top: "36%" },
+  { text: "Top law firms in East Africa?",   delay: 1.6, side: "right", top: "26%" },
+  { text: "AI-powered HR software Kenya?",   delay: 3.2, side: "right", top: "60%" },
 ];
 
-/* ─── Globe background — crops to just the globe half of Logo.png ─── */
-function GlobeBackground() {
+/* ─────────────────────────────────────────────────────
+   Globe watermark — crops to the globe half of Logo.png,
+   fills the full hero as a high-visibility blended texture.
+───────────────────────────────────────────────────────── */
+function GlobeWatermark() {
   const { resolvedTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
   useEffect(() => setMounted(true), []);
   const isDark = mounted && resolvedTheme === "dark";
 
   return (
-    <div
-      aria-hidden
-      className="absolute inset-0 overflow-hidden pointer-events-none select-none"
-    >
-      {/* The logo PNG is landscape (globe left, text right).
-          We make the image very wide so the globe fills the centre,
-          then nudge it left so the text half sits off-screen right.
-          objectPosition left-centres the globe in the viewport.      */}
+    <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
+      {/*
+        The PNG layout: [ globe (≈43% width) | text (≈57%) ]
+        Strategy: render the image at 220vw wide so it's massive.
+        translateX(-21.5%) centres the globe's midpoint (21.5% of total)
+        at the viewport centre. The text half drifts far off-screen right.
+        Opacity raised to 0.13 in light, 0.16 in dark — visible but natural.
+        mix-blend-mode: multiply fuses the navy/teal lines with the bg.
+      */}
       <div
-        className="absolute"
+        className="absolute top-1/2 left-1/2"
         style={{
-          /* Sits dead-centre, slightly lower so the top of the globe
-             anchors near the hero headline */
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
-          width: "min(1100px, 160vw)",
-          height: "auto",
-          opacity: isDark ? 0.07 : 0.06,
-          /* On dark mode invert so the globe lines are white */
+          width: "220vw",
+          transform: "translate(-21.5%, -52%)",
+          opacity: isDark ? 0.16 : 0.13,
           filter: isDark
             ? "brightness(0) invert(1)"
-            : "saturate(0.6) brightness(0.95)",
+            : "saturate(0.8) brightness(0.9) contrast(1.1)",
           mixBlendMode: isDark ? "screen" : "multiply",
+          willChange: "transform",
         }}
       >
         <Image
           src="/Logo.png"
           alt=""
-          width={1600}
-          height={430}
+          width={2200}
+          height={590}
           priority
           className="w-full h-auto"
-          style={{
-            /* Shift left so only the globe portion (left 45% of image)
-               is centred — the text half drifts off the right edge   */
-            objectFit: "cover",
-            objectPosition: "28% center",
-          }}
+          draggable={false}
         />
       </div>
+
+      {/* Very soft centre-fade so the text area stays readable */}
+      <div
+        className="absolute inset-0"
+        style={{
+          background: isDark
+            ? "radial-gradient(ellipse 65% 55% at 50% 48%, rgba(7,11,20,0.55) 0%, transparent 80%)"
+            : "radial-gradient(ellipse 65% 55% at 50% 48%, rgba(248,250,252,0.50) 0%, transparent 80%)",
+        }}
+      />
     </div>
-  );
-}
-
-/* ─── Foreground logo ── */
-function HeroLogo() {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted && resolvedTheme === "dark";
-
-  return (
-    <Image
-      src="/Logo.png"
-      alt="TechFind International Consulting"
-      width={320}
-      height={86}
-      priority
-      className="h-16 md:h-20 lg:h-24 w-auto object-contain"
-      style={{
-        filter: isDark
-          ? "brightness(0) invert(1) drop-shadow(0 8px 32px rgba(124,58,237,0.45))"
-          : "drop-shadow(0 4px 20px rgba(124,58,237,0.15))",
-      }}
-    />
   );
 }
 
@@ -116,25 +96,15 @@ export function Hero() {
   return (
     <section
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-20"
-      /* Match the logo's off-white background exactly in light mode */
       style={{ background: "var(--bg)" }}
     >
-      {/* ── Globe watermark background ── */}
-      <GlobeBackground />
+      {/* Globe background */}
+      <GlobeWatermark />
 
-      {/* ── Subtle grid overlay ── */}
-      <div className="absolute inset-0 grid-bg opacity-30 pointer-events-none" />
+      {/* Subtle grid */}
+      <div className="absolute inset-0 grid-bg opacity-20 pointer-events-none" />
 
-      {/* ── Soft gradient vignette so content pops over the globe ── */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          background:
-            "radial-gradient(ellipse 70% 60% at 50% 50%, transparent 40%, var(--bg) 90%)",
-        }}
-      />
-
-      {/* ── Floating query bubbles ── */}
+      {/* Floating query bubbles */}
       {floatingBubbles.map((b, i) => (
         <motion.div
           key={i}
@@ -142,7 +112,7 @@ export function Hero() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 1.8 + i * 0.3, duration: 0.6 }}
           className="absolute hidden xl:block"
-          style={b.side === "left" ? { left: "3%", top: b.top } : { right: "3%", top: b.top }}
+          style={b.side === "left" ? { left: "4%", top: b.top } : { right: "4%", top: b.top }}
         >
           <motion.div
             animate={{ y: [0, -8, 0] }}
@@ -157,36 +127,17 @@ export function Hero() {
         </motion.div>
       ))}
 
-      {/* ══════════════════════════════════════
-          CONTENT
-      ══════════════════════════════════════ */}
+      {/* ═══════════════════════════
+          CONTENT — sits inside globe
+      ═══════════════════════════════ */}
       <div className="relative z-10 max-w-5xl mx-auto px-6 flex flex-col items-center text-center">
-
-        {/* Logo centrepiece */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9, y: 16 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          transition={{ duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          className="mb-7"
-        >
-          <HeroLogo />
-        </motion.div>
-
-        {/* Gradient divider */}
-        <motion.div
-          initial={{ scaleX: 0, opacity: 0 }}
-          animate={{ scaleX: 1, opacity: 1 }}
-          transition={{ delay: 0.55, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="w-20 h-px mb-7 origin-center"
-          style={{ background: "linear-gradient(90deg, transparent, var(--accent), var(--accent-2), transparent)" }}
-        />
 
         {/* Badge */}
         <motion.div
-          initial={{ opacity: 0, y: 10 }}
+          initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65 }}
-          className="inline-block mb-6"
+          transition={{ delay: 0.3, duration: 0.6 }}
+          className="inline-block mb-7"
         >
           <span className="section-label">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
@@ -194,12 +145,12 @@ export function Hero() {
           </span>
         </motion.div>
 
-        {/* Main headline */}
+        {/* Main headline — sits right over the globe */}
         <motion.h1
-          initial={{ opacity: 0, y: 18 }}
+          initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.8, duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight mb-4 leading-[1.0] text-[var(--text)]"
+          transition={{ delay: 0.45, duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
+          className="text-5xl md:text-7xl lg:text-[5.5rem] font-bold tracking-tight mb-4 leading-[1.0] text-[var(--text)]"
           style={{ fontFamily: "var(--font-outfit)" }}
         >
           Get Your Business
@@ -211,7 +162,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ delay: 1.0 }}
+          transition={{ delay: 0.75 }}
           className="flex items-center justify-center gap-3 mb-5 h-8"
         >
           <span className="text-sm text-[var(--muted)]">Appearing on</span>
@@ -230,7 +181,7 @@ export function Hero() {
         <motion.p
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.05, duration: 0.7 }}
+          transition={{ delay: 0.85, duration: 0.7 }}
           className="text-lg md:text-xl text-[var(--muted)] max-w-2xl mx-auto leading-relaxed mb-10"
         >
           TechFind Consulting helps brands rank, appear, and get cited across ChatGPT,
@@ -241,7 +192,7 @@ export function Hero() {
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.15, duration: 0.7 }}
+          transition={{ delay: 0.95, duration: 0.7 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
           <Link href="/ai-visibility-audit" className="btn-primary group">
@@ -254,11 +205,11 @@ export function Hero() {
           </Link>
         </motion.div>
 
-        {/* Stats */}
+        {/* Stats — float naturally over the globe */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 1.3, duration: 0.8 }}
+          transition={{ delay: 1.1, duration: 0.8 }}
           className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto w-full"
         >
           {stats.map(({ icon: Icon, value, label }, i) => (
@@ -269,7 +220,10 @@ export function Hero() {
               className="surface surface-hover rounded-2xl p-5 text-center group cursor-default"
             >
               <Icon className="w-5 h-5 text-[var(--accent)] mx-auto mb-2.5 group-hover:text-[var(--highlight)] transition-colors" />
-              <div className="text-2xl font-bold gradient-text mb-1" style={{ fontFamily: "var(--font-geist)" }}>
+              <div
+                className="text-2xl font-bold gradient-text mb-1"
+                style={{ fontFamily: "var(--font-geist)" }}
+              >
                 {value}
               </div>
               <div className="text-xs text-[var(--muted)] leading-snug">{label}</div>
@@ -282,7 +236,7 @@ export function Hero() {
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
-        transition={{ delay: 2.2 }}
+        transition={{ delay: 2 }}
         className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
       >
         <span className="text-[10px] font-medium tracking-widest uppercase text-[var(--muted)] opacity-40">Scroll</span>
