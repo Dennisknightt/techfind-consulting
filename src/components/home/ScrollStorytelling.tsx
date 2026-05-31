@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import Link from "next/link";
+import { motion, useScroll } from "framer-motion";
 import { EyeOff, Brain, Quote, Star, TrendingUp, ArrowRight } from "lucide-react";
 
 const stages = [
@@ -9,61 +10,51 @@ const stages = [
     icon: EyeOff,
     step: "01",
     title: "Invisible Brand",
-    description:
-      "AI systems don't know your business exists. You're losing leads to competitors every time someone asks AI for a recommendation.",
-    color: "text-red-400",
-    bgColor: "bg-red-500/10",
-    borderColor: "border-red-500/20",
-    status: "current for most",
-    statusColor: "bg-red-500/20 text-red-300",
+    description: "AI systems don't know your business exists. You're losing leads to competitors every time someone asks AI for a recommendation.",
+    statusLabel: "where most businesses are",
+    accentColor: "var(--highlight)",
+    bg: "rgba(8,145,178,0.08)",
+    border: "rgba(8,145,178,0.2)",
   },
   {
     icon: Brain,
     step: "02",
     title: "Understood by AI",
-    description:
-      "We structure your entity, schema, and knowledge graph presence so AI systems clearly understand what your business does and who it serves.",
-    color: "text-yellow-400",
-    bgColor: "bg-yellow-500/10",
-    borderColor: "border-yellow-500/20",
-    status: "phase 1",
-    statusColor: "bg-yellow-500/20 text-yellow-300",
+    description: "We structure your entity, schema, and knowledge graph presence so AI systems clearly understand what your business does and who it serves.",
+    statusLabel: "Phase 1",
+    accentColor: "var(--accent-2)",
+    bg: "var(--accent-2-glow)",
+    border: "rgba(59,130,246,0.25)",
   },
   {
     icon: Quote,
     step: "03",
     title: "Cited by AI",
-    description:
-      "Through authority content, digital PR, and citation building, your brand becomes a source that AI engines pull from and quote in their responses.",
-    color: "text-blue-400",
-    bgColor: "bg-blue-500/10",
-    borderColor: "border-blue-500/20",
-    status: "phase 2",
-    statusColor: "bg-blue-500/20 text-blue-300",
+    description: "Through authority content, digital PR, and citation building, your brand becomes a source that AI engines pull from and quote in their responses.",
+    statusLabel: "Phase 2",
+    accentColor: "var(--accent)",
+    bg: "var(--accent-glow)",
+    border: "var(--border-accent)",
   },
   {
     icon: Star,
     step: "04",
     title: "Recommended by AI",
-    description:
-      "Your business appears in AI-generated recommendation lists, answers, and comparisons. Buyers see your brand before they ever visit a website.",
-    color: "text-violet-400",
-    bgColor: "bg-violet-500/10",
-    borderColor: "border-violet-500/20",
-    status: "phase 3",
-    statusColor: "bg-violet-500/20 text-violet-300",
+    description: "Your business appears in AI-generated recommendation lists and comparisons. Buyers see your brand before they visit any website.",
+    statusLabel: "Phase 3",
+    accentColor: "var(--accent)",
+    bg: "var(--accent-glow)",
+    border: "var(--border-accent)",
   },
   {
     icon: TrendingUp,
     step: "05",
     title: "Leads Generated",
-    description:
-      "High-intent buyers — already primed by AI — contact your business directly. These are warm leads who AI has already convinced to trust you.",
-    color: "text-emerald-400",
-    bgColor: "bg-emerald-500/10",
-    borderColor: "border-emerald-500/20",
-    status: "the outcome",
-    statusColor: "bg-emerald-500/20 text-emerald-300",
+    description: "High-intent buyers — already primed by AI — contact your business directly. These are warm leads who AI has already convinced to trust you.",
+    statusLabel: "The outcome",
+    accentColor: "#10b981",
+    bg: "rgba(16,185,129,0.08)",
+    border: "rgba(16,185,129,0.2)",
   },
 ];
 
@@ -76,42 +67,41 @@ export function ScrollStorytelling() {
 
   return (
     <section className="relative py-28 overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-navy-900/60 to-transparent" />
-      <div className="absolute left-1/4 top-1/3 w-72 h-72 bg-blue-600/10 rounded-full blur-3xl" />
+      <div className="orb orb-accent animate-orb absolute left-1/4 top-1/3 w-64 h-64 opacity-25" />
 
       <div className="relative max-w-7xl mx-auto px-6">
-        {/* Header */}
         <div className="text-center mb-20">
-          <motion.p
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-blue-400 text-sm font-medium tracking-widest uppercase mb-4"
-          >
-            The AEO Journey
-          </motion.p>
+          <motion.div initial={{ opacity: 0 }} whileInView={{ opacity: 1 }} viewport={{ once: true }} className="inline-block mb-4">
+            <span className="section-label">The AEO Journey</span>
+          </motion.div>
           <motion.h2
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 16 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1, duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-            className="text-4xl md:text-5xl font-black tracking-tight"
-            style={{ fontFamily: "var(--font-syne)" }}
+            className="text-4xl md:text-5xl font-bold tracking-tight text-[var(--text)]"
+            style={{ fontFamily: "var(--font-space)" }}
           >
             From{" "}
-            <span className="text-white/30">Invisible</span>{" "}
+            <span className="text-[var(--muted)]">Invisible</span>{" "}
             to{" "}
             <span className="gradient-text">AI-Recommended</span>
           </motion.h2>
         </div>
 
-        {/* Journey timeline */}
         <div ref={containerRef} className="relative">
-          {/* Progress line */}
-          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-white/5 hidden lg:block" />
+          {/* Timeline line */}
+          <div
+            className="absolute left-1/2 top-0 bottom-0 w-px hidden lg:block opacity-20"
+            style={{ background: "var(--border)" }}
+          />
           <motion.div
-            className="absolute left-1/2 top-0 w-px bg-gradient-to-b from-blue-500 to-violet-500 hidden lg:block origin-top"
-            style={{ scaleY: scrollYProgress, height: "100%" }}
+            className="absolute left-1/2 top-0 w-px hidden lg:block origin-top"
+            style={{
+              scaleY: scrollYProgress,
+              height: "100%",
+              background: "linear-gradient(to bottom, var(--accent), var(--accent-2))",
+            }}
           />
 
           <div className="space-y-12 lg:space-y-0">
@@ -122,76 +112,77 @@ export function ScrollStorytelling() {
               return (
                 <motion.div
                   key={i}
-                  initial={{ opacity: 0, x: isLeft ? -30 : 30 }}
+                  initial={{ opacity: 0, x: isLeft ? -24 : 24 }}
                   whileInView={{ opacity: 1, x: 0 }}
                   viewport={{ once: true, margin: "-15% 0px" }}
-                  transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                  transition={{ duration: 0.65, ease: [0.22, 1, 0.36, 1] }}
                   className={`relative lg:grid lg:grid-cols-2 lg:gap-12 items-center mb-12`}
                 >
-                  {/* Left/Right content */}
-                  <div className={isLeft ? "lg:text-right" : "lg:col-start-2"}>
+                  <div className={isLeft ? "lg:text-right lg:flex lg:justify-end" : "lg:col-start-2"}>
                     <div
-                      className={`inline-block glass border ${stage.borderColor} rounded-2xl p-6 text-left max-w-sm group hover:-translate-y-1 transition-transform duration-300 hover:shadow-xl`}
+                      className="surface surface-hover rounded-2xl p-6 max-w-sm text-left group cursor-default"
+                      style={{ borderColor: stage.border }}
                     >
                       <div className="flex items-start gap-4 mb-4">
-                        <div className={`w-10 h-10 rounded-xl ${stage.bgColor} border ${stage.borderColor} flex items-center justify-center shrink-0`}>
-                          <Icon className={`w-5 h-5 ${stage.color}`} />
+                        <div
+                          className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
+                          style={{ background: stage.bg, border: `1px solid ${stage.border}` }}
+                        >
+                          <Icon className="w-5 h-5" style={{ color: stage.accentColor }} />
                         </div>
                         <div>
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="text-white/20 text-xs font-mono">
-                              Step {stage.step}
-                            </span>
-                            <span className={`text-[10px] px-2 py-0.5 rounded-full font-medium ${stage.statusColor}`}>
-                              {stage.status}
+                            <span className="text-[10px] font-mono text-[var(--muted)]">Step {stage.step}</span>
+                            <span
+                              className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                              style={{ background: stage.bg, color: stage.accentColor, border: `1px solid ${stage.border}` }}
+                            >
+                              {stage.statusLabel}
                             </span>
                           </div>
                           <h3
-                            className={`text-xl font-black ${stage.color}`}
-                            style={{ fontFamily: "var(--font-syne)" }}
+                            className="text-lg font-bold"
+                            style={{ fontFamily: "var(--font-space)", color: stage.accentColor }}
                           >
                             {stage.title}
                           </h3>
                         </div>
                       </div>
-                      <p className="text-white/50 text-sm leading-relaxed">
-                        {stage.description}
-                      </p>
+                      <p className="text-[var(--muted)] text-sm leading-relaxed">{stage.description}</p>
                     </div>
                   </div>
 
-                  {/* Center dot */}
-                  <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center">
-                    <motion.div
-                      initial={{ scale: 0 }}
-                      whileInView={{ scale: 1 }}
-                      viewport={{ once: true }}
-                      className={`w-5 h-5 rounded-full ${stage.bgColor} border-2 ${stage.borderColor} flex items-center justify-center`}
+                  {/* Centre dot */}
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    whileInView={{ scale: 1 }}
+                    viewport={{ once: true }}
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 hidden lg:flex items-center justify-center"
+                  >
+                    <div
+                      className="w-4 h-4 rounded-full border-2 flex items-center justify-center"
+                      style={{ background: stage.bg, borderColor: stage.accentColor }}
                     >
-                      <div className={`w-2 h-2 rounded-full ${stage.color} bg-current`} />
-                    </motion.div>
-                  </div>
+                      <div className="w-1.5 h-1.5 rounded-full" style={{ background: stage.accentColor }} />
+                    </div>
+                  </motion.div>
                 </motion.div>
               );
             })}
           </div>
         </div>
 
-        {/* Bottom CTA */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           className="text-center mt-16"
         >
-          <p className="text-white/30 text-sm mb-4">Ready to start the journey?</p>
-          <a
-            href="/ai-visibility-audit"
-            className="inline-flex items-center gap-2 text-sm font-medium px-7 py-3.5 rounded-full bg-gradient-to-r from-blue-600 to-violet-600 text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all hover:scale-105 group"
-          >
+          <p className="text-[var(--muted)] text-sm mb-4">Ready to start the journey?</p>
+          <Link href="/ai-visibility-audit" className="btn-primary group inline-flex">
             Start with Your AI Audit
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-          </a>
+          </Link>
         </motion.div>
       </div>
     </section>

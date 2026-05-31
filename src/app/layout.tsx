@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
-import { Inter, Syne } from "next/font/google";
+import { Inter, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { CustomCursor } from "@/components/layout/CustomCursor";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
+import { ThemeProvider } from "@/components/layout/ThemeProvider";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -13,10 +14,11 @@ const inter = Inter({
   display: "swap",
 });
 
-const syne = Syne({
-  variable: "--font-syne",
+const spaceGrotesk = Space_Grotesk({
+  variable: "--font-space",
   subsets: ["latin"],
   display: "swap",
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -41,17 +43,19 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${syne.variable}`}
+      className={`${inter.variable} ${spaceGrotesk.variable}`}
       suppressHydrationWarning
     >
-      <body className="bg-navy-950 text-white antialiased overflow-x-hidden">
-        <SmoothScroll>
-          <CustomCursor />
-          <ScrollProgress />
-          <Navbar />
-          <main>{children}</main>
-          <Footer />
-        </SmoothScroll>
+      <body className="bg-bg text-foreground antialiased overflow-x-hidden">
+        <ThemeProvider>
+          <SmoothScroll>
+            <CustomCursor />
+            <ScrollProgress />
+            <Navbar />
+            <main>{children}</main>
+            <Footer />
+          </SmoothScroll>
+        </ThemeProvider>
       </body>
     </html>
   );

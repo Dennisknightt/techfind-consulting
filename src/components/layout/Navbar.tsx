@@ -3,7 +3,8 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { Menu, X, ChevronDown, Zap } from "lucide-react";
+import { Menu, X, ChevronDown, Zap, Sun, Moon } from "lucide-react";
+import { useTheme } from "next-themes";
 import { cn } from "@/lib/utils";
 
 const navLinks = [
@@ -22,6 +23,39 @@ const navLinks = [
   { label: "Insights", href: "/insights" },
 ];
 
+function ThemeToggle() {
+  const { theme, setTheme, resolvedTheme } = useTheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return <div className="w-9 h-9 rounded-full" />;
+  }
+
+  const isDark = resolvedTheme === "dark";
+
+  return (
+    <button
+      onClick={() => setTheme(isDark ? "light" : "dark")}
+      aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+      className="relative w-9 h-9 rounded-full flex items-center justify-center border border-[var(--border)] bg-[var(--card)] text-[var(--muted)] hover:text-[var(--accent)] hover:border-[var(--border-accent)] transition-all duration-200 hover:shadow-sm"
+    >
+      <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={isDark ? "moon" : "sun"}
+          initial={{ opacity: 0, rotate: -30, scale: 0.8 }}
+          animate={{ opacity: 1, rotate: 0, scale: 1 }}
+          exit={{ opacity: 0, rotate: 30, scale: 0.8 }}
+          transition={{ duration: 0.18 }}
+        >
+          {isDark ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+        </motion.div>
+      </AnimatePresence>
+    </button>
+  );
+}
+
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -29,35 +63,32 @@ export function Navbar() {
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", handleScroll);
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   return (
     <motion.nav
-      initial={{ y: -100, opacity: 0 }}
+      initial={{ y: -80, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
+      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        "fixed top-0 left-0 right-0 z-50 transition-all duration-300",
         scrolled
-          ? "glass border-b border-white/5 py-3"
-          : "bg-transparent py-5"
+          ? "py-3 shadow-[var(--shadow-sm)]"
+          : "py-5 bg-transparent"
       )}
+      style={scrolled ? { background: "var(--nav-bg)", backdropFilter: "blur(20px)", borderBottom: "1px solid var(--border)" } : {}}
     >
       <div className="max-w-7xl mx-auto px-6 flex items-center justify-between">
         {/* Logo */}
         <Link href="/" className="flex items-center gap-2.5 group">
-          <div className="relative w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center">
+          <div className="relative w-8 h-8 rounded-xl bg-gradient-to-br from-[var(--accent)] to-[var(--accent-2)] flex items-center justify-center shadow-[0_4px_14px_var(--accent-glow)]">
             <Zap className="w-4 h-4 text-white" />
-            <div className="absolute inset-0 rounded-lg bg-blue-500/20 blur-md group-hover:blur-lg transition-all" />
           </div>
-          <span
-            className="font-display font-bold text-lg tracking-tight"
-            style={{ fontFamily: "var(--font-syne)" }}
-          >
+          <span className="font-display font-bold text-lg tracking-tight text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
             TechFind
-            <span className="gradient-text-blue ml-1">Consulting</span>
+            <span className="gradient-text-violet ml-1">Consulting</span>
           </span>
         </Link>
 
@@ -71,14 +102,14 @@ export function Navbar() {
               onMouseLeave={() => setActiveDropdown(null)}
             >
               {link.dropdown ? (
-                <button className="flex items-center gap-1 px-4 py-2 text-sm text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5">
+                <button className="flex items-center gap-1 px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors rounded-xl hover:bg-[var(--card)]">
                   {link.label}
                   <ChevronDown className="w-3.5 h-3.5" />
                 </button>
               ) : (
                 <Link
                   href={link.href}
-                  className="flex items-center gap-1 px-4 py-2 text-sm text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                  className="px-4 py-2 text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors rounded-xl hover:bg-[var(--card)] block"
                 >
                   {link.label}
                 </Link>
@@ -87,19 +118,23 @@ export function Navbar() {
               <AnimatePresence>
                 {link.dropdown && activeDropdown === link.label && (
                   <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    initial={{ opacity: 0, y: 6, scale: 0.97 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    exit={{ opacity: 0, y: 6, scale: 0.97 }}
                     transition={{ duration: 0.15 }}
-                    className="absolute top-full left-0 mt-2 w-64 glass rounded-xl border border-white/10 p-2 overflow-hidden"
+                    className="absolute top-full left-0 mt-2 w-64 rounded-2xl border p-2 overflow-hidden shadow-[var(--shadow-md)]"
+                    style={{ background: "var(--card)", borderColor: "var(--border)" }}
                   >
                     {link.dropdown.map((item) => (
                       <Link
                         key={item.label}
                         href={item.href}
-                        className="flex items-center gap-3 px-4 py-2.5 text-sm text-white/70 hover:text-white hover:bg-white/5 rounded-lg transition-all group"
+                        className="flex items-center gap-3 px-4 py-2.5 text-sm rounded-xl transition-all group"
+                        style={{ color: "var(--muted)" }}
+                        onMouseEnter={e => (e.currentTarget.style.background = "var(--card-hover)", e.currentTarget.style.color = "var(--text)")}
+                        onMouseLeave={e => (e.currentTarget.style.background = "transparent", e.currentTarget.style.color = "var(--muted)")}
                       >
-                        <span className="w-1.5 h-1.5 rounded-full bg-blue-500 group-hover:bg-cyan-400 transition-colors" />
+                        <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] opacity-60 group-hover:opacity-100 transition-opacity" />
                         {item.label}
                       </Link>
                     ))}
@@ -110,30 +145,34 @@ export function Navbar() {
           ))}
         </div>
 
-        {/* CTA */}
-        <div className="hidden lg:flex items-center gap-3">
+        {/* Right actions */}
+        <div className="hidden lg:flex items-center gap-2">
+          <ThemeToggle />
           <Link
             href="/contact"
-            className="text-sm text-white/70 hover:text-white transition-colors px-4 py-2"
+            className="text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors px-4 py-2"
           >
             Contact
           </Link>
           <Link
             href="/ai-visibility-audit"
-            className="relative group text-sm font-medium px-5 py-2.5 rounded-full bg-gradient-to-r from-blue-600 to-violet-600 text-white hover:shadow-lg hover:shadow-blue-500/25 transition-all duration-300 hover:scale-105"
+            className="btn-primary text-sm"
           >
             Book AI Audit
-            <div className="absolute inset-0 rounded-full bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity" />
           </Link>
         </div>
 
-        {/* Mobile menu button */}
-        <button
-          onClick={() => setMobileOpen(!mobileOpen)}
-          className="lg:hidden p-2 rounded-lg glass text-white/70 hover:text-white"
-        >
-          {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-        </button>
+        {/* Mobile: theme toggle + hamburger */}
+        <div className="lg:hidden flex items-center gap-2">
+          <ThemeToggle />
+          <button
+            onClick={() => setMobileOpen(!mobileOpen)}
+            className="p-2 rounded-xl border text-[var(--muted)] hover:text-[var(--text)] transition-colors"
+            style={{ borderColor: "var(--border)", background: "var(--card)" }}
+          >
+            {mobileOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile menu */}
@@ -143,14 +182,15 @@ export function Navbar() {
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
-            className="lg:hidden glass border-t border-white/5 mt-2"
+            className="lg:hidden border-t mt-2"
+            style={{ background: "var(--nav-bg)", backdropFilter: "blur(20px)", borderColor: "var(--border)" }}
           >
             <div className="max-w-7xl mx-auto px-6 py-4 flex flex-col gap-1">
               {navLinks.map((link) => (
                 <div key={link.label}>
                   {link.dropdown ? (
                     <>
-                      <span className="block px-4 py-2 text-xs text-white/40 uppercase tracking-wider font-medium">
+                      <span className="block px-4 py-2 text-[10px] font-semibold uppercase tracking-widest text-[var(--muted)]">
                         {link.label}
                       </span>
                       {link.dropdown.map((item) => (
@@ -158,7 +198,7 @@ export function Navbar() {
                           key={item.label}
                           href={item.href}
                           onClick={() => setMobileOpen(false)}
-                          className="block px-6 py-2 text-sm text-white/70 hover:text-white transition-colors"
+                          className="block px-6 py-2.5 text-sm text-[var(--muted)] hover:text-[var(--text)] transition-colors rounded-xl hover:bg-[var(--card-hover)]"
                         >
                           {item.label}
                         </Link>
@@ -168,18 +208,18 @@ export function Navbar() {
                     <Link
                       href={link.href}
                       onClick={() => setMobileOpen(false)}
-                      className="block px-4 py-2.5 text-sm text-white/70 hover:text-white transition-colors rounded-lg hover:bg-white/5"
+                      className="block px-4 py-2.5 text-sm font-medium text-[var(--muted)] hover:text-[var(--text)] transition-colors rounded-xl hover:bg-[var(--card-hover)]"
                     >
                       {link.label}
                     </Link>
                   )}
                 </div>
               ))}
-              <div className="pt-3 border-t border-white/5">
+              <div className="pt-3 border-t" style={{ borderColor: "var(--border)" }}>
                 <Link
                   href="/ai-visibility-audit"
                   onClick={() => setMobileOpen(false)}
-                  className="block w-full text-center text-sm font-medium px-5 py-3 rounded-full bg-gradient-to-r from-blue-600 to-violet-600 text-white"
+                  className="btn-primary w-full justify-center text-sm"
                 >
                   Book AI Visibility Audit
                 </Link>
