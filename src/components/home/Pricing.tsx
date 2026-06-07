@@ -10,8 +10,12 @@ const plans = [
     name: "AI Visibility Starter",
     tagline: "For businesses new to AEO",
     description: "Perfect for businesses that want to understand their AI visibility gap and start building a foundational presence across AI search engines.",
+    originalPrice: 1500,
+    price: 900,
+    savings: 600,
+    discount: "40%",
     features: ["Full AI Visibility Audit", "Entity & knowledge graph optimization", "Structured data implementation", "2 authority content pieces/month", "Basic AI monitoring dashboard", "Monthly performance report"],
-    cta: "Get Custom Quote",
+    cta: "Start Now",
     popular: false,
     badge: null,
   },
@@ -19,19 +23,14 @@ const plans = [
     name: "AEO Growth Partner",
     tagline: "For businesses ready to dominate",
     description: "A comprehensive AI Engine Optimization retainer for businesses actively competing for AI recommendations in their industry.",
+    originalPrice: 2000,
+    price: 1200,
+    savings: 800,
+    discount: "40%",
     features: ["Everything in Starter", "Competitive AI ranking reports", "4 authority content pieces/month", "Digital PR & citation building (8/mo)", "Review & reputation optimization", "WhatsApp/Slack reporting integration", "Quarterly strategy review call"],
-    cta: "Get Custom Quote",
+    cta: "Become a Partner",
     popular: true,
     badge: "Most Popular",
-  },
-  {
-    name: "Enterprise AI Visibility",
-    tagline: "For large brands & multi-location",
-    description: "Full-service AI visibility management for enterprises and businesses operating across multiple markets or verticals.",
-    features: ["Everything in Growth Partner", "Multi-market & multilingual AEO", "Unlimited content production", "Aggressive PR & citation program", "Custom AI monitoring platform", "Dedicated AEO strategist", "Weekly executive reporting", "Automation services included"],
-    cta: "Book a Strategy Call",
-    popular: false,
-    badge: "Enterprise",
   },
 ];
 
@@ -46,7 +45,9 @@ export function Pricing() {
       <div className="relative max-w-7xl mx-auto px-6">
         <div className="text-center mb-14">
           <motion.div initial={{ opacity: 0 }} animate={isInView ? { opacity: 1 } : {}} className="inline-block mb-4">
-            <span className="section-label">Engagement Options</span>
+            <span className="section-label bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 border-emerald-500/30">
+              🎉 Limited-Time Offer
+            </span>
           </motion.div>
           <motion.h2
             initial={{ opacity: 0, y: 16 }}
@@ -55,9 +56,9 @@ export function Pricing() {
             className="text-4xl md:text-5xl font-bold tracking-tight mb-4 text-[var(--text)]"
             style={{ fontFamily: "var(--font-space)" }}
           >
-            Custom Pricing for
+            40% Off All Plans
             <br />
-            <span className="gradient-text">Every Business Size</span>
+            <span className="gradient-text">AI Engine Optimization Services</span>
           </motion.h2>
           <motion.p
             initial={{ opacity: 0 }}
@@ -65,12 +66,11 @@ export function Pricing() {
             transition={{ delay: 0.2 }}
             className="text-[var(--muted)] max-w-lg mx-auto"
           >
-            We don&apos;t do one-size-fits-all pricing. Every quote is built around your industry,
-            competitive landscape, and growth goals.
+            Get your business AI-recommended at unbeatable prices. Limited-time discount—lock in your rate now.
           </motion.p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 mb-10">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-12 max-w-4xl mx-auto">
           {plans.map((plan, i) => (
             <motion.div
               key={i}
@@ -111,12 +111,23 @@ export function Pricing() {
               </div>
 
               <div
-                className="flex items-baseline gap-2 mb-6 pb-6 border-b"
+                className="flex flex-col gap-3 mb-6 pb-6 border-b"
                 style={{ borderColor: "var(--border)" }}
               >
-                <span className="text-3xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
-                  Custom Quote
-                </span>
+                <div className="flex items-baseline gap-3">
+                  <span className="text-4xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
+                    ${plan.price}
+                  </span>
+                  <span className="text-lg text-[var(--muted)] line-through">${plan.originalPrice}</span>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="inline-block px-3 py-1 rounded-full text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-emerald-600">
+                    Save ${plan.savings}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-500">
+                    {plan.discount} off
+                  </span>
+                </div>
               </div>
 
               <ul className="space-y-3 mb-8 flex-1">
@@ -129,12 +140,12 @@ export function Pricing() {
               </ul>
 
               <Link
-                href="/contact"
+                href="/audit"
                 className={`flex items-center justify-center gap-2 w-full py-3.5 rounded-full font-medium text-sm transition-all group ${
                   plan.popular ? "btn-primary" : "btn-secondary"
                 }`}
               >
-                {plan.cta}
+                Get My Visibility Plan
                 <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
               </Link>
             </motion.div>
@@ -145,12 +156,15 @@ export function Pricing() {
           initial={{ opacity: 0 }}
           animate={isInView ? { opacity: 1 } : {}}
           transition={{ delay: 0.55 }}
-          className="text-center"
+          className="text-center space-y-4"
         >
           <span className="inline-flex items-center gap-2 text-sm text-[var(--muted)]">
             <Sparkles className="w-4 h-4 text-[var(--accent)]" />
             All packages begin with an AI Visibility Audit to establish your baseline and strategy.
           </span>
+          <p className="text-xs text-emerald-400 font-semibold">
+            ✓ 40% discount applies to all plans • Limited time offer
+          </p>
         </motion.div>
       </div>
     </section>

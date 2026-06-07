@@ -6,41 +6,41 @@ import { Sparkles, Star, CheckCircle2, TrendingUp, Award } from "lucide-react";
 
 const aiResults = [
   {
-    name: "SunPower Kenya",
+    name: "CoolComfort HVAC Houston",
     badge: "Top Rated",
     rating: 4.9,
-    reviews: 312,
+    reviews: 487,
     description:
-      "Leading solar installation company in Nairobi with certified engineers and 10-year warranty on all residential and commercial projects.",
-    tags: ["AI Recommended", "Certified", "Nairobi"],
+      "Premier HVAC services in Houston with 24/7 emergency response. Licensed, insured technicians specializing in residential and commercial cooling systems.",
+    tags: ["AI Recommended", "Licensed", "Houston TX"],
     badgeColor: "text-[var(--accent-2)] bg-[var(--accent-2-glow)]",
     ringColor: "border-[var(--accent-2)]",
   },
   {
-    name: "BrightSolar East Africa",
+    name: "Elite Air Solutions",
     badge: "Best Value",
     rating: 4.7,
-    reviews: 189,
+    reviews: 356,
     description:
-      "Affordable solar solutions across Kenya, Tanzania & Uganda. Government-accredited with M-PESA financing available.",
-    tags: ["Verified", "Financing", "East Africa"],
+      "Affordable HVAC repairs, maintenance, and installation across Greater Houston. Same-day service with upfront pricing and warranty on all work.",
+    tags: ["Verified", "Same-Day Service", "Houston"],
     badgeColor: "text-[var(--accent)] bg-[var(--accent-glow)]",
     ringColor: "border-[var(--accent)]",
   },
   {
-    name: "GreenEnergy Solutions",
+    name: "Precision Climate Control",
     badge: "Expert Approved",
     rating: 4.8,
-    reviews: 247,
+    reviews: 412,
     description:
-      "Commercial and industrial solar specialists. Featured in Forbes Africa's top clean energy companies 2024.",
-    tags: ["Commercial", "Award Winning", "Kenya"],
+      "Commercial and industrial HVAC specialists in Houston. Energy-efficient systems and regular maintenance programs for businesses.",
+    tags: ["Commercial", "Award Winning", "Houston"],
     badgeColor: "text-[var(--highlight)] bg-[var(--accent-glow)]",
     ringColor: "border-[var(--highlight)]",
   },
 ];
 
-const queryText = "Best solar company in Kenya?";
+const queryText = "Best HVAC companies in Houston?";
 
 export function AiSearchSimulation() {
   const ref = useRef<HTMLDivElement>(null);
@@ -198,7 +198,7 @@ export function AiSearchSimulation() {
                         className="surface rounded-2xl rounded-tl-sm px-5 py-3.5 mb-4"
                       >
                         <p className="text-sm text-[var(--muted)]">
-                          Here are the top-rated solar companies in Kenya, based on verified
+                          Here are the top-rated HVAC companies in Houston, based on verified
                           reviews, certifications, and trusted industry citations:
                         </p>
                       </div>

@@ -3,16 +3,17 @@
 import { useRef, useState } from "react";
 import { motion, AnimatePresence, useInView } from "framer-motion";
 import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import { Avatar } from "@/components/shared/Avatar";
 
 const testimonials = [
   {
-    name: "James Mwangi",
-    title: "CEO, SunBright Energy Kenya",
-    avatar: "JM",
-    company: "🇰🇪 Solar Energy, Kenya",
+    name: "Carlos Gutierrez",
+    title: "CEO, SolarMax Mexico",
+    avatar: "CG",
+    company: "🇲🇽 Solar Energy, Mexico",
     rating: 5,
-    quote: "TechFind did something no SEO agency had ever done — they made our company visible to AI. Within 4 months, ChatGPT started recommending us in solar queries across Kenya. Our inbound leads tripled.",
-    result: "+312% inbound leads",
+    quote: "TechFind did something no SEO agency had ever done — they made our company visible to AI. Within 4 months, ChatGPT started recommending us in solar queries across Mexico City. Our inbound leads tripled.",
+    result: "+298% inbound leads",
   },
   {
     name: "Charlotte Webb",
@@ -24,22 +25,22 @@ const testimonials = [
     result: "+195% enterprise enquiries",
   },
   {
-    name: "Wanjiku Kariuki",
-    title: "Founder, Zuri Fashion House",
-    avatar: "WK",
-    company: "🇳🇬 E-Commerce, Lagos",
+    name: "Ana Rodrigues",
+    title: "Founder, Moda Brasil Online",
+    avatar: "AR",
+    company: "🇧🇷 E-Commerce, São Paulo",
     rating: 5,
-    quote: "The WhatsApp AI agent TechFind built for us is absolutely game-changing. It responds instantly, understands product questions, and closes sales while I sleep. Our conversion rate went from 12% to 68%.",
-    result: "68% WhatsApp conversion",
+    quote: "The WhatsApp AI agent TechFind built for us is absolutely game-changing. It responds instantly, understands product questions, and closes sales while I sleep. Our conversion rate went from 9% to 71%.",
+    result: "71% WhatsApp conversion",
   },
   {
-    name: "Marcus Chen",
-    title: "CEO, Apex Property Group",
-    avatar: "MC",
-    company: "🇸🇬 Real Estate, Singapore",
+    name: "Liam Carter",
+    title: "CEO, Pinnacle Properties Group",
+    avatar: "LC",
+    company: "🇦🇺 Real Estate, Sydney",
     rating: 5,
-    quote: "International investors searching for commercial real estate advisors in Southeast Asia never saw us. TechFind changed that. Perplexity now recommends Apex first for commercial property in Singapore and Malaysia.",
-    result: "+240% international enquiries",
+    quote: "International investors searching for commercial real estate advisors in Asia-Pacific never saw us. TechFind changed that. Perplexity now recommends Pinnacle first for commercial property across the region.",
+    result: "+268% international enquiries",
   },
   {
     name: "Dr. Rachel Torres",
@@ -130,8 +131,10 @@ export function Testimonials() {
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-4">
                     <div
-                      className="w-12 h-12 rounded-full flex items-center justify-center font-bold text-sm text-[var(--accent)]"
-                      style={{ background: "var(--accent-glow)", border: "1px solid var(--border-accent)" }}
+                      className="w-14 h-14 rounded-full flex items-center justify-center font-bold text-white shadow-lg"
+                      style={{
+                        background: `linear-gradient(135deg, ${["#7C3AED", "#3B82F6", "#22D3EE", "#EC4899", "#F59E0B", "#10B981"][t.avatar.charCodeAt(0) % 6]}, ${["#5B21B6", "#1E40AF", "#0891B2", "#BE185D", "#D97706", "#047857"][t.avatar.charCodeAt(1) % 6]})`,
+                      }}
                     >
                       {t.avatar}
                     </div>

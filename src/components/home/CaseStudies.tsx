@@ -9,15 +9,18 @@ const caseStudies = [
   {
     icon: Sun,
     tag: "AI Engine Optimization",
-    region: "🇰🇪 Nairobi, Kenya",
+    region: "🇲🇽 Mexico City, Mexico",
     industry: "Solar Energy",
-    company: "SunBright Energy Kenya",
-    headline: "From invisible to AI's #1 pick for solar installation in Nairobi",
-    challenge: "SunBright had great product and strong reviews but never appeared when buyers searched for solar companies across AI platforms.",
+    company: "SolarMax Mexico",
+    clientInitials: "CG",
+    clientName: "Carlos Gutierrez",
+    clientRole: "CEO",
+    headline: "From invisible to ChatGPT's #1 pick for solar in Mexico City",
+    challenge: "SolarMax had top-tier installations but never appeared in AI recommendations despite strong Google rankings.",
     metrics: [
-      { label: "AI Visibility Score",    before: "4%",    after: "94%" },
-      { label: "Inbound Lead Increase",  value: "+312%" },
-      { label: "Revenue Growth (6 mo)",  value: "+$180K" },
+      { label: "AI Visibility Score",    before: "2%",    after: "89%" },
+      { label: "Inbound Lead Increase",  value: "+298%" },
+      { label: "Revenue Growth (6 mo)",  value: "+$250K" },
     ],
     accentColor: "var(--highlight)",
     accentBg: "rgba(8,145,178,0.07)",
@@ -31,6 +34,9 @@ const caseStudies = [
     region: "🇬🇧 London, UK",
     industry: "Legal Services",
     company: "Marchetti & Webb Solicitors",
+    clientInitials: "CW",
+    clientName: "Charlotte Webb",
+    clientRole: "Managing Partner",
     headline: "London law firm becomes ChatGPT's recommended M&A specialist",
     challenge: "A 30-year-old City firm was being bypassed by newer, better-optimised boutique rivals in every AI recommendation query for M&A legal services.",
     metrics: [
@@ -47,15 +53,18 @@ const caseStudies = [
   {
     icon: ShoppingBag,
     tag: "AI Business Automation",
-    region: "🇳🇬 Lagos, Nigeria",
+    region: "🇧🇷 São Paulo, Brazil",
     industry: "E-Commerce",
-    company: "Zuri Fashion House",
-    headline: "WhatsApp AI agent converts 68% of browsers into buyers — 24/7",
-    challenge: "Zuri's sales team was overwhelmed with WhatsApp inquiries but couldn't respond fast enough — leads went cold and the team burned out.",
+    company: "Moda Brasil Online",
+    clientInitials: "AR",
+    clientName: "Ana Rodrigues",
+    clientRole: "Founder",
+    headline: "WhatsApp AI agent converts 71% of browsers into buyers — 24/7",
+    challenge: "Ana's team was drowning in WhatsApp inquiries across 3 time zones but couldn't respond fast enough — leads went cold.",
     metrics: [
-      { label: "Response Time",              before: "4.2 hrs", after: "< 30 sec" },
-      { label: "WhatsApp Conversion Rate",   before: "12%",     after: "68%" },
-      { label: "Monthly Revenue Uplift",     value: "+$42K" },
+      { label: "Response Time",              before: "3.8 hrs", after: "< 15 sec" },
+      { label: "WhatsApp Conversion Rate",   before: "9%",      after: "71%" },
+      { label: "Monthly Revenue Uplift",     value: "+$58K" },
     ],
     accentColor: "var(--accent)",
     accentBg: "var(--accent-glow)",
@@ -66,15 +75,18 @@ const caseStudies = [
   {
     icon: Building2,
     tag: "AI Engine Optimization",
-    region: "🇸🇬 Singapore",
+    region: "🇦🇺 Sydney, Australia",
     industry: "Commercial Real Estate",
-    company: "Apex Property Group",
-    headline: "Singapore's top commercial broker dominates Perplexity & Gemini results",
-    challenge: "International investors searching for commercial real estate advisors in Southeast Asia were being directed to global names — local expertise was invisible.",
+    company: "Pinnacle Properties Group",
+    clientInitials: "LC",
+    clientName: "Liam Carter",
+    clientRole: "CEO",
+    headline: "Sydney's top commercial broker dominates Perplexity & Gemini in APAC",
+    challenge: "International investors searching for commercial real estate advisors in Asia-Pacific were missing Pinnacle despite their market leadership.",
     metrics: [
-      { label: "AI Visibility (SEA queries)", before: "2%",  after: "78%" },
-      { label: "International Enquiries",     value: "+240%" },
-      { label: "Deal Pipeline Value",         value: "+$2.1M" },
+      { label: "AI Visibility (APAC queries)", before: "4%",  after: "82%" },
+      { label: "International Enquiries",      value: "+268%" },
+      { label: "Deal Pipeline Value",         value: "+$3.2M" },
     ],
     accentColor: "#f59e0b",
     accentBg: "rgba(245,158,11,0.07)",
@@ -88,6 +100,9 @@ const caseStudies = [
     region: "🇺🇸 Austin, TX — USA",
     industry: "Healthcare",
     company: "ClearMind Wellness Clinics",
+    clientInitials: "RT",
+    clientName: "Dr. Rachel Torres",
+    clientRole: "Founder",
     headline: "Mental health clinic chain becomes ChatGPT's top recommendation in Texas",
     challenge: "With 12 clinic locations across Texas, ClearMind had zero AI presence — potential patients searching ChatGPT for therapy providers never saw their name.",
     metrics: [
@@ -107,6 +122,9 @@ const caseStudies = [
     region: "🇩🇪 Berlin, Germany",
     industry: "B2B SaaS",
     company: "Operata GmbH",
+    clientInitials: "TK",
+    clientName: "Tobias Krause",
+    clientRole: "VP Marketing",
     headline: "German HR software brand cited by AI across 7 European markets",
     challenge: "Despite strong product-market fit, Operata was absent from AI answers when European HR directors asked about workforce management software.",
     metrics: [
@@ -205,6 +223,22 @@ export function CaseStudies() {
                     <span className="text-xs text-[var(--muted)] font-medium">{cs.region}</span>
                     <span className="mx-2 text-[var(--border)] text-xs">·</span>
                     <span className="text-xs text-[var(--muted)]">{cs.industry}</span>
+                  </div>
+
+                  {/* Client Info */}
+                  <div className="flex items-center gap-3 mb-4">
+                    <div
+                      className="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white text-sm shadow-md"
+                      style={{
+                        background: `linear-gradient(135deg, ${["#7C3AED", "#3B82F6", "#22D3EE", "#EC4899", "#F59E0B", "#10B981"][cs.clientInitials.charCodeAt(0) % 6]}, ${["#5B21B6", "#1E40AF", "#0891B2", "#BE185D", "#D97706", "#047857"][cs.clientInitials.charCodeAt(1) % 6]})`,
+                      }}
+                    >
+                      {cs.clientInitials}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-xs font-semibold text-[var(--text)]">{cs.clientName}</p>
+                      <p className="text-[10px] text-[var(--muted)]">{cs.clientRole}</p>
+                    </div>
                   </div>
 
                   <p className="text-xs text-[var(--muted)] font-medium mb-2.5">{cs.company}</p>

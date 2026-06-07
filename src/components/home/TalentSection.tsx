@@ -15,7 +15,7 @@ const roles = [
 
 const features = [
   "All talent is pre-vetted and tested",
-  "Africa-based with global standards",
+  "Global team with world-class standards",
   "Available for short-term and long-term",
   "Managed and accountable to TechFind",
   "Plug directly into client projects",

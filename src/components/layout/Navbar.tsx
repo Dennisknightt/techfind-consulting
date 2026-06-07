@@ -178,8 +178,8 @@ export function Navbar() {
           >
             Contact
           </Link>
-          <Link href="/ai-visibility-audit" className="btn-primary text-sm">
-            Book AI Audit
+          <Link href="/audit" className="btn-primary text-sm">
+            Free AI Audit
           </Link>
         </div>
 
@@ -242,11 +242,11 @@ export function Navbar() {
               ))}
               <div className="pt-3 border-t" style={{ borderColor: "var(--border)" }}>
                 <Link
-                  href="/ai-visibility-audit"
+                  href="/audit"
                   onClick={() => setMobileOpen(false)}
                   className="btn-primary w-full justify-center text-sm inline-flex"
                 >
-                  Book AI Visibility Audit
+                  Free AI Audit
                 </Link>
               </div>
             </div>

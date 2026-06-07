@@ -7,6 +7,7 @@ import { CustomCursor } from "@/components/layout/CustomCursor";
 import { ScrollProgress } from "@/components/layout/ScrollProgress";
 import { SmoothScroll } from "@/components/layout/SmoothScroll";
 import { ThemeProvider } from "@/components/layout/ThemeProvider";
+import { SchemaRenderer } from "@/components/home/SchemaRenderer";
 
 /** Outfit — hero display headlines (large, expressive) */
 const outfit = Outfit({
@@ -36,7 +37,7 @@ export const metadata: Metadata = {
   description:
     "TechFind Consulting helps businesses get discovered, understood, cited, and recommended by AI systems like ChatGPT, Gemini, Claude, Perplexity, and Google AI Overviews.",
   keywords:
-    "AI Engine Optimization, AEO, AI visibility, ChatGPT optimization, Gemini optimization, AI search, business AI, Kenya, Africa",
+    "AI Engine Optimization, AEO, AI visibility, ChatGPT optimization, Gemini optimization, Claude optimization, Perplexity optimization, AI search, business AI, global agency",
   openGraph: {
     title: "TechFind Consulting | AI Engine Optimization Agency",
     description:
@@ -56,6 +57,9 @@ export default function RootLayout({
       className={`${outfit.variable} ${geist.variable} ${dmSans.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <SchemaRenderer />
+      </head>
       <body className="bg-bg text-foreground antialiased overflow-x-hidden">
         <ThemeProvider>
           <SmoothScroll>

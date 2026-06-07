@@ -31,10 +31,10 @@ const shifts = [
 
 const queries = [
   "Best hospital near me?", "Trusted law firm for corporate work?",
-  "Top interior designer in Nairobi?", "Best hotel for a business trip?",
+  "Top interior designer in my city?", "Best hotel for a business trip?",
   "Reliable solar installation company?", "Which recruitment agency is best?",
   "Best hospital near me?", "Trusted law firm for corporate work?",
-  "Top interior designer in Nairobi?", "Best hotel for a business trip?",
+  "Top interior designer in my city?", "Best hotel for a business trip?",
   "Reliable solar installation company?", "Which recruitment agency is best?",
 ];
 

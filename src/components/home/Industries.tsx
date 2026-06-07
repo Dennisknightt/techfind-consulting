@@ -6,16 +6,16 @@ import { Sun, Home, Scale, Heart, GraduationCap, Hotel, Palette, Building2, Code
 import Link from "next/link";
 
 const industries = [
-  { icon: Sun,           label: "Solar Companies",    query: '"Best solar installers Kenya?"' },
-  { icon: Home,          label: "Real Estate Firms",  query: '"Top property developers Nairobi?"' },
-  { icon: Scale,         label: "Law Firms",           query: '"Best corporate law firm East Africa?"' },
-  { icon: Heart,         label: "Clinics & Hospitals", query: '"Trusted private hospital in Kenya?"' },
-  { icon: GraduationCap, label: "Schools",             query: '"Top international schools Nairobi?"' },
-  { icon: Hotel,         label: "Hotels & Resorts",   query: '"Best business hotels in Nairobi?"' },
-  { icon: Palette,       label: "Interior Design",    query: '"Luxury interior designers Kenya?"' },
-  { icon: Building2,     label: "Construction",       query: '"Top construction companies Kenya?"' },
-  { icon: Code2,         label: "SaaS Companies",     query: '"Best SaaS HR software Africa?"' },
-  { icon: Users,         label: "Recruitment Firms",  query: '"Top recruitment agencies Kenya?"' },
+  { icon: Sun,           label: "Solar Companies",    query: '"Best solar installers Mexico?"' },
+  { icon: Home,          label: "Real Estate Firms",  query: '"Top property developers Singapore?"' },
+  { icon: Scale,         label: "Law Firms",           query: '"Best corporate law firms London?"' },
+  { icon: Heart,         label: "Clinics & Hospitals", query: '"Trusted private hospitals Austin?"' },
+  { icon: GraduationCap, label: "Schools",             query: '"Top international schools Tokyo?"' },
+  { icon: Hotel,         label: "Hotels & Resorts",   query: '"Best business hotels Paris?"' },
+  { icon: Palette,       label: "Interior Design",    query: '"Luxury interior designers NYC?"' },
+  { icon: Building2,     label: "Construction",       query: '"Top construction companies Dubai?"' },
+  { icon: Code2,         label: "SaaS Companies",     query: '"Best SaaS software Berlin?"' },
+  { icon: Users,         label: "Recruitment Firms",  query: '"Top recruitment agencies Toronto?"' },
 ];
 
 export function Industries() {

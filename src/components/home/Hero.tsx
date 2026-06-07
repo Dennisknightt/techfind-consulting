@@ -2,12 +2,29 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import Image from "next/image";
 import { motion } from "framer-motion";
 import { ArrowRight, Play, Globe2, Brain, TrendingUp, Sparkles } from "lucide-react";
-import { useTheme } from "next-themes";
+import { AnimatedHeroBackground } from "./AnimatedHeroBackground";
+import { AiPlatformBadge } from "./AiPlatformLogo";
 
 const aiPlatforms = ["ChatGPT", "Gemini", "Claude", "Perplexity", "Google AI"];
+
+/* Static particle data — never re-computed, no hydration mismatch */
+const STREAM_PARTICLES = [
+  { top: "22%", dur: 4.5, del: 0.0,  color: 0 },
+  { top: "35%", dur: 5.0, del: 0.35, color: 1 },
+  { top: "48%", dur: 4.7, del: 0.70, color: 2 },
+  { top: "61%", dur: 5.2, del: 1.05, color: 0 },
+  { top: "74%", dur: 4.6, del: 1.40, color: 1 },
+  { top: "18%", dur: 5.1, del: 1.75, color: 2 },
+  { top: "55%", dur: 4.8, del: 2.10, color: 0 },
+  { top: "30%", dur: 5.3, del: 2.45, color: 1 },
+  { top: "68%", dur: 4.5, del: 2.80, color: 2 },
+  { top: "42%", dur: 5.0, del: 3.15, color: 0 },
+  { top: "82%", dur: 4.9, del: 3.50, color: 1 },
+  { top: "12%", dur: 5.2, del: 3.85, color: 2 },
+] as const;
+const STREAM_COLORS = ["var(--accent)", "var(--accent-2)", "var(--highlight)"] as const;
 
 const stats = [
   { icon: Globe2,     value: "80%", label: "of buyers use AI for research" },
@@ -16,67 +33,10 @@ const stats = [
 ];
 
 const floatingBubbles = [
-  { text: "Best solar company in Nairobi?",  delay: 0,   side: "left",  top: "36%" },
-  { text: "Top law firms in East Africa?",   delay: 1.6, side: "right", top: "26%" },
-  { text: "AI-powered HR software Kenya?",   delay: 3.2, side: "right", top: "60%" },
+  { text: "Best solar company in Mexico City?",  delay: 0,   side: "left",  top: "36%" },
+  { text: "Top law firms in London for M&A?",   delay: 1.6, side: "right", top: "26%" },
+  { text: "AI-powered HR software Berlin?",   delay: 3.2, side: "right", top: "60%" },
 ];
-
-/* ─────────────────────────────────────────────────────
-   Globe watermark — crops to the globe half of Logo.png,
-   fills the full hero as a high-visibility blended texture.
-───────────────────────────────────────────────────────── */
-function GlobeWatermark() {
-  const { resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
-  const isDark = mounted && resolvedTheme === "dark";
-
-  return (
-    <div aria-hidden className="absolute inset-0 overflow-hidden pointer-events-none select-none">
-      {/*
-        The PNG layout: [ globe (≈43% width) | text (≈57%) ]
-        Strategy: render the image at 220vw wide so it's massive.
-        translateX(-21.5%) centres the globe's midpoint (21.5% of total)
-        at the viewport centre. The text half drifts far off-screen right.
-        Opacity raised to 0.13 in light, 0.16 in dark — visible but natural.
-        mix-blend-mode: multiply fuses the navy/teal lines with the bg.
-      */}
-      <div
-        className="absolute top-1/2 left-1/2"
-        style={{
-          width: "220vw",
-          transform: "translate(-21.5%, -52%)",
-          opacity: isDark ? 0.16 : 0.13,
-          filter: isDark
-            ? "brightness(0) invert(1)"
-            : "saturate(0.8) brightness(0.9) contrast(1.1)",
-          mixBlendMode: isDark ? "screen" : "multiply",
-          willChange: "transform",
-        }}
-      >
-        <Image
-          src="/Logo.png"
-          alt=""
-          width={2200}
-          height={590}
-          priority
-          className="w-full h-auto"
-          draggable={false}
-        />
-      </div>
-
-      {/* Very soft centre-fade so the text area stays readable */}
-      <div
-        className="absolute inset-0"
-        style={{
-          background: isDark
-            ? "radial-gradient(ellipse 65% 55% at 50% 48%, rgba(7,11,20,0.55) 0%, transparent 80%)"
-            : "radial-gradient(ellipse 65% 55% at 50% 48%, rgba(248,250,252,0.50) 0%, transparent 80%)",
-        }}
-      />
-    </div>
-  );
-}
 
 export function Hero() {
   const [platformIndex, setPlatformIndex] = useState(0);
@@ -98,11 +58,60 @@ export function Hero() {
       className="relative min-h-screen flex flex-col items-center justify-center overflow-hidden pt-24 pb-20"
       style={{ background: "var(--bg)" }}
     >
-      {/* Globe background */}
-      <GlobeWatermark />
+      {/* Animated Hero Background */}
+      <AnimatedHeroBackground />
 
-      {/* Subtle grid */}
-      <div className="absolute inset-0 grid-bg opacity-20 pointer-events-none" />
+      {/* Orbiting Circles */}
+      <div className="absolute top-1/2 left-1/2 w-96 h-96 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+        <div className="absolute inset-0 rounded-full border border-[var(--border)] opacity-10" />
+
+        {/* Orbit 1 - 20s */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0"
+        >
+          <div className="absolute w-4 h-4 rounded-full bg-[var(--accent)] top-0 left-1/2 -translate-x-1/2 shadow-lg"
+            style={{ boxShadow: "0 0 20px var(--accent-glow)" }} />
+        </motion.div>
+
+        {/* Orbit 2 - 26s reverse */}
+        <motion.div
+          animate={{ rotate: -360 }}
+          transition={{ duration: 26, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0"
+        >
+          <div className="absolute w-3 h-3 rounded-full bg-[var(--accent-2)] right-0 top-1/2 -translate-y-1/2 shadow-lg"
+            style={{ boxShadow: "0 0 16px var(--accent-2-glow)" }} />
+        </motion.div>
+
+        {/* Orbit 3 - 16s */}
+        <motion.div
+          animate={{ rotate: 360 }}
+          transition={{ duration: 16, repeat: Infinity, ease: "linear" }}
+          className="absolute inset-0"
+        >
+          <div className="absolute w-4 h-4 rounded-full bg-[var(--highlight)] bottom-0 left-1/2 -translate-x-1/2 shadow-lg"
+            style={{ boxShadow: "0 0 20px rgba(34, 211, 238, 0.4)" }} />
+        </motion.div>
+      </div>
+
+      {/* Particle Stream — CSS-only, no Math.random() in render */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none" aria-hidden="true">
+        {STREAM_PARTICLES.map((p, i) => (
+          <div
+            key={i}
+            className="absolute w-2 h-2 rounded-full"
+            style={{
+              background: STREAM_COLORS[p.color],
+              top: p.top,
+              left: "10%",
+              willChange: "transform, opacity",
+              animation: `stream-particle ${p.dur}s ease-in ${p.del}s infinite`,
+            }}
+          />
+        ))}
+      </div>
 
       {/* Floating query bubbles */}
       {floatingBubbles.map((b, i) => (
@@ -141,7 +150,7 @@ export function Hero() {
         >
           <span className="section-label">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] animate-pulse" />
-            Africa&apos;s First AI Engine Optimization Agency · Global
+            AI Engine Optimization Agency · Trusted Globally
           </span>
         </motion.div>
 
@@ -158,23 +167,22 @@ export function Hero() {
           <span className="gradient-text">Recommended by AI.</span>
         </motion.h1>
 
-        {/* Platform rotator */}
+        {/* Platform rotator with logos */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.75 }}
-          className="flex items-center justify-center gap-3 mb-5 h-8"
+          className="flex items-center justify-center gap-3 mb-5 h-10"
         >
           <span className="text-sm text-[var(--muted)]">Appearing on</span>
-          <motion.span
+          <motion.div
             key={platformIndex}
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -6 }}
             transition={{ duration: 0.22 }}
-            className="text-sm font-semibold text-[var(--accent)] surface px-3 py-1 rounded-full"
           >
-            {aiPlatforms[platformIndex]}
-          </motion.span>
+            <AiPlatformBadge platform={aiPlatforms[platformIndex] as any} />
+          </motion.div>
         </motion.div>
 
         {/* Subheadline */}
@@ -195,13 +203,13 @@ export function Hero() {
           transition={{ delay: 0.95, duration: 0.7 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
-          <Link href="/ai-visibility-audit" className="btn-primary group">
-            Book AI Visibility Audit
+          <Link href="/audit" className="btn-primary group">
+            Get Your Free AI Visibility Audit
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link href="/ai-engine-optimization" className="btn-secondary group">
             <Play className="w-4 h-4 text-[var(--accent)]" />
-            See How AEO Works
+            See How It Works
           </Link>
         </motion.div>
 

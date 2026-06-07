@@ -75,7 +75,7 @@ export function Footer() {
             <div className="flex items-center gap-1.5 mb-5">
               <Globe className="w-3.5 h-3.5 text-[var(--muted)] opacity-50" />
               <span className="text-xs text-[var(--muted)] opacity-50">
-                Nairobi, Kenya · Global Reach
+                Serving 6 Continents · Worldwide Impact
               </span>
             </div>
 
@@ -142,10 +142,10 @@ export function Footer() {
             </p>
           </div>
           <Link
-            href="/ai-visibility-audit"
+            href="/audit"
             className="btn-primary text-sm whitespace-nowrap group inline-flex"
           >
-            Book Your AI Audit
+            Start Free AI Audit
             <ArrowUpRight className="w-4 h-4 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
           </Link>
         </motion.div>

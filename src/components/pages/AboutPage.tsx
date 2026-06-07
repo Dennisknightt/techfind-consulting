@@ -8,7 +8,7 @@ import { Zap, Globe2, Target, Heart } from "lucide-react";
 const values = [
   { icon: Target,  title: "Results Over Vanity",    desc: "We measure success in AI mentions, citations, and leads — not impressions or rankings that don't convert." },
   { icon: Zap,     title: "Speed of AI",             desc: "The AI landscape moves fast. We move faster — constantly updating our methods as AI platforms evolve." },
-  { icon: Globe2,  title: "Africa First. Global Always.", desc: "Built in Nairobi, serving businesses across Africa and the world. Africa deserves world-class AI strategy." },
+  { icon: Globe2,  title: "Global Expertise. Local Impact.", desc: "Serving businesses worldwide from every continent. Every business deserves world-class AI strategy, regardless of location." },
   { icon: Heart,   title: "Client Success = Our Success", desc: "We don't just sell a service. We become invested in your AI visibility as if it were our own brand on the line." },
 ];
 
@@ -29,7 +29,7 @@ export function AboutPage() {
 
         <div className="relative max-w-5xl mx-auto px-6 text-center">
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="inline-block mb-8">
-            <span className="section-label"><Globe2 className="w-3.5 h-3.5" />Africa&apos;s First AEO Agency</span>
+            <span className="section-label"><Globe2 className="w-3.5 h-3.5" />AI Engine Optimization Experts · Global</span>
           </motion.div>
           <motion.h1
             initial={{ opacity: 0, y: 24 }}
@@ -48,7 +48,7 @@ export function AboutPage() {
             transition={{ delay: 0.2 }}
             className="text-[var(--muted)] text-lg max-w-2xl mx-auto leading-relaxed"
           >
-            In 2023, we watched businesses across Africa lose opportunities because AI systems had no idea they existed. We built TechFind to fix that.
+            In 2023, we watched exceptional businesses worldwide lose opportunities because AI systems had no idea they existed. We built TechFind to fix that, everywhere.
           </motion.p>
         </div>
       </section>
@@ -89,10 +89,10 @@ export function AboutPage() {
           >
             <h2 className="text-3xl font-bold text-[var(--text)] mb-6" style={{ fontFamily: "var(--font-space)" }}>Our Story</h2>
             <div className="space-y-4 text-[var(--muted)] leading-relaxed">
-              <p>TechFind Consulting was founded in Nairobi in 2023 by a team of AI engineers, digital strategists, and business operators who kept seeing the same problem: exceptional African businesses invisible to AI systems.</p>
-              <p>We had clients with 5-star ratings, decades of experience, and genuine expertise — but when we asked ChatGPT about their industry, their names never appeared. Their competitors were optimised. They weren&apos;t.</p>
-              <p>So we built the methodology, tested it obsessively, refined it across 50+ engagements, and made it our life&apos;s work to get every great African business the AI visibility it deserves.</p>
-              <p className="text-[var(--text)] font-semibold">AI is the new search engine. We make sure you&apos;re on it.</p>
+              <p>TechFind Consulting was founded in 2023 by a team of AI engineers, digital strategists, and business operators who kept seeing the same problem worldwide: exceptional businesses invisible to AI systems.</p>
+              <p>We had clients with 5-star ratings, decades of experience, and genuine expertise across every continent — but when we asked ChatGPT, Gemini, or Claude about their industry, their names never appeared. Their competitors were optimised. They weren&apos;t.</p>
+              <p>So we built the methodology, tested it obsessively, refined it across 50+ engagements across 6 continents, and made it our life&apos;s work to get every great business the AI visibility it deserves, no matter where they operate.</p>
+              <p className="text-[var(--text)] font-semibold">AI is the new search engine. We make sure you&apos;re on it — everywhere.</p>
             </div>
           </motion.div>
         </div>

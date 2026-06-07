@@ -11,6 +11,7 @@ import { CaseStudies } from "@/components/home/CaseStudies";
 import { Process } from "@/components/home/Process";
 import { Pricing } from "@/components/home/Pricing";
 import { Testimonials } from "@/components/home/Testimonials";
+import { OptimizedFAQ } from "@/components/home/OptimizedFAQ";
 import { FinalCTA } from "@/components/home/FinalCTA";
 
 export default function HomePage() {
@@ -32,6 +33,7 @@ export default function HomePage() {
       <Process />
       <Pricing />
       <Testimonials />
+      <OptimizedFAQ />
       <FinalCTA />
     </div>
   );

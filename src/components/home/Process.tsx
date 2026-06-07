@@ -107,8 +107,8 @@ export function Process() {
           transition={{ delay: 0.65 }}
           className="text-center mt-12"
         >
-          <Link href="/ai-visibility-audit" className="btn-primary group inline-flex">
-            Start Step 1: Book Your Audit
+          <Link href="/audit" className="btn-primary group inline-flex">
+            Get Your Free AI Visibility Audit
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </motion.div>

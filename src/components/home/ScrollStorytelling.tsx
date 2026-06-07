@@ -179,8 +179,8 @@ export function ScrollStorytelling() {
           className="text-center mt-16"
         >
           <p className="text-[var(--muted)] text-sm mb-4">Ready to start the journey?</p>
-          <Link href="/ai-visibility-audit" className="btn-primary group inline-flex">
-            Start with Your AI Audit
+          <Link href="/audit" className="btn-primary group inline-flex">
+            Get Your Free AI Visibility Audit
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
         </motion.div>

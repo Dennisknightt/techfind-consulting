@@ -88,8 +88,8 @@ export function FinalCTA() {
           transition={{ delay: 0.3 }}
           className="mb-10"
         >
-          <Link href="/ai-visibility-audit" className="btn-primary text-base px-8 py-5 group inline-flex">
-            Book Your AI Visibility Audit
+          <Link href="/audit" className="btn-primary text-base px-8 py-5 group inline-flex">
+            Get Your Free AI Visibility Audit
             <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
           </Link>
         </motion.div>

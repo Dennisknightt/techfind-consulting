@@ -44,8 +44,8 @@ export function AeoPageHero() {
           transition={{ delay: 0.3 }}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-14"
         >
-          <Link href="/ai-visibility-audit" className="btn-primary group">
-            Book AI Visibility Audit
+          <Link href="/audit" className="btn-primary group">
+            Check Your AI Visibility Score
             <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
           </Link>
           <Link href="/contact" className="btn-secondary">

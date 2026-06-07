@@ -293,10 +293,23 @@ body {
   pointer-events: none;
   filter: blur(80px);
   will-change: transform;
+  contain: strict;
 }
 .orb-accent  { background: var(--orb-1); }
 .orb-blue    { background: var(--orb-2); }
 .orb-cyan    { background: var(--orb-3); }
+
+/* Promote animated layers to GPU compositor upfront */
+.animate-orb,
+.animate-orb-2,
+.animate-orb-3,
+.animate-float,
+.animate-float-slow,
+.animate-marquee,
+.animate-pulse-glow {
+  will-change: transform;
+  transform: translateZ(0);
+}
 
 /* ─────────────────────────────────────────────
    GRADIENT BORDER (premium card accent)
@@ -330,6 +343,23 @@ body {
   to   { transform: translateX(-50%); }
 }
 .animate-marquee { animation: marquee 32s linear infinite; }
+
+/* ─────────────────────────────────────────────
+   HERO PARTICLE — static keyframe, no JS
+───────────────────────────────────────────── */
+@keyframes hero-particle {
+  0%, 100% { transform: translate(0, 0) scale(1);   opacity: 0; }
+  10%       { opacity: 1; }
+  50%       { transform: translate(30px, -40px) scale(0.8); opacity: 0.6; }
+  90%       { opacity: 0.2; }
+}
+
+@keyframes stream-particle {
+  0%   { transform: translateX(0)    scale(1);   opacity: 0; }
+  8%   { opacity: 0.85; }
+  92%  { opacity: 0.5; }
+  100% { transform: translateX(70vw) scale(0);   opacity: 0; }
+}
 
 /* ─────────────────────────────────────────────
    FLOAT
@@ -386,24 +416,23 @@ body {
 }
 
 /* ─────────────────────────────────────────────
-   THEME TRANSITION — smooth swap on toggle
+   THEME TRANSITION — only on elements that
+   actually need it. Never use * selector for
+   transitions — it causes full-DOM jank.
 ───────────────────────────────────────────── */
-*, *::before, *::after {
+body,
+.surface,
+.surface-hover,
+.btn-primary,
+.btn-secondary,
+.glass,
+.glass-accent,
+.section-label,
+nav,
+footer {
   transition-property: background-color, border-color, color, box-shadow;
   transition-duration: 0.2s;
   transition-timing-function: ease;
-}
-/* Remove transitions from animated elements so they don't look sluggish */
-.animate-orb,
-.animate-orb-2,
-.animate-orb-3,
-.animate-float,
-.animate-float-slow,
-.animate-marquee,
-.animate-pulse-glow,
-.cursor-blink,
-.scroll-progress {
-  transition: none;
 }
 
 /* ─────────────────────────────────────────────
@@ -477,5 +506,55 @@ body {
 @keyframes logo-shimmer {
   0%   { background-position: -200% center; }
   100% { background-position: 200% center; }
+}
+
+/* ─────────────────────────────────────────────
+   ORBITING CIRCLES ANIMATION
+───────────────────────────────────────────── */
+@keyframes orbit-smooth {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes orbit-smooth-reverse {
+  0%   { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+.orbit-container {
+  position: absolute;
+  pointer-events: none;
+}
+
+.orbit-item {
+  animation: orbit-smooth 20s linear infinite;
+}
+
+.orbit-item-reverse {
+  animation: orbit-smooth-reverse 26s linear infinite;
+}
+
+/* ─────────────────────────────────────────────
+   PARTICLE STREAM ANIMATION
+───────────────────────────────────────────── */
+@keyframes particle-stream {
+  0% {
+    transform: translateX(0) translateY(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.8;
+  }
+  90% {
+    opacity: 0.6;
+  }
+  100% {
+    transform: translateX(600px) translateY(50px) scale(0);
+    opacity: 0;
+  }
+}
+
+.particle-element {
+  animation: particle-stream 4.5s ease-in infinite;
 }
 

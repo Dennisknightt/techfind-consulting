@@ -6,11 +6,11 @@ import { BookOpen, Clock, ArrowUpRight } from "lucide-react";
 
 const articles = [
   { tag: "AEO Guide",  title: "What is AI Engine Optimization? The Complete 2025 Guide",   excerpt: "AEO is the practice of making your business discoverable by AI systems. This guide covers everything you need to know about optimizing for ChatGPT, Gemini, and Perplexity.", readTime: "12 min read", date: "May 2025" },
-  { tag: "Strategy",   title: "How African Businesses Can Win the AI Discovery Race",        excerpt: "African businesses are uniquely positioned to capture AI visibility in their markets — but most aren't taking advantage. Here's the strategic playbook.", readTime: "8 min read",  date: "April 2025" },
+  { tag: "Strategy",   title: "Global Businesses Can Win the AI Discovery Race",        excerpt: "Businesses worldwide are uniquely positioned to capture AI visibility in their markets — but most aren't taking advantage. Here's the strategic playbook.", readTime: "8 min read",  date: "April 2025" },
   { tag: "Technical",  title: "Structured Data for AI: Beyond Basic Schema Markup",          excerpt: "Most businesses only implement basic schema. Here's how to use advanced structured data to become a trusted signal for AI knowledge graphs.", readTime: "10 min read", date: "March 2025" },
-  { tag: "Case Study", title: "How We Got a Nairobi Law Firm to Appear in ChatGPT in 90 Days", excerpt: "A step-by-step breakdown of the exact AEO strategy we used to take Kariuki & Associates from AI-invisible to AI-recommended.", readTime: "15 min read", date: "February 2025" },
+  { tag: "Case Study", title: "How We Got a Law Firm to Appear in ChatGPT in 90 Days", excerpt: "A step-by-step breakdown of the exact AEO strategy we used to take a boutique law firm from AI-invisible to AI-recommended.", readTime: "15 min read", date: "February 2025" },
   { tag: "Automation", title: "The WhatsApp AI Agent Stack: What We Use and Why",            excerpt: "Inside our preferred tech stack for building WhatsApp AI agents that qualify leads, answer questions, and close sales at scale.", readTime: "9 min read",  date: "January 2025" },
-  { tag: "Research",   title: "AI Search Behaviour in Africa: 2025 Data Report",             excerpt: "Original research on how buyers across Kenya, Nigeria, South Africa, and Ghana are using AI tools to discover and evaluate businesses.", readTime: "20 min read", date: "December 2024" },
+  { tag: "Research",   title: "AI Search Behaviour Worldwide: 2025 Global Data Report",             excerpt: "Original research on how buyers across multiple continents are using AI tools to discover and evaluate businesses in their regions.", readTime: "20 min read", date: "December 2024" },
 ];
 
 export function InsightsPage() {
