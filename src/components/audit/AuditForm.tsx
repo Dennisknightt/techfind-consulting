@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Globe, Building2, Mail, Phone, BarChart3, MapPin, Sparkles, ShieldCheck, Zap } from "lucide-react";
+import { ArrowRight, Globe, Building2, Mail, Phone, BarChart3, MapPin, Sparkles, ShieldCheck, Zap, Loader2 } from "lucide-react";
 import type { AuditData } from "./AuditFlow";
 
 const industries = [
@@ -24,14 +24,41 @@ const trustItems = [
   { icon: BarChart3,   label: "Trusted by 500+ businesses" },
 ];
 
-interface Props { onSubmit: (data: AuditData) => void; }
+interface Props {
+  onSubmit:    (data: AuditData) => void;
+  serverError?: string | null;
+}
 
-export function AuditForm({ onSubmit }: Props) {
+export function AuditForm({ onSubmit, serverError }: Props) {
   const [form, setForm] = useState<AuditData>({
     websiteUrl: "", companyName: "", email: "",
     industry: "", country: "", phone: "",
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof AuditData, string>>>({});
+  const [errors,    setErrors]    = useState<Partial<Record<keyof AuditData, string>>>({});
+  const [submitting, setSubmitting] = useState(false);
+
+  // Honeypot value — real users never touch this field
+  const [honeypot, setHoneypot] = useState("");
+
+  // Track when the page loaded for bot timing check
+  const loadedAt = useRef(Date.now());
+
+  // Turnstile token (populated by the Cloudflare widget callback if configured)
+  const [turnstileToken, setTurnstileToken] = useState("");
+
+  // Register Turnstile callbacks on the window object
+  useEffect(() => {
+    if (!process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY) return;
+    (window as unknown as Record<string, unknown>).__tfTurnstileSuccess = (token: string) =>
+      setTurnstileToken(token);
+    (window as unknown as Record<string, unknown>).__tfTurnstileExpired = () =>
+      setTurnstileToken("");
+  }, []);
+
+  // Reset submitting state when the server sends back an error
+  useEffect(() => {
+    if (serverError) setSubmitting(false);
+  }, [serverError]);
 
   function validate(): boolean {
     const e: typeof errors = {};
@@ -42,17 +69,35 @@ export function AuditForm({ onSubmit }: Props) {
     if (!form.email.trim()) e.email = "Required";
     else if (!/\S+@\S+\.\S+/.test(form.email)) e.email = "Enter a valid email";
     if (!form.industry) e.industry = "Required";
-    if (!form.country) e.country = "Required";
+    if (!form.country)  e.country  = "Required";
     setErrors(e);
     return Object.keys(e).length === 0;
   }
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    if (submitting) return;  // prevent double-click / double-submit
+
+    // Client-side honeypot check — silently do nothing if filled (bot detected)
+    if (honeypot.length > 0) {
+      setSubmitting(true);
+      setTimeout(() => setSubmitting(false), 3000);  // fake "thinking"
+      return;
+    }
+
     if (!validate()) return;
+
+    setSubmitting(true);
     let url = form.websiteUrl.trim();
     if (!url.startsWith("http")) url = "https://" + url;
-    onSubmit({ ...form, websiteUrl: url });
+
+    onSubmit({
+      ...form,
+      websiteUrl: url,
+      _loadedAt:  loadedAt.current,
+      _token:     turnstileToken || undefined,
+      _hp:        "",  // always empty for real users
+    });
   }
 
   function field(key: keyof AuditData, value: string) {
@@ -99,6 +144,32 @@ export function AuditForm({ onSubmit }: Props) {
           className="surface rounded-3xl p-8 md:p-10 shadow-[var(--shadow-lg)]"
         >
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/*
+              ── Honeypot field ──────────────────────────────────────────
+              Visually hidden from real users; positioned off-screen.
+              Bots that auto-fill fields will populate this.
+              Must NOT use display:none or visibility:hidden — many bots
+              skip those. Use absolute positioning off-screen instead.
+            */}
+            <input
+              type="text"
+              name="website_confirm"
+              value={honeypot}
+              onChange={e => setHoneypot(e.target.value)}
+              tabIndex={-1}
+              autoComplete="off"
+              aria-hidden="true"
+              style={{
+                position:      "absolute",
+                left:          "-9999px",
+                top:           "0",
+                opacity:       0,
+                pointerEvents: "none",
+                height:        "0",
+              }}
+            />
+
             {/* URL */}
             <div>
               <label className="block text-xs font-semibold text-[var(--muted)] mb-2 uppercase tracking-wider">
@@ -226,7 +297,7 @@ export function AuditForm({ onSubmit }: Props) {
                 <Phone className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-[var(--muted)]" />
                 <input
                   type="tel"
-                  placeholder="+1 555 000 0000"
+                  placeholder="+254 700 000 000"
                   value={form.phone}
                   onChange={e => field("phone", e.target.value)}
                   className="w-full pl-11 pr-4 py-3.5 rounded-xl text-sm transition-all outline-none"
@@ -239,9 +310,51 @@ export function AuditForm({ onSubmit }: Props) {
               </div>
             </div>
 
-            <button type="submit" className="btn-primary w-full justify-center py-4 text-base mt-2">
-              Run My Free AI Audit
-              <ArrowRight className="w-5 h-5" />
+            {/* Optional Cloudflare Turnstile widget */}
+            {process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY && (
+              <div
+                className="cf-turnstile"
+                data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY}
+                data-callback="__tfTurnstileSuccess"
+                data-expired-callback="__tfTurnstileExpired"
+                data-theme="auto"
+              />
+            )}
+
+            {/* Server-side error message (rate limit, duplicate, etc.) */}
+            {serverError && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="rounded-xl px-4 py-3 text-sm"
+                style={{
+                  background:   "rgba(239,68,68,0.08)",
+                  border:       "1px solid rgba(239,68,68,0.25)",
+                  color:        "#fca5a5",
+                }}
+              >
+                {serverError}
+              </motion.div>
+            )}
+
+            {/* Submit button — locked while submitting to prevent double-click */}
+            <button
+              type="submit"
+              disabled={submitting}
+              className="btn-primary w-full justify-center py-4 text-base mt-2"
+              style={{ opacity: submitting ? 0.7 : 1, cursor: submitting ? "not-allowed" : "pointer" }}
+            >
+              {submitting ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Checking…
+                </>
+              ) : (
+                <>
+                  Run My Free AI Audit
+                  <ArrowRight className="w-5 h-5" />
+                </>
+              )}
             </button>
           </form>
 
