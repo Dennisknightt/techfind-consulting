@@ -117,9 +117,9 @@ export function AdminSettings() {
             style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--text)" }}
           >
             {[
-              "Europe/London", "Europe/Dublin", "America/New_York",
-              "America/Chicago", "America/Denver", "America/Los_Angeles",
-              "Australia/Sydney", "Asia/Dubai", "Africa/Lagos",
+              "Africa/Nairobi", "Africa/Lagos", "Africa/Johannesburg",
+              "Europe/London", "Europe/Dublin", "Asia/Dubai",
+              "Australia/Sydney", "Asia/Singapore", "America/New_York",
             ].map(tz => <option key={tz} value={tz}>{tz}</option>)}
           </select>
         </div>

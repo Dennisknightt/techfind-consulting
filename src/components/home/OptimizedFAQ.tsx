@@ -44,7 +44,7 @@ const faqData = [
   },
   {
     q: "What industries have you optimized for AEO and what were the results?",
-    a: "We have proven AEO success across diverse industries globally: Solar Energy (SolarMax Mexico - 2% to 89% AI visibility, +298% leads), Legal Services (Marchetti & Webb London - 0 to 51/month ChatGPT citations, +195% enquiries), E-Commerce (Moda Brasil São Paulo - 71% WhatsApp AI conversion rate), Real Estate (Pinnacle Properties Sydney - 4% to 82% AI visibility for APAC), Healthcare (ClearMind Wellness Austin - 0 to 88% AI mention rate, +420% patient enquiries), B2B SaaS (Operata Berlin - 3 to 120 monthly AI citations). Success factors across industries: (1) Authority in your niche, (2) Current, detailed content, (3) Proper technical structure, (4) Strong entity optimization. We tailor the approach to your industry's specific AI discovery patterns globally."
+    a: "We have proven AEO success across diverse industries globally: Solar Energy (SolarMax Mexico - 2% to 89% AI visibility, +298% leads), Legal Services (Marchetti & Webb London - 0 to 51/month ChatGPT citations, +195% enquiries), E-Commerce (Moda Brasil São Paulo - 71% WhatsApp AI conversion rate), Real Estate (Pinnacle Properties Sydney - 4% to 82% AI visibility for APAC), Healthcare (AfyaPlus Wellness Nairobi - 0 to 88% AI mention rate, +420% patient enquiries), B2B SaaS (Operata Berlin - 3 to 120 monthly AI citations). Success factors across industries: (1) Authority in your niche, (2) Current, detailed content, (3) Proper technical structure, (4) Strong entity optimization. We tailor the approach to your industry's specific AI discovery patterns globally."
   },
   {
     q: "How much does AEO optimization cost and what's the ROI?",

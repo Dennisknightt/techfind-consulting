@@ -6,41 +6,41 @@ import { Sparkles, Star, CheckCircle2, TrendingUp, Award } from "lucide-react";
 
 const aiResults = [
   {
-    name: "CoolComfort HVAC Houston",
+    name: "Jua Cool HVAC Nairobi",
     badge: "Top Rated",
     rating: 4.9,
     reviews: 487,
     description:
-      "Premier HVAC services in Houston with 24/7 emergency response. Licensed, insured technicians specializing in residential and commercial cooling systems.",
-    tags: ["AI Recommended", "Licensed", "Houston TX"],
+      "Premier HVAC services in Nairobi with 24/7 emergency response. Licensed, insured technicians specialising in residential and commercial cooling systems.",
+    tags: ["AI Recommended", "Licensed", "Nairobi"],
     badgeColor: "text-[var(--accent-2)] bg-[var(--accent-2-glow)]",
     ringColor: "border-[var(--accent-2)]",
   },
   {
-    name: "Elite Air Solutions",
+    name: "Baridi Air Solutions",
     badge: "Best Value",
     rating: 4.7,
     reviews: 356,
     description:
-      "Affordable HVAC repairs, maintenance, and installation across Greater Houston. Same-day service with upfront pricing and warranty on all work.",
-    tags: ["Verified", "Same-Day Service", "Houston"],
+      "Affordable HVAC repairs, maintenance, and installation across Greater Nairobi. Same-day service with upfront pricing and warranty on all work.",
+    tags: ["Verified", "Same-Day Service", "Nairobi"],
     badgeColor: "text-[var(--accent)] bg-[var(--accent-glow)]",
     ringColor: "border-[var(--accent)]",
   },
   {
-    name: "Precision Climate Control",
+    name: "Precision Climate Kenya",
     badge: "Expert Approved",
     rating: 4.8,
     reviews: 412,
     description:
-      "Commercial and industrial HVAC specialists in Houston. Energy-efficient systems and regular maintenance programs for businesses.",
-    tags: ["Commercial", "Award Winning", "Houston"],
+      "Commercial and industrial HVAC specialists in Nairobi. Energy-efficient systems and regular maintenance programmes for businesses.",
+    tags: ["Commercial", "Award Winning", "Nairobi"],
     badgeColor: "text-[var(--highlight)] bg-[var(--accent-glow)]",
     ringColor: "border-[var(--highlight)]",
   },
 ];
 
-const queryText = "Best HVAC companies in Houston?";
+const queryText = "Best HVAC companies in Nairobi?";
 
 export function AiSearchSimulation() {
   const ref = useRef<HTMLDivElement>(null);
@@ -198,7 +198,7 @@ export function AiSearchSimulation() {
                         className="surface rounded-2xl rounded-tl-sm px-5 py-3.5 mb-4"
                       >
                         <p className="text-sm text-[var(--muted)]">
-                          Here are the top-rated HVAC companies in Houston, based on verified
+                          Here are the top-rated HVAC companies in Nairobi, based on verified
                           reviews, certifications, and trusted industry citations:
                         </p>
                       </div>

@@ -13,8 +13,8 @@ const industries = [
 ];
 
 const countries = [
-  "United States", "United Kingdom", "Canada", "Australia", "South Africa",
-  "Kenya", "Nigeria", "Germany", "France", "Netherlands", "UAE", "Singapore",
+  "Kenya", "Uganda", "Tanzania", "Nigeria", "South Africa", "Ethiopia",
+  "United Kingdom", "Germany", "France", "Netherlands", "UAE", "Singapore",
   "India", "Brazil", "Mexico", "Other",
 ];
 
