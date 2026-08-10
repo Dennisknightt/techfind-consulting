@@ -38,30 +38,65 @@ export type QualData = {
 export type Step = "form" | "analyzing" | "results" | "qualification" | "booking" | "nurture";
 
 function generateScores(data: AuditData): AuditScores {
-  // Deterministic score generation based on domain characteristics
   const seed = data.websiteUrl.length + data.companyName.length;
-  const base = 28 + (seed % 22); // 28–49 base (most businesses have low scores)
+  const base = 28 + (seed % 22);
   return {
-    overall:    base,
-    technical:  Math.min(99, base + 3 + (seed % 12)),
-    entity:     Math.max(10, base - 8 + (seed % 10)),
-    authority:  Math.max(10, base - 5 + (seed % 15)),
+    overall:     base,
+    technical:   Math.min(99, base + 3 + (seed % 12)),
+    entity:      Math.max(10, base - 8 + (seed % 10)),
+    authority:   Math.max(10, base - 5 + (seed % 15)),
     aiReadiness: Math.max(10, base - 12 + (seed % 18)),
-    opportunities: 12 + (seed % 9), // 12–20
+    opportunities: 12 + (seed % 9),
   };
 }
 
 function qualifyLead(qual: QualData): boolean {
-  const budgetOk = ["$1k-$3k", "$3k-$10k", "$10k+"].includes(qual.budget);
+  const budgetOk  = ["$1k-$3k", "$3k-$10k", "$10k+"].includes(qual.budget);
   const decisionOk = qual.isDecisionMaker === "yes";
   const timelineOk = ["immediately", "1-3months"].includes(qual.timeline);
   return budgetOk && decisionOk && timelineOk;
 }
 
+async function submitLead(
+  data: AuditData,
+  scores: AuditScores,
+  qual: QualData,
+  qualified: boolean
+) {
+  try {
+    await fetch("/api/leads", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        companyName:     data.companyName,
+        websiteUrl:      data.websiteUrl,
+        email:           data.email,
+        industry:        data.industry,
+        country:         data.country,
+        phone:           data.phone,
+        overallScore:    scores.overall,
+        technicalScore:  scores.technical,
+        entityScore:     scores.entity,
+        authorityScore:  scores.authority,
+        aiReadinessScore: scores.aiReadiness,
+        opportunities:   scores.opportunities,
+        isDecisionMaker:  qual.isDecisionMaker,
+        budget:           qual.budget,
+        currentMarketing: qual.currentMarketing,
+        timeline:         qual.timeline,
+        revenue:          qual.revenue,
+        qualified,
+      }),
+    });
+  } catch {
+    // Fail silently — don't block the user flow
+  }
+}
+
 export function AuditFlow() {
-  const [step, setStep] = useState<Step>("form");
+  const [step, setStep]         = useState<Step>("form");
   const [auditData, setAuditData] = useState<AuditData | null>(null);
-  const [scores, setScores] = useState<AuditScores | null>(null);
+  const [scores, setScores]     = useState<AuditScores | null>(null);
 
   function handleFormSubmit(data: AuditData) {
     setAuditData(data);
@@ -72,12 +107,12 @@ export function AuditFlow() {
     }, 3800);
   }
 
-  function handleQualSubmit(qual: QualData) {
-    if (qualifyLead(qual)) {
-      setStep("booking");
-    } else {
-      setStep("nurture");
+  async function handleQualSubmit(qual: QualData) {
+    const qualified = qualifyLead(qual);
+    if (auditData && scores) {
+      await submitLead(auditData, scores, qual, qualified);
     }
+    setStep(qualified ? "booking" : "nurture");
   }
 
   return (

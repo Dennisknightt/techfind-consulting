@@ -2,22 +2,11 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Kanban, List, MoreHorizontal } from "lucide-react";
+import { Kanban, List, RefreshCw, ExternalLink } from "lucide-react";
+import { useLeads } from "../useLeads";
+import type { LeadStage } from "@/lib/store";
 
-type Stage = "Discovered" | "Audited" | "Qualified" | "Outreach Sent" | "Responded" |
-             "Meeting Booked" | "Proposal Sent" | "Negotiation" | "Won" | "Lost" | "Nurture";
-
-type Lead = {
-  id: number;
-  company: string;
-  industry: string;
-  score: number;
-  grade: string;
-  stage: Stage;
-  value: number;
-};
-
-const stageColors: Record<Stage, string> = {
+const stageColors: Record<LeadStage, string> = {
   "Discovered":     "#6b7280",
   "Audited":        "#8b5cf6",
   "Qualified":      "#3b82f6",
@@ -31,22 +20,14 @@ const stageColors: Record<Stage, string> = {
   "Nurture":        "#6b7280",
 };
 
-const stageOrder: Stage[] = [
-  "Discovered", "Audited", "Qualified", "Outreach Sent", "Responded",
-  "Meeting Booked", "Proposal Sent", "Negotiation", "Won", "Lost", "Nurture",
+const pipelineStages: LeadStage[] = [
+  "Audited", "Qualified", "Outreach Sent", "Responded",
+  "Meeting Booked", "Proposal Sent", "Negotiation", "Won",
 ];
 
-const initialLeads: Lead[] = [
-  { id: 1,  company: "Summit HVAC",      industry: "HVAC",       score: 94, grade: "A+", stage: "Meeting Booked",  value: 14400 },
-  { id: 2,  company: "LexGroup Law",     industry: "Legal",      score: 92, grade: "A+", stage: "Outreach Sent",   value: 14400 },
-  { id: 3,  company: "Premier Dental",   industry: "Dental",     score: 91, grade: "A+", stage: "Proposal Sent",   value: 10800 },
-  { id: 4,  company: "Bright Solar",     industry: "Solar",      score: 88, grade: "A",  stage: "Responded",       value: 14400 },
-  { id: 5,  company: "Atlas Roofing",    industry: "Roofing",    score: 82, grade: "A",  stage: "Qualified",       value: 10800 },
-  { id: 6,  company: "ProPlumb Co",      industry: "Plumbing",   score: 78, grade: "B",  stage: "Audited",         value: 10800 },
-  { id: 7,  company: "GreenLawn Pro",    industry: "Landscaping",score: 65, grade: "N",  stage: "Nurture",         value: 0 },
-  { id: 8,  company: "Nexus IT",         industry: "IT",         score: 87, grade: "A",  stage: "Negotiation",     value: 14400 },
-  { id: 9,  company: "ClearPath Law",    industry: "Legal",      score: 89, grade: "A",  stage: "Won",             value: 14400 },
-  { id: 10, company: "Apex Accounting",  industry: "Accounting", score: 83, grade: "A",  stage: "Meeting Booked",  value: 10800 },
+const allStages: LeadStage[] = [
+  "Discovered","Audited","Qualified","Outreach Sent","Responded",
+  "Meeting Booked","Proposal Sent","Negotiation","Won","Lost","Nurture",
 ];
 
 function gradeColor(g: string) {
@@ -57,20 +38,12 @@ function gradeColor(g: string) {
 }
 
 export function CRMPipeline() {
-  const [leads, setLeads] = useState(initialLeads);
+  const { leads, loading, updateStage, refresh } = useLeads();
   const [view, setView] = useState<"kanban" | "table">("kanban");
-  const [dragging, setDragging] = useState<number | null>(null);
 
-  function moveStage(id: number, direction: number) {
-    setLeads(prev => prev.map(l => {
-      if (l.id !== id) return l;
-      const idx = stageOrder.indexOf(l.stage);
-      const next = stageOrder[Math.max(0, Math.min(stageOrder.length - 1, idx + direction))];
-      return { ...l, stage: next };
-    }));
-  }
-
-  const pipelineStages: Stage[] = ["Qualified", "Outreach Sent", "Responded", "Meeting Booked", "Proposal Sent", "Negotiation", "Won"];
+  const activeLeads  = leads.filter(l => !["Lost","Nurture"].includes(l.stage));
+  const wonLeads     = leads.filter(l => l.stage === "Won");
+  const pipelineVal  = activeLeads.length * 1200;
 
   return (
     <div className="p-6 md:p-8 space-y-6">
@@ -79,51 +52,61 @@ export function CRMPipeline() {
           <h1 className="text-2xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
             CRM Pipeline
           </h1>
-          <p className="text-sm text-[var(--muted)] mt-1">Track every lead from discovery to closed client</p>
+          <p className="text-sm text-[var(--muted)] mt-1">Real-time lead tracking from audit submission to closed client</p>
         </div>
         <div className="flex items-center gap-2">
-          {[
-            { key: "kanban", icon: Kanban, label: "Kanban" },
-            { key: "table",  icon: List,   label: "Table" },
-          ].map(({ key, icon: Icon, label }) => (
-            <button
-              key={key}
-              onClick={() => setView(key as "kanban" | "table")}
+          <button onClick={refresh} className="p-2 rounded-xl"
+            style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--muted)" }}>
+            <RefreshCw className="w-4 h-4" />
+          </button>
+          {["kanban","table"].map(v => (
+            <button key={v} onClick={() => setView(v as "kanban"|"table")}
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-sm transition-all"
               style={{
-                background: view === key ? "var(--accent-glow)" : "var(--card-hover)",
-                border: `1px solid ${view === key ? "var(--border-accent)" : "var(--border)"}`,
-                color: view === key ? "var(--accent)" : "var(--muted)",
-              }}
-            >
-              <Icon className="w-4 h-4" />
-              {label}
+                background: view === v ? "var(--accent-glow)" : "var(--card-hover)",
+                border: `1px solid ${view === v ? "var(--border-accent)" : "var(--border)"}`,
+                color: view === v ? "var(--accent)" : "var(--muted)",
+              }}>
+              {v === "kanban" ? <Kanban className="w-4 h-4" /> : <List className="w-4 h-4" />}
+              <span className="capitalize">{v}</span>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Pipeline value summary */}
+      {/* Summary cards */}
       <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Total Pipeline",   value: `$${(leads.filter(l => !["Lost","Nurture","Discovered","Audited"].includes(l.stage)).reduce((s, l) => s + l.value, 0) / 1000).toFixed(0)}K` },
-          { label: "Won (This Month)", value: `$${(leads.filter(l => l.stage === "Won").reduce((s, l) => s + l.value, 0) / 1000).toFixed(0)}K` },
-          { label: "Active Deals",     value: leads.filter(l => pipelineStages.includes(l.stage)).length.toString() },
+          { label: "Total Leads",      value: leads.length },
+          { label: "Active Pipeline",  value: `$${(pipelineVal/1000).toFixed(0)}K` },
+          { label: "Won This Session", value: wonLeads.length },
         ].map(({ label, value }) => (
           <div key={label} className="surface rounded-2xl p-4 text-center">
-            <p className="text-2xl font-bold text-[var(--text)] mb-1" style={{ fontFamily: "var(--font-space)" }}>{value}</p>
+            <p className="text-2xl font-bold text-[var(--text)] mb-1" style={{ fontFamily: "var(--font-space)" }}>
+              {loading ? "—" : value}
+            </p>
             <p className="text-xs text-[var(--muted)]">{label}</p>
           </div>
         ))}
       </div>
 
-      {view === "kanban" ? (
-        /* Kanban board — horizontal scroll */
+      {/* Empty state */}
+      {!loading && leads.length === 0 && (
+        <div className="surface rounded-2xl p-10 text-center">
+          <p className="text-2xl mb-3">📋</p>
+          <p className="font-bold text-[var(--text)] mb-1">Pipeline is empty</p>
+          <p className="text-sm text-[var(--muted)]">Leads from your /audit page will appear here automatically</p>
+        </div>
+      )}
+
+      {/* Kanban */}
+      {leads.length > 0 && view === "kanban" && (
         <div className="overflow-x-auto pb-4">
           <div className="flex gap-4 min-w-max">
             {pipelineStages.map(stage => {
               const stageLeads = leads.filter(l => l.stage === stage);
               const color = stageColors[stage];
+              const idx = allStages.indexOf(stage);
               return (
                 <div key={stage} className="w-56 shrink-0">
                   <div className="flex items-center justify-between mb-3">
@@ -133,98 +116,113 @@ export function CRMPipeline() {
                     </div>
                     <span className="text-xs text-[var(--muted)]">{stageLeads.length}</span>
                   </div>
-                  <div className="space-y-2.5 min-h-32">
+                  <div className="space-y-2.5 min-h-24">
                     {stageLeads.map(lead => (
-                      <motion.div
-                        key={lead.id}
-                        layout
-                        className="surface rounded-xl p-3.5 cursor-grab"
-                        style={{ border: `1px solid var(--border)` }}
-                      >
-                        <div className="flex items-start justify-between mb-2">
-                          <p className="text-xs font-semibold text-[var(--text)] leading-tight">{lead.company}</p>
-                          <button className="opacity-50 hover:opacity-100">
-                            <MoreHorizontal className="w-3.5 h-3.5 text-[var(--muted)]" />
-                          </button>
+                      <motion.div key={lead.id} layout
+                        className="surface rounded-xl p-3.5"
+                        style={{ border: "1px solid var(--border)" }}>
+                        <div className="flex items-start justify-between mb-1.5">
+                          <p className="text-xs font-semibold text-[var(--text)] leading-tight">{lead.companyName}</p>
+                          <span className="text-[10px] font-bold ml-1 shrink-0"
+                            style={{ color: gradeColor(lead.grade) }}>{lead.grade}</span>
                         </div>
-                        <p className="text-[10px] text-[var(--muted)] mb-2">{lead.industry}</p>
-                        <div className="flex items-center justify-between">
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
-                            style={{ background: `${gradeColor(lead.grade)}22`, color: gradeColor(lead.grade) }}>
-                            {lead.grade}
+                        <p className="text-[10px] text-[var(--muted)] mb-2">{lead.industry} · {lead.country}</p>
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className="text-[10px] font-bold" style={{ color: gradeColor(lead.grade) }}>
+                            {lead.overallScore}/100
                           </span>
-                          {lead.value > 0 && (
-                            <span className="text-[10px] text-[var(--muted)]">
-                              ${(lead.value / 1000).toFixed(1)}K/yr
-                            </span>
+                          {lead.email && (
+                            <a href={`mailto:${lead.email}`}
+                              className="text-[10px] text-[var(--accent)] hover:underline flex items-center gap-0.5">
+                              Email <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
                           )}
                         </div>
-                        <div className="flex gap-1 mt-2.5">
+                        <div className="flex gap-1">
                           <button
-                            onClick={() => moveStage(lead.id, -1)}
-                            className="flex-1 text-[10px] py-1 rounded-lg transition-all"
-                            style={{ background: "var(--card-hover)", color: "var(--muted)" }}
-                          >← Back</button>
+                            onClick={() => idx > 0 && updateStage(lead.id, allStages[idx - 1])}
+                            disabled={idx === 0}
+                            className="flex-1 text-[10px] py-1 rounded-lg transition-all disabled:opacity-30"
+                            style={{ background: "var(--card-hover)", color: "var(--muted)" }}>
+                            ← Back
+                          </button>
                           <button
-                            onClick={() => moveStage(lead.id, 1)}
-                            className="flex-1 text-[10px] py-1 rounded-lg transition-all"
-                            style={{ background: "var(--accent-glow)", color: "var(--accent)" }}
-                          >Next →</button>
+                            onClick={() => idx < allStages.length - 1 && updateStage(lead.id, allStages[idx + 1])}
+                            disabled={idx >= allStages.length - 1}
+                            className="flex-1 text-[10px] py-1 rounded-lg transition-all disabled:opacity-30"
+                            style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>
+                            Next →
+                          </button>
                         </div>
                       </motion.div>
                     ))}
+                    {stageLeads.length === 0 && (
+                      <div className="rounded-xl border-2 border-dashed flex items-center justify-center h-16"
+                        style={{ borderColor: "var(--border)" }}>
+                        <span className="text-[10px] text-[var(--muted)]">Empty</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               );
             })}
           </div>
         </div>
-      ) : (
-        /* Table view */
+      )}
+
+      {/* Table view */}
+      {leads.length > 0 && view === "table" && (
         <div className="surface rounded-2xl overflow-hidden">
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-                  {["Company", "Industry", "Score", "Grade", "Stage", "Value/yr", "Actions"].map(h => (
+                  {["Company", "Industry", "Score", "Grade", "Budget", "Email", "Stage", "Move"].map(h => (
                     <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider"
                       style={{ color: "var(--muted)" }}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
-                {leads.map((l, i) => (
-                  <tr key={i} className="border-b last:border-0 hover:bg-[var(--card-hover)] transition-colors"
-                    style={{ borderColor: "var(--border)" }}>
-                    <td className="px-5 py-3 font-medium text-[var(--text)]">{l.company}</td>
-                    <td className="px-5 py-3 text-[var(--muted)]">{l.industry}</td>
-                    <td className="px-5 py-3 font-bold text-[var(--text)]">{l.score}</td>
-                    <td className="px-5 py-3">
-                      <span className="px-2.5 py-1 rounded-full text-xs font-bold"
-                        style={{ background: `${gradeColor(l.grade)}22`, color: gradeColor(l.grade) }}>
-                        {l.grade}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3">
-                      <span className="px-2.5 py-1 rounded-full text-xs"
-                        style={{ background: `${stageColors[l.stage]}22`, color: stageColors[l.stage] }}>
-                        {l.stage}
-                      </span>
-                    </td>
-                    <td className="px-5 py-3 text-[var(--muted)]">
-                      {l.value > 0 ? `$${(l.value / 1000).toFixed(1)}K` : "—"}
-                    </td>
-                    <td className="px-5 py-3">
-                      <div className="flex gap-1">
-                        <button onClick={() => moveStage(l.id, 1)}
-                          className="text-xs px-2.5 py-1 rounded-lg"
-                          style={{ background: "var(--accent-glow)", color: "var(--accent)" }}>
-                          Advance →
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
+                {leads.map((l, i) => {
+                  const idx = allStages.indexOf(l.stage);
+                  return (
+                    <tr key={l.id}
+                      className="border-b last:border-0 hover:bg-[var(--card-hover)] transition-colors"
+                      style={{ borderColor: "var(--border)" }}>
+                      <td className="px-5 py-3 font-medium text-[var(--text)]">{l.companyName}</td>
+                      <td className="px-5 py-3 text-[var(--muted)]">{l.industry}</td>
+                      <td className="px-5 py-3 font-bold" style={{ color: gradeColor(l.grade) }}>{l.overallScore}</td>
+                      <td className="px-5 py-3">
+                        <span className="px-2.5 py-1 rounded-full text-xs font-bold"
+                          style={{ background: `${gradeColor(l.grade)}22`, color: gradeColor(l.grade) }}>
+                          {l.grade}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3 text-xs text-[var(--muted)]">{l.budget ?? "—"}</td>
+                      <td className="px-5 py-3">
+                        <a href={`mailto:${l.email}`} className="text-xs text-[var(--accent)] hover:underline">
+                          {l.email}
+                        </a>
+                      </td>
+                      <td className="px-5 py-3">
+                        <span className="text-xs px-2 py-0.5 rounded-full"
+                          style={{ background: `${stageColors[l.stage]}22`, color: stageColors[l.stage] }}>
+                          {l.stage}
+                        </span>
+                      </td>
+                      <td className="px-5 py-3">
+                        <select
+                          value={l.stage}
+                          onChange={e => updateStage(l.id, e.target.value as LeadStage)}
+                          className="text-xs px-2 py-1.5 rounded-lg outline-none"
+                          style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--text)" }}>
+                          {allStages.map(s => <option key={s} value={s}>{s}</option>)}
+                        </select>
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>

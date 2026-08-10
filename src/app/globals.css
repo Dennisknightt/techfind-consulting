@@ -98,8 +98,41 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ─── CUSTOM CURSOR: suppress native cursor everywhere ─────────────
+   body { cursor: none } is only inherited — any element with an
+   explicit cursor value (cursor: pointer, cursor: default, etc.)
+   overrides it. We must defeat every explicit value directly.
+   Strategy: same-specificity override, declared AFTER the conflicting
+   rules → cascade source-order wins, no !important needed.
+   Touch/coarse devices are restored below. ─────────────────────── */
+
+/* Element-level overrides (specificity 0,0,1) */
+html, a, button, input, select, textarea, label, summary,
+[role="button"], [tabindex]:not([tabindex="-1"]) {
+  cursor: none;
+}
+
+/* Class-level overrides — must match .btn-primary/.btn-secondary
+   specificity (0,1,0) so cascade order beats them */
+.btn-primary,
+.btn-secondary,
+.cursor-pointer,
+.cursor-default,
+.cursor-text,
+.cursor-not-allowed,
+.cursor-auto,
+.cursor-crosshair,
+.cursor-move,
+.cursor-grab,
+.cursor-grabbing {
+  cursor: none;
+}
+
+/* Touch / stylus — restore native cursor completely */
 @media (pointer: coarse) {
-  body { cursor: auto; }
+  html, body, *, *::before, *::after {
+    cursor: auto !important;
+  }
 }
 
 /* ─────────────────────────────────────────────
@@ -207,7 +240,7 @@ body {
   font-size: 0.9375rem;
   line-height: 1;
   border: none;
-  cursor: pointer;
+  cursor: none;
   position: relative;
   overflow: hidden;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -239,7 +272,7 @@ body {
   font-weight: 500;
   font-size: 0.9375rem;
   border: 1px solid var(--border);
-  cursor: pointer;
+  cursor: none;
   transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 .btn-secondary:hover {

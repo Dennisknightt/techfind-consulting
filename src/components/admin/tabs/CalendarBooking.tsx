@@ -1,150 +1,220 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
-import { Calendar, CheckCircle2, ArrowRight, Clock, Star, TrendingUp, FileText, Users } from "lucide-react";
+import { Calendar, CheckCircle2, Star, TrendingUp, FileText, Users, Settings, ExternalLink, RefreshCw } from "lucide-react";
+import { useLeads } from "../useLeads";
 
-const meetings = [
-  {
-    company: "Summit HVAC",
-    contact: "James Ortega",
-    date: "Jun 10, 2026 · 9:00 AM CST",
-    score: 94,
-    grade: "A+",
-    package: "AEO Growth Partner ($1,200/mo)",
-    closeProbability: 78,
-    salesAngle: "Competitor Apex HVAC shows in ChatGPT for all 12 target queries. Summit appears in 0. Show the screenshot — let the data do the talking.",
-    brief: "James runs a $2.8M/yr HVAC business in Dallas. Been in business 11 years. Currently spending $2K/mo on Google Ads. No SEO. No AI strategy. Very active on Google reviews (4.9★, 312 reviews). His biggest competitor is Apex HVAC who dominates AI search.",
-  },
-  {
-    company: "LexGroup Law",
-    contact: "Priya Singh",
-    date: "Jun 11, 2026 · 2:00 PM EST",
-    score: 92,
-    grade: "A+",
-    package: "AEO Growth Partner ($1,200/mo)",
-    closeProbability: 71,
-    salesAngle: "Priya's firm focuses on M&A and corporate law. Major AI gap in 'M&A lawyer [city]' queries. Show entity gap report.",
-    brief: "Priya is managing partner at LexGroup, a 12-partner corporate law firm. $8M revenue. Marketing spend $5K/mo (mostly LinkedIn). Very competitive market in Chicago.",
-  },
-];
+/* ── Load Calendly widget script once ─────────────────────────────── */
+function useCalendlyScript() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (document.getElementById("calendly-script")) { setReady(true); return; }
+    const script = document.createElement("script");
+    script.id  = "calendly-script";
+    script.src = "https://assets.calendly.com/assets/external/widget.js";
+    script.async = true;
+    script.onload = () => setReady(true);
+    document.head.appendChild(script);
 
-const gradeColor = (g: string) => g === "A+" ? "#10b981" : "#3b82f6";
+    const link = document.createElement("link");
+    link.rel  = "stylesheet";
+    link.href = "https://assets.calendly.com/assets/external/widget.css";
+    document.head.appendChild(link);
+  }, []);
+  return ready;
+}
+
+function gradeColor(g: string) {
+  if (g === "A+") return "#10b981";
+  if (g === "A")  return "#3b82f6";
+  return "#6b7280";
+}
 
 export function CalendarBooking() {
+  const { leads, loading, refresh } = useLeads();
+  useCalendlyScript(); // loads Calendly widget.js + CSS into the page
+  const [calendlyUrl, setCalendlyUrl] = useState("");
+  const [showEmbed, setShowEmbed] = useState<string | null>(null); // lead id
+
+  // Load saved Calendly URL from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem("tf_calendly_url") ?? "";
+    setCalendlyUrl(saved);
+  }, []);
+
+  function saveCalendlyUrl(url: string) {
+    setCalendlyUrl(url);
+    localStorage.setItem("tf_calendly_url", url);
+  }
+
+  // Qualified leads (A+ or A) eligible for booking
+  const qualifiedLeads = leads.filter(l =>
+    (l.grade === "A+" || l.grade === "A") && l.qualified
+  );
+  const meetingLeads = leads.filter(l => l.stage === "Meeting Booked");
+
   return (
     <div className="p-6 md:p-8 space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
-          Calendar & Booking
-        </h1>
-        <p className="text-sm text-[var(--muted)] mt-1">
-          Only qualified leads (A+ and A grade) access booking. Pre-call briefs auto-generated.
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
+            Calendar & Booking
+          </h1>
+          <p className="text-sm text-[var(--muted)] mt-1">
+            Only A+ and A qualified leads can book. Live Calendly embed.
+          </p>
+        </div>
+        <button onClick={refresh} className="p-2 rounded-xl"
+          style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--muted)" }}>
+          <RefreshCw className="w-4 h-4" />
+        </button>
       </div>
 
-      {/* Integration cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      {/* Calendly URL config */}
+      <div className="surface rounded-2xl p-6">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{ background: "var(--accent-glow)" }}>
+            <Calendar className="w-4 h-4" style={{ color: "var(--accent)" }} />
+          </div>
+          <h2 className="font-semibold text-[var(--text)]">Calendly Integration</h2>
+          {calendlyUrl && (
+            <span className="ml-auto text-xs font-semibold text-emerald-400 flex items-center gap-1">
+              <CheckCircle2 className="w-3.5 h-3.5" /> Connected
+            </span>
+          )}
+        </div>
+        <div className="flex gap-3">
+          <input
+            type="url"
+            value={calendlyUrl}
+            onChange={e => saveCalendlyUrl(e.target.value)}
+            placeholder="https://calendly.com/yourname/strategy-call"
+            className="flex-1 px-4 py-2.5 rounded-xl text-sm outline-none"
+            style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--text)" }}
+          />
+          {calendlyUrl && (
+            <a href={calendlyUrl} target="_blank" rel="noopener noreferrer"
+              className="btn-secondary text-sm gap-1.5 inline-flex items-center">
+              Preview <ExternalLink className="w-3.5 h-3.5" />
+            </a>
+          )}
+        </div>
+        {!calendlyUrl && (
+          <p className="text-xs text-[var(--muted)] mt-2">
+            Paste your Calendly event URL above. Qualified leads will book directly through the embedded calendar.
+          </p>
+        )}
+      </div>
+
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-4">
         {[
-          { label: "Calendly", connected: false, desc: "Embed your Calendly scheduling link" },
-          { label: "Google Calendar", connected: false, desc: "Connect your Google Calendar directly" },
-        ].map(({ label, connected, desc }) => (
-          <div key={label} className="surface rounded-2xl p-5 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                style={{ background: "var(--card-hover)" }}>
-                <Calendar className="w-5 h-5" style={{ color: "var(--accent)" }} />
-              </div>
-              <div>
-                <p className="font-semibold text-sm text-[var(--text)]">{label}</p>
-                <p className="text-xs text-[var(--muted)]">{desc}</p>
-              </div>
-            </div>
-            <button className={connected ? "btn-secondary text-xs" : "btn-primary text-xs"}>
-              {connected ? "Connected ✓" : "Connect"}
-            </button>
+          { label: "Qualified for Booking", value: qualifiedLeads.length },
+          { label: "Meetings Booked",        value: meetingLeads.length },
+          { label: "Total Leads",            value: leads.length },
+        ].map(({ label, value }) => (
+          <div key={label} className="surface rounded-2xl p-4 text-center">
+            <p className="text-2xl font-bold text-[var(--text)] mb-1" style={{ fontFamily: "var(--font-space)" }}>
+              {loading ? "—" : value}
+            </p>
+            <p className="text-xs text-[var(--muted)]">{label}</p>
           </div>
         ))}
       </div>
 
-      {/* Upcoming meetings */}
-      <div>
-        <h2 className="font-bold text-[var(--text)] mb-4">Upcoming Strategy Calls</h2>
+      {/* Qualified leads list */}
+      {qualifiedLeads.length === 0 && !loading ? (
+        <div className="surface rounded-2xl p-10 text-center">
+          <p className="text-2xl mb-3">📅</p>
+          <p className="font-bold text-[var(--text)] mb-1">No qualified leads yet</p>
+          <p className="text-sm text-[var(--muted)]">
+            A+ and A graded leads who pass qualification will appear here ready for booking
+          </p>
+        </div>
+      ) : (
         <div className="space-y-4">
-          {meetings.map((m, i) => (
-            <motion.div
-              key={i}
+          <h2 className="font-bold text-[var(--text)]">Qualified for Strategy Call ({qualifiedLeads.length})</h2>
+          {qualifiedLeads.map((lead, i) => (
+            <motion.div key={lead.id}
               initial={{ opacity: 0, y: 16 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="surface rounded-2xl overflow-hidden"
-            >
+              transition={{ delay: i * 0.07 }}
+              className="surface rounded-2xl overflow-hidden">
+
               {/* Header */}
               <div className="flex items-center justify-between px-6 py-4 border-b"
                 style={{ borderColor: "var(--border)" }}>
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-                    style={{ background: `${gradeColor(m.grade)}22` }}>
-                    <Users className="w-5 h-5" style={{ color: gradeColor(m.grade) }} />
+                    style={{ background: `${gradeColor(lead.grade)}22` }}>
+                    <Users className="w-5 h-5" style={{ color: gradeColor(lead.grade) }} />
                   </div>
                   <div>
-                    <p className="font-bold text-[var(--text)]">{m.company}</p>
-                    <p className="text-xs text-[var(--muted)]">{m.contact}</p>
+                    <p className="font-bold text-[var(--text)]">{lead.companyName}</p>
+                    <p className="text-xs text-[var(--muted)]">{lead.email} · {lead.country}</p>
                   </div>
                 </div>
-                <div className="text-right">
-                  <div className="flex items-center gap-1.5 justify-end mb-0.5">
-                    <Clock className="w-3.5 h-3.5" style={{ color: "var(--muted)" }} />
-                    <span className="text-xs text-[var(--muted)]">{m.date}</span>
-                  </div>
+                <div className="flex items-center gap-2">
                   <span className="px-2.5 py-1 rounded-full text-xs font-bold"
-                    style={{ background: `${gradeColor(m.grade)}22`, color: gradeColor(m.grade) }}>
-                    Grade {m.grade}
+                    style={{ background: `${gradeColor(lead.grade)}22`, color: gradeColor(lead.grade) }}>
+                    Grade {lead.grade}
                   </span>
                 </div>
               </div>
 
-              {/* Brief */}
-              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: "var(--muted)" }}>
-                    Company Brief
-                  </p>
-                  <p className="text-sm text-[var(--muted)] leading-relaxed">{m.brief}</p>
+              {/* Details */}
+              <div className="p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  {[
+                    { icon: Star,       label: "AI Score",    val: `${lead.overallScore}/100` },
+                    { icon: TrendingUp, label: "Industry",    val: lead.industry },
+                    { icon: FileText,   label: "Budget",      val: lead.budget ?? "Not stated" },
+                    { icon: CheckCircle2, label: "Timeline",  val: lead.timeline ?? "—" },
+                  ].map(({ icon: Icon, label, val }) => (
+                    <div key={label} className="flex items-center gap-2 text-sm">
+                      <Icon className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--muted)" }} />
+                      <span className="text-[var(--muted)]">{label}:</span>
+                      <span className="font-semibold text-[var(--text)]">{val}</span>
+                    </div>
+                  ))}
                 </div>
-                <div className="space-y-3">
-                  <div>
-                    <p className="text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "var(--muted)" }}>
-                      Suggested Sales Angle
-                    </p>
-                    <p className="text-sm text-[var(--text)] leading-relaxed">{m.salesAngle}</p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Star className="w-3.5 h-3.5" style={{ color: "var(--accent)" }} />
-                    <span className="text-xs text-[var(--muted)]">Lead score: <strong className="text-[var(--text)]">{m.score}</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
-                    <span className="text-xs text-[var(--muted)]">Close probability: <strong className="text-emerald-400">{m.closeProbability}%</strong></span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-3.5 h-3.5" style={{ color: "var(--accent-2)" }} />
-                    <span className="text-xs text-[var(--muted)]">Recommend: <strong className="text-[var(--text)]">{m.package}</strong></span>
-                  </div>
-                  <div className="flex gap-2 mt-3">
-                    <button className="btn-primary text-xs flex-1 justify-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Mark Complete
-                    </button>
-                    <button className="btn-secondary text-xs flex-1 justify-center gap-1.5">
-                      <FileText className="w-3.5 h-3.5" /> Create Proposal
-                      <ArrowRight className="w-3.5 h-3.5" />
-                    </button>
-                  </div>
+
+                {/* Calendly embed or prompt */}
+                <div>
+                  {calendlyUrl ? (
+                    showEmbed === lead.id ? (
+                      <div className="rounded-xl overflow-hidden border" style={{ borderColor: "var(--border)" }}>
+                        <div
+                          className="calendly-inline-widget"
+                          data-url={`${calendlyUrl}?name=${encodeURIComponent(lead.companyName)}&email=${encodeURIComponent(lead.email)}&a1=${lead.overallScore}`}
+                          style={{ minWidth: "100%", height: 420 }}
+                        />
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setShowEmbed(lead.id)}
+                        className="btn-primary w-full justify-center gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Book Strategy Call for {lead.companyName}
+                      </button>
+                    )
+                  ) : (
+                    <div className="rounded-xl p-5 flex flex-col items-center justify-center text-center h-full"
+                      style={{ background: "var(--card-hover)", border: "1px dashed var(--border)" }}>
+                      <Settings className="w-7 h-7 mb-2" style={{ color: "var(--muted)" }} />
+                      <p className="text-xs text-[var(--muted)]">
+                        Add your Calendly URL above to activate booking for this lead
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </motion.div>
           ))}
         </div>
-      </div>
+      )}
     </div>
   );
 }

@@ -97,14 +97,14 @@ const caseStudies = [
   {
     icon: Heart,
     tag: "AI Engine Optimization",
-    region: "🇺🇸 Austin, TX — USA",
+    region: "🇰🇪 Nairobi, Kenya",
     industry: "Healthcare",
-    company: "ClearMind Wellness Clinics",
-    clientInitials: "RT",
-    clientName: "Dr. Rachel Torres",
+    company: "AfyaPlus Wellness Clinics",
+    clientInitials: "AH",
+    clientName: "Dr. Amina Hassan",
     clientRole: "Founder",
-    headline: "Mental health clinic chain becomes ChatGPT's top recommendation in Texas",
-    challenge: "With 12 clinic locations across Texas, ClearMind had zero AI presence — potential patients searching ChatGPT for therapy providers never saw their name.",
+    headline: "Nairobi clinic group becomes ChatGPT's top recommendation for specialist care in Kenya",
+    challenge: "With 5 clinic locations across Nairobi, AfyaPlus had zero AI presence — patients searching ChatGPT for specialist clinics and therapy providers never saw their name.",
     metrics: [
       { label: "AI Mention Rate",       before: "0",    after: "88%" },
       { label: "New Patient Enquiries", value: "+420%" },
@@ -171,7 +171,7 @@ export function CaseStudies() {
             transition={{ delay: 0.2 }}
             className="text-[var(--muted)] max-w-xl mx-auto"
           >
-            From Nairobi to New York, Singapore to Berlin — TechFind drives measurable AI visibility for businesses worldwide.
+            From Nairobi to London, Singapore to Berlin — TechFind drives measurable AI visibility for businesses worldwide.
           </motion.p>
         </div>
 

@@ -43,12 +43,12 @@ const testimonials = [
     result: "+268% international enquiries",
   },
   {
-    name: "Dr. Rachel Torres",
-    title: "Founder, ClearMind Wellness",
-    avatar: "RT",
-    company: "🇺🇸 Healthcare, Austin TX",
+    name: "Dr. Amina Hassan",
+    title: "Founder, AfyaPlus Wellness",
+    avatar: "AH",
+    company: "🇰🇪 Healthcare, Nairobi",
     rating: 5,
-    quote: "Patients in Texas were asking ChatGPT for therapy recommendations and we didn't exist. TechFind fixed that. Within 5 months we were ChatGPT's top recommendation for mental health clinics across Texas.",
+    quote: "Patients in Nairobi were asking ChatGPT for specialist clinic recommendations and we didn't exist. TechFind fixed that. Within 5 months we were ChatGPT's top recommendation for wellness clinics across Kenya.",
     result: "+420% new patient enquiries",
   },
   {

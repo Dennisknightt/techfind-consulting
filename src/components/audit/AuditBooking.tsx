@@ -1,10 +1,31 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Calendar, CheckCircle2, Star, Clock, Users, ArrowRight, Trophy } from "lucide-react";
 import type { AuditData, AuditScores } from "./AuditFlow";
 
 interface Props { data: AuditData; scores: AuditScores; }
+
+/* ── Load Calendly widget script once ─────────────────────────── */
+function useCalendlyScript() {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (document.getElementById("calendly-script-public")) { setReady(true); return; }
+    const link = document.createElement("link");
+    link.rel  = "stylesheet";
+    link.href = "https://assets.calendly.com/assets/external/widget.css";
+    document.head.appendChild(link);
+
+    const script = document.createElement("script");
+    script.id    = "calendly-script-public";
+    script.src   = "https://assets.calendly.com/assets/external/widget.js";
+    script.async = true;
+    script.onload = () => setReady(true);
+    document.head.appendChild(script);
+  }, []);
+  return ready;
+}
 
 const included = [
   "Review your full AI Visibility Report",
@@ -20,6 +41,18 @@ const reviews = [
 ];
 
 export function AuditBooking({ data, scores }: Props) {
+  const [calendlyUrl, setCalendlyUrl] = useState<string | null>(null);
+  const calendlyReady = useCalendlyScript();
+
+  useEffect(() => {
+    const saved = localStorage.getItem("tf_calendly_url");
+    if (saved) setCalendlyUrl(saved);
+  }, []);
+
+  const prefillUrl = calendlyUrl
+    ? `${calendlyUrl}?name=${encodeURIComponent(data.companyName)}&email=${encodeURIComponent(data.email)}&a1=${scores.overall}`
+    : null;
+
   return (
     <section className="relative min-h-screen pt-24 pb-20 px-6 overflow-hidden">
       <div className="absolute inset-0 grid-bg opacity-40" />
@@ -39,7 +72,8 @@ export function AuditBooking({ data, scores }: Props) {
             <span className="gradient-text">Strategy Call</span>
           </h2>
           <p className="text-[var(--muted)] max-w-lg mx-auto">
-            Hi {data.companyName.split(" ")[0]} — based on your score of <strong style={{ color: "#ef4444" }}>{scores.overall}/100</strong>,
+            Hi {data.companyName.split(" ")[0]} — based on your score of{" "}
+            <strong style={{ color: "#ef4444" }}>{scores.overall}/100</strong>,
             you have significant revenue being left on the table. Let&apos;s fix that.
           </p>
         </motion.div>
@@ -74,27 +108,41 @@ export function AuditBooking({ data, scores }: Props) {
             ))}
           </div>
 
-          {/* Calendly embed placeholder */}
-          <div
-            className="rounded-2xl flex flex-col items-center justify-center p-10 text-center"
-            style={{ background: "var(--card-hover)", border: "1px dashed var(--border)" }}
-          >
-            <Calendar className="w-12 h-12 mb-4" style={{ color: "var(--accent)" }} />
-            <h4 className="font-bold text-[var(--text)] mb-2">Calendar Booking</h4>
-            <p className="text-sm text-[var(--muted)] mb-5 max-w-xs">
-              Connect your Calendly or Google Calendar to activate live booking.
-              Qualified leads land directly in your calendar.
-            </p>
-            <a
-              href="https://calendly.com"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="btn-primary group inline-flex"
+          {/* Calendly embed — real if URL is set, placeholder otherwise */}
+          {prefillUrl && calendlyReady ? (
+            <div className="rounded-2xl overflow-hidden" style={{ border: "1px solid var(--border)" }}>
+              <div
+                className="calendly-inline-widget"
+                data-url={prefillUrl}
+                style={{ minWidth: "100%", height: 700 }}
+              />
+            </div>
+          ) : prefillUrl ? (
+            /* Script still loading — show spinner */
+            <div className="rounded-2xl flex items-center justify-center p-10"
+              style={{ background: "var(--card-hover)", border: "1px solid var(--border)", height: 200 }}>
+              <p className="text-sm text-[var(--muted)]">Loading calendar…</p>
+            </div>
+          ) : (
+            /* No Calendly URL configured yet */
+            <div
+              className="rounded-2xl flex flex-col items-center justify-center p-10 text-center"
+              style={{ background: "var(--card-hover)", border: "1px dashed var(--border)" }}
             >
-              Connect Calendly
-              <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
-            </a>
-          </div>
+              <Calendar className="w-12 h-12 mb-4" style={{ color: "var(--accent)" }} />
+              <h4 className="font-bold text-[var(--text)] mb-2">Schedule Your Strategy Call</h4>
+              <p className="text-sm text-[var(--muted)] mb-5 max-w-xs">
+                We&apos;ll reach out to {data.email} within 24 hours to confirm a time that works for you.
+              </p>
+              <a
+                href={`mailto:${data.email}?subject=Your Free AEO Strategy Call — ${data.companyName}`}
+                className="btn-primary group inline-flex"
+              >
+                Confirm via Email
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
+              </a>
+            </div>
+          )}
         </motion.div>
 
         {/* Social proof */}

@@ -8,8 +8,8 @@ const nodes = [
   { x: 72, y: 35, color: "#22D3EE" },    // Mumbai, India - Cyan
   { x: 85, y: 28, color: "#10B981" },    // Singapore - Green
   { x: 75, y: 48, color: "#F59E0B" },    // Middle East - Orange
-  { x: 20, y: 45, color: "#EC4899" },    // USA East - Pink
-  { x: 10, y: 52, color: "#8B5CF6" },    // USA West - Purple-pink
+  { x: 43, y: 55, color: "#EC4899" },    // Dar es Salaam, Tanzania - Pink
+  { x: 38, y: 65, color: "#8B5CF6" },    // Johannesburg, South Africa - Purple
   { x: 62, y: 62, color: "#06B6D4" },    // Australia - Cyan
 ];
 
