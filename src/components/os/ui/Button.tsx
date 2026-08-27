@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import { Slot } from "@radix-ui/react-slot";
 import { cn } from "@/lib/utils";
 
 type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
@@ -30,21 +31,34 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: Variant;
   size?: Size;
   loading?: boolean;
+  /** Merge button styling/behavior onto a single child element (e.g. a Link) instead of rendering a <button>. */
+  asChild?: boolean;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = "primary", size = "md", loading, disabled, children, style, ...props }, ref) => {
+  ({ className, variant = "primary", size = "md", loading, disabled, children, style, asChild, ...props }, ref) => {
+    const sharedClassName = cn(
+      "inline-flex items-center justify-center font-medium transition-all duration-150 whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none select-none",
+      variantClass[variant],
+      sizeClass[size],
+      className
+    );
+    const sharedStyle = variant === "primary" ? { background: "linear-gradient(135deg, var(--accent), var(--accent-2))", ...style } : style;
+
+    if (asChild) {
+      return (
+        <Slot ref={ref} className={sharedClassName} style={sharedStyle} {...props}>
+          {children}
+        </Slot>
+      );
+    }
+
     return (
       <button
         ref={ref}
         disabled={disabled || loading}
-        className={cn(
-          "inline-flex items-center justify-center font-medium transition-all duration-150 whitespace-nowrap disabled:opacity-40 disabled:pointer-events-none select-none",
-          variantClass[variant],
-          sizeClass[size],
-          className
-        )}
-        style={variant === "primary" ? { background: "linear-gradient(135deg, var(--accent), var(--accent-2))", ...style } : style}
+        className={sharedClassName}
+        style={sharedStyle}
         {...props}
       >
         {loading ? (

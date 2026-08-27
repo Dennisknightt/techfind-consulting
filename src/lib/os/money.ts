@@ -2,11 +2,10 @@
 
 export function formatKES(amount: number, opts: { compact?: boolean } = {}): string {
   if (opts.compact) return `KES ${formatCompact(amount)}`;
-  return new Intl.NumberFormat("en-KE", {
-    style: "currency",
-    currency: "KES",
-    maximumFractionDigits: 0,
-  }).format(amount);
+  // Intl's currency symbol for KES varies by ICU data ("KES" vs "Ksh") —
+  // spell it out explicitly so it's always consistent with the compact form.
+  const number = new Intl.NumberFormat("en-KE", { maximumFractionDigits: 0 }).format(amount);
+  return `KES ${number}`;
 }
 
 export function formatCompact(amount: number): string {
