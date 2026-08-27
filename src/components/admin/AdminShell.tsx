@@ -6,7 +6,7 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Search, Radar, Star, Bot, Calendar, FileText,
-  Kanban, Settings, ChevronLeft, ChevronRight, Zap, Menu,
+  Kanban, MessageSquare, Settings, ChevronLeft, ChevronRight, Zap, Menu,
 } from "lucide-react";
 
 const nav = [
@@ -18,6 +18,7 @@ const nav = [
   { label: "Calendar & Booking", href: "/admin/revenue-engine", tab: "calendar"  , icon: Calendar },
   { label: "Proposal Generator", href: "/admin/revenue-engine", tab: "proposals" , icon: FileText },
   { label: "CRM Pipeline",       href: "/admin/revenue-engine", tab: "crm"       , icon: Kanban },
+  { label: "Communications",     href: "/admin/revenue-engine", tab: "communications", icon: MessageSquare },
   { label: "Settings",           href: "/admin/revenue-engine", tab: "settings"  , icon: Settings },
 ];
 

@@ -10,6 +10,7 @@ import { OutreachAgent }   from "./tabs/OutreachAgent";
 import { CalendarBooking } from "./tabs/CalendarBooking";
 import { ProposalGenerator } from "./tabs/ProposalGenerator";
 import { CRMPipeline }     from "./tabs/CRMPipeline";
+import { Communications }  from "./tabs/Communications";
 import { AdminSettings }   from "./tabs/AdminSettings";
 
 function RevenueEngineInner() {
@@ -25,6 +26,7 @@ function RevenueEngineInner() {
     calendar:   <CalendarBooking />,
     proposals:  <ProposalGenerator />,
     crm:        <CRMPipeline />,
+    communications: <Communications />,
     settings:   <AdminSettings />,
   };
 

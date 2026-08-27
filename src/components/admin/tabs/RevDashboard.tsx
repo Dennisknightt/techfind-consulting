@@ -16,6 +16,7 @@ const quickLinks = [
   { label: "Discover Prospects",  href: "?tab=discovery", icon: Users },
   { label: "Run Prospect Audit",  href: "?tab=audit",     icon: Radar },
   { label: "View CRM Pipeline",   href: "?tab=crm",       icon: Activity },
+  { label: "Communications",      href: "?tab=communications", icon: MessageSquare },
   { label: "Create Proposal",     href: "?tab=proposals", icon: FileText },
 ];
 
