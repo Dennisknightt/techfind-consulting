@@ -3,7 +3,7 @@ import type { PrismaClient } from "@prisma/client";
 export async function seedSettings(db: PrismaClient) {
   const defaults: Record<string, unknown> = {
     tax_config: { mode: "EXCLUSIVE", rate: 16, label: "VAT" },
-    payment_provider: { active: "MOCK" },
+    payment_provider: { active: "INTASEND" },
     currency: { code: "KES", symbol: "KES" },
   };
 

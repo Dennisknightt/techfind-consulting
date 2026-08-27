@@ -450,6 +450,7 @@ model Payment {
   recordedById      String?
   recordedBy        User?     @relation("PaymentRecordedBy", fields: [recordedById], references: [id])
   notes             String?
+  gatewayRaw        String?   // last raw gateway response JSON — audit trail, never trusted over an authoritative status check
 
   paidAt            DateTime?
   createdAt         DateTime  @default(now())
