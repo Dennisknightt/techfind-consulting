@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Techfind — Offline</title>
+<style>
+  html,body{height:100%;margin:0;background:#F7F8FA;color:#0B0F19;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;}
+  .wrap{height:100%;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;padding:24px;}
+  .mark{width:56px;height:56px;border-radius:16px;background:linear-gradient(135deg,#6D28D9,#2563EB);display:flex;align-items:center;justify-content:center;}
+  .mark svg{width:26px;height:26px;fill:#fff;}
+  h1{font-size:17px;margin:0;}
+  p{font-size:14px;color:#5B6472;margin:0;max-width:320px;}
+  button{margin-top:8px;height:40px;padding:0 20px;border-radius:10px;border:none;background:#0B0F19;color:#fff;font-size:14px;font-weight:600;}
+  @media (prefers-color-scheme: dark){
+    html,body{background:#0A0D14;color:#F5F6F8;}
+    p{color:#98A2B3;}
+    button{background:#F5F6F8;color:#0A0D14;}
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="mark"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6l1-8z"/></svg></div>
+    <h1>You&rsquo;re offline</h1>
+    <p>Techfind needs a connection to show live CRM and payment data. Reconnect and try again.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

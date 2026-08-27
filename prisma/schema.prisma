@@ -1,0 +1,537 @@
+// Techfind Revenue OS — database schema
+//
+// Provider: SQLite for local/dev (zero external credentials required).
+// The schema intentionally avoids SQLite-only features (no native enums,
+// no composite types) so it maps cleanly onto PostgreSQL/Supabase for
+// production — see /docs/DATABASE.md for the migration path and for the
+// string-union "enum" convention used throughout (documented per field).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// IDENTITY & ACCESS
+// ─────────────────────────────────────────────────────────────────────────
+
+/// role: SUPER_ADMIN | MANAGEMENT | SALES | FINANCE | VIEWER
+model User {
+  id                   String    @id @default(cuid())
+  email                String    @unique
+  passwordHash         String
+  name                 String
+  role                 String    @default("SALES")
+  phone                String?
+  avatarColor          String    @default("#7C3AED")
+  active               Boolean   @default(true)
+  welcomeSoundEnabled  Boolean   @default(true)
+  welcomeSoundVolume   Float     @default(0.6)
+  createdAt            DateTime  @default(now())
+
+  sessions             Session[]
+  ownedCompanies       Company[]        @relation("CompanyOwner")
+  ownedLeads           Lead[]           @relation("LeadOwner")
+  ownedDeals           Deal[]           @relation("DealOwner")
+  assignedTasks        Task[]           @relation("TaskAssignee")
+  createdTasks         Task[]           @relation("TaskCreator")
+  communications       Communication[]  @relation("CommAuthor")
+  documents            SalesDocument[]  @relation("DocumentOwner")
+  recordedPayments     Payment[]        @relation("PaymentRecordedBy")
+  auditLogs            AuditLog[]
+  notifications        Notification[]
+  quickItems           QuickItem[]
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  userAgent String?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// CUSTOMERS
+// ─────────────────────────────────────────────────────────────────────────
+
+/// source: WHATSAPP | WEBSITE | META | TIKTOK | EMAIL | PHONE | REFERRAL | MANUAL
+model Company {
+  id          String   @id @default(cuid())
+  name        String
+  industry    String?
+  phone       String?
+  email       String?
+  website     String?
+  address     String?
+  source      String   @default("MANUAL")
+  notes       String?
+  ownerId     String?
+  owner       User?    @relation("CompanyOwner", fields: [ownerId], references: [id])
+  createdAt   DateTime @default(now())
+
+  contacts        Contact[]
+  leads           Lead[]
+  deals           Deal[]
+  communications  Communication[]
+  meetings        Meeting[]
+  documents       SalesDocument[]
+  payments        Payment[]
+  receipts        Receipt[]
+  projects        Project[]
+  footprint       ProductFootprint[]
+
+  @@index([ownerId])
+}
+
+model Contact {
+  id         String   @id @default(cuid())
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  name       String
+  phone      String?
+  email      String?
+  title      String?
+  isPrimary  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  deals           Deal[]
+  meetings        Meeting[]
+  communications  Communication[]
+  documents       SalesDocument[]
+
+  @@index([companyId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PIPELINE
+// ─────────────────────────────────────────────────────────────────────────
+
+/// temperature: HOT | WARM | COLD
+/// status: NEW | CONTACTED | QUALIFIED | CONVERTED | DISQUALIFIED
+model Lead {
+  id                String    @id @default(cuid())
+  name              String
+  companyId         String?
+  company           Company?  @relation(fields: [companyId], references: [id])
+  companyNameRaw    String?
+  phone             String?
+  email             String?
+  industry          String?
+  interestedProduct String?
+  source            String    @default("MANUAL")
+  value             Float     @default(0)
+  ownerId           String?
+  owner             User?     @relation("LeadOwner", fields: [ownerId], references: [id])
+  temperature       String    @default("WARM")
+  status            String    @default("NEW")
+  nextAction        String?
+  nextActionDue     DateTime?
+  convertedDealId   String?   @unique
+  convertedDeal     Deal?     @relation("LeadToDeal", fields: [convertedDealId], references: [id])
+  createdAt         DateTime  @default(now())
+
+  @@index([ownerId])
+  @@index([companyId])
+  @@index([status])
+}
+
+/// stage: IDENTIFIED | CONTACTED | INTERESTED | DEMO_BOOKED | DEMO_DONE |
+///        PROPOSAL | PROFORMA_SENT | DEPOSIT_PENDING | NEGOTIATING | WON |
+///        IMPLEMENTATION | LIVE | MAINTENANCE | UPSELL | LOST
+/// temperature: HOT | WARM | COLD
+model Deal {
+  id             String    @id @default(cuid())
+  title          String
+  companyId      String
+  company        Company   @relation(fields: [companyId], references: [id])
+  contactId      String?
+  contact        Contact?  @relation(fields: [contactId], references: [id])
+  value           Float
+  stage          String    @default("IDENTIFIED")
+  stageEnteredAt DateTime  @default(now())
+  temperature    String    @default("WARM")
+  ownerId        String?
+  owner          User?     @relation("DealOwner", fields: [ownerId], references: [id])
+  productKeys    String    @default("[]") // JSON string[] of Product.key
+  nextAction     String?
+  nextActionDue  DateTime?
+  lastContactAt  DateTime?
+  lostReason     String?
+  wonAt          DateTime?
+  lostAt         DateTime?
+  createdAt      DateTime  @default(now())
+
+  lead            Lead?              @relation("LeadToDeal")
+  meetings        Meeting[]
+  communications  Communication[]
+  documents       SalesDocument[]
+  payments        Payment[]
+  tasks           Task[]
+  project         Project?
+
+  @@index([ownerId])
+  @@index([companyId])
+  @@index([stage])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMMUNICATIONS
+// ─────────────────────────────────────────────────────────────────────────
+
+/// channel: WHATSAPP | EMAIL | WEBSITE | CALL | META | TIKTOK | REFERRAL | NOTE
+/// direction: INBOUND | OUTBOUND
+model Communication {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  contactId   String?
+  contact     Contact? @relation(fields: [contactId], references: [id])
+  dealId      String?
+  deal        Deal?    @relation(fields: [dealId], references: [id])
+  channel     String
+  direction   String   @default("OUTBOUND")
+  subject     String?
+  body        String
+  authorId    String?
+  author      User?    @relation("CommAuthor", fields: [authorId], references: [id])
+  externalRef String?
+  createdAt   DateTime @default(now())
+
+  @@index([companyId])
+  @@index([dealId])
+}
+
+/// status: SCHEDULED | DONE | CANCELLED
+model Meeting {
+  id            String    @id @default(cuid())
+  companyId     String
+  company       Company   @relation(fields: [companyId], references: [id])
+  contactId     String?
+  contact       Contact?  @relation(fields: [contactId], references: [id])
+  dealId        String?
+  deal          Deal?     @relation(fields: [dealId], references: [id])
+  scheduledAt   DateTime
+  status        String    @default("SCHEDULED")
+  agenda        String?
+  // post-meeting capture
+  temperature      String?
+  budget           String?
+  decisionMaker    String?
+  problem          String?
+  objection        String?
+  productsDiscussed String? // JSON string[]
+  nextAction       String?
+  nextActionDue    DateTime?
+  completedAt      DateTime?
+  createdAt        DateTime @default(now())
+
+  tasks Task[]
+
+  @@index([companyId])
+  @@index([dealId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// TASKS
+// ─────────────────────────────────────────────────────────────────────────
+
+/// priority: LOW | MEDIUM | HIGH
+/// status: OPEN | DONE
+/// relatedType: CLIENT | DEAL | MEETING | QUOTE | PROFORMA | INVOICE | PAYMENT | PROJECT
+model Task {
+  id            String    @id @default(cuid())
+  title         String
+  description   String?
+  dueAt         DateTime?
+  priority      String    @default("MEDIUM")
+  status        String    @default("OPEN")
+  assigneeId    String?
+  assignee      User?     @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  creatorId     String?
+  creator       User?     @relation("TaskCreator", fields: [creatorId], references: [id])
+  relatedType   String?
+  relatedId     String?
+  dealId        String?
+  deal          Deal?     @relation(fields: [dealId], references: [id])
+  meetingId     String?
+  meeting       Meeting?  @relation(fields: [meetingId], references: [id])
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@index([assigneeId])
+  @@index([status])
+  @@index([dueAt])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PRODUCT CATALOGUE
+// ─────────────────────────────────────────────────────────────────────────
+
+/// category: WEBSITE | WHATSAPP | BUSINESS_SYSTEMS | AI | SERVICES
+model Product {
+  id            String   @id @default(cuid())
+  key           String   @unique
+  category      String
+  name          String
+  isRecurring   Boolean  @default(false)
+  isQuickChip   Boolean  @default(false) // shown as a chip in the Quick Proforma Generator
+  quickPrices   String   @default("[]") // JSON number[] in KES
+  active        Boolean  @default(true)
+  sortOrder     Int      @default(0)
+
+  footprint ProductFootprint[]
+}
+
+model QuickItem {
+  id         String   @id @default(cuid())
+  label      String
+  productKeys String  @default("[]") // JSON string[]
+  totalPrice Float
+  recurring  Boolean  @default(false)
+  ownerId    String?
+  owner      User?    @relation(fields: [ownerId], references: [id])
+  global     Boolean  @default(true)
+  sortOrder  Int      @default(0)
+}
+
+model Package {
+  id          String  @id @default(cuid())
+  name        String
+  description String?
+  productKeys String  @default("[]") // JSON string[]
+  price       Float
+  sortOrder   Int     @default(0)
+}
+
+/// status: ACTIVE | OPPORTUNITY | NOT_PITCHED
+model ProductFootprint {
+  id          String   @id @default(cuid())
+  companyId   String
+  company     Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  status      String   @default("NOT_PITCHED")
+  mrr         Float?
+  activatedAt DateTime?
+
+  @@unique([companyId, productId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// COMMERCIAL DOCUMENTS  (Lead → Deal → Quote → Proforma → Payment → Invoice → Receipt → Project)
+// ─────────────────────────────────────────────────────────────────────────
+
+/// type: QUOTE | PROFORMA | INVOICE
+/// status: DRAFT | SENT | VIEWED | PARTIALLY_PAID | PAID | EXPIRED | CANCELLED
+/// taxMode: INCLUSIVE | EXCLUSIVE | NONE
+model SalesDocument {
+  id               String    @id @default(cuid())
+  type             String
+  number           String    @unique
+  companyId        String
+  company          Company   @relation(fields: [companyId], references: [id])
+  contactId        String?
+  contact          Contact?  @relation(fields: [contactId], references: [id])
+  dealId           String?
+  deal             Deal?     @relation(fields: [dealId], references: [id])
+  convertedFromId  String?   @unique
+  convertedFrom    SalesDocument? @relation("DocChain", fields: [convertedFromId], references: [id])
+  convertedTo      SalesDocument? @relation("DocChain")
+
+  currency         String    @default("KES")
+  subtotal         Float     @default(0)
+  discount         Float     @default(0)
+  taxMode          String    @default("EXCLUSIVE")
+  taxRate          Float     @default(0)
+  taxAmount        Float     @default(0)
+  total            Float     @default(0)
+
+  paymentTermsLabel String   @default("100%")
+  depositRequired   Float    @default(0)
+  balance           Float    @default(0)
+  paidAmount        Float    @default(0)
+
+  validUntil       DateTime?
+  notes            String?
+  terms            String?
+  status           String    @default("DRAFT")
+
+  ownerId          String?
+  owner            User?     @relation("DocumentOwner", fields: [ownerId], references: [id])
+
+  createdAt        DateTime  @default(now())
+  sentAt           DateTime?
+
+  items            SalesDocumentItem[]
+  paymentSessions  PaymentSession[]
+  payments         Payment[]
+  receipts         Receipt[]
+
+  @@index([companyId])
+  @@index([dealId])
+  @@index([type])
+  @@index([status])
+}
+
+model SalesDocumentItem {
+  id          String        @id @default(cuid())
+  documentId  String
+  document    SalesDocument @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  productKey  String?
+  label       String
+  description String?
+  quantity    Float         @default(1)
+  unitPrice   Float
+  amount      Float
+  sortOrder   Int           @default(0)
+}
+
+model Counter {
+  key   String @id // e.g. "PF-2026"
+  value Int    @default(0)
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PAYMENTS
+// ─────────────────────────────────────────────────────────────────────────
+
+/// status: ACTIVE | EXPIRED | COMPLETED | CANCELLED
+model PaymentSession {
+  id          String        @id @default(cuid())
+  token       String        @unique
+  documentId  String
+  document    SalesDocument @relation(fields: [documentId], references: [id])
+  amountDue   Float
+  currency    String        @default("KES")
+  status      String        @default("ACTIVE")
+  expiresAt   DateTime
+  createdAt   DateTime      @default(now())
+
+  payments Payment[]
+
+  @@index([documentId])
+}
+
+/// method: MPESA | CARD | BANK_TRANSFER | PESALINK | OTHER
+/// gateway: MOCK | (future real providers)
+/// status: PENDING | PROCESSING | SUCCESSFUL | FAILED | CANCELLED | REVERSED | REFUNDED | PARTIALLY_REFUNDED | NEEDS_MATCHING
+model Payment {
+  id                String    @id @default(cuid())
+  reference         String    @unique
+  sessionId         String?
+  session           PaymentSession? @relation(fields: [sessionId], references: [id])
+  documentId        String?
+  document          SalesDocument?  @relation(fields: [documentId], references: [id])
+  companyId         String?
+  company           Company?  @relation(fields: [companyId], references: [id])
+  dealId            String?
+  deal              Deal?     @relation(fields: [dealId], references: [id])
+
+  amount            Float
+  currency          String    @default("KES")
+  method            String
+  gateway           String    @default("MOCK")
+  gatewayReference  String?
+  status            String    @default("PENDING")
+
+  matchConfidence   Float?
+  matchSuggestionId String?
+  idempotencyKey    String?   @unique
+
+  recordedById      String?
+  recordedBy        User?     @relation("PaymentRecordedBy", fields: [recordedById], references: [id])
+  notes             String?
+
+  paidAt            DateTime?
+  createdAt         DateTime  @default(now())
+
+  receipt Receipt?
+
+  @@index([documentId])
+  @@index([companyId])
+  @@index([status])
+}
+
+model Receipt {
+  id          String        @id @default(cuid())
+  number      String        @unique
+  paymentId   String        @unique
+  payment     Payment       @relation(fields: [paymentId], references: [id])
+  documentId  String
+  document    SalesDocument @relation(fields: [documentId], references: [id])
+  companyId   String
+  company     Company       @relation(fields: [companyId], references: [id])
+  amount      Float
+  method      String
+  issuedAt    DateTime      @default(now())
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PROJECTS
+// ─────────────────────────────────────────────────────────────────────────
+
+/// stage: DEPOSIT | REQUIREMENTS | DESIGN | DEVELOPMENT | CLIENT_REVIEW | CHANGES | DEPLOYMENT | TRAINING | LIVE | MAINTENANCE
+model Project {
+  id         String   @id @default(cuid())
+  dealId     String   @unique
+  deal       Deal     @relation(fields: [dealId], references: [id])
+  companyId  String
+  company    Company  @relation(fields: [companyId], references: [id])
+  name       String
+  stage      String   @default("DEPOSIT")
+  startedAt  DateTime @default(now())
+  notes      String?
+
+  @@index([companyId])
+}
+
+// ─────────────────────────────────────────────────────────────────────────
+// PLATFORM
+// ─────────────────────────────────────────────────────────────────────────
+
+model Setting {
+  key         String   @id
+  value       String   // JSON
+  updatedById String?
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  action     String
+  entityType String
+  entityId   String?
+  before     String?  // JSON
+  after      String?  // JSON
+  ip         String?
+  createdAt  DateTime @default(now())
+
+  @@index([entityType, entityId])
+  @@index([actorId])
+}
+
+model Notification {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  type        String
+  title       String
+  body        String?
+  relatedType String?
+  relatedId   String?
+  read        Boolean  @default(false)
+  createdAt   DateTime @default(now())
+
+  @@index([userId, read])
+}
