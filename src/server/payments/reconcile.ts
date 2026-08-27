@@ -5,6 +5,7 @@ import { getActiveProvider } from "./registry";
 import { writeAudit } from "@/server/audit";
 import { round2 } from "@/lib/os/money";
 import { nextReceiptNumber } from "@/server/documents/numbering";
+import { handoffToProject } from "@/server/projects/handoff";
 import type { Payment } from "@prisma/client";
 
 /**
@@ -58,8 +59,14 @@ async function applySuccessfulPayment(payment: Payment): Promise<void> {
 
   await db.salesDocument.update({ where: { id: doc.id }, data: { balance, status: newStatus } });
 
-  if (doc.dealId && doc.deal && paidAmount >= doc.depositRequired && doc.deal.stage !== "WON") {
-    await db.deal.update({ where: { id: doc.dealId }, data: { stage: "WON", wonAt: new Date(), lastContactAt: new Date() } });
+  if (paidAmount >= doc.depositRequired) {
+    if (doc.dealId && doc.deal && doc.deal.stage !== "WON") {
+      await db.deal.update({ where: { id: doc.dealId }, data: { stage: "WON", wonAt: new Date(), lastContactAt: new Date() } });
+    }
+    // Deposit reached is the handoff trigger regardless of whether this sale
+    // ever had an explicit Deal — a quick walk-up proforma with no deal
+    // still needs to become a project (handoffToProject infers one).
+    await handoffToProject(doc);
   }
 
   const receiptNumber = await nextReceiptNumber();
@@ -90,6 +97,7 @@ async function applySuccessfulPayment(payment: Payment): Promise<void> {
   revalidatePath("/app");
   revalidatePath("/app/payments");
   revalidatePath("/app/revenue");
+  revalidatePath("/app/projects");
   revalidatePath(`/app/quotes/${doc.id}`);
   if (doc.dealId) revalidatePath(`/app/deals/${doc.dealId}`);
   revalidatePath(`/app/clients/${doc.companyId}`);

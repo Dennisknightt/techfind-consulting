@@ -3,8 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Deal, Company, Contact, User, Meeting, Task } from "@prisma/client";
-import { Phone, MessageCircle, Trophy, XCircle, FileText, Building2, Check } from "lucide-react";
+import type { Deal, Company, Contact, User, Meeting, Task, Project } from "@prisma/client";
+import { Phone, MessageCircle, Trophy, XCircle, FileText, Building2, Check, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -25,6 +25,7 @@ type DealFull = Deal & {
   owner: User | null;
   meetings: Meeting[];
   tasks: (Task & { assignee: User | null })[];
+  project: Project | null;
 };
 
 function waLink(phone: string, text: string) {
@@ -140,6 +141,11 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
         <Button variant="secondary" size="sm" onClick={() => router.push(`/app/quotes/new?deal=${deal.id}`)} className="gap-1.5">
           <FileText className="w-3.5 h-3.5" /> Create Proforma
         </Button>
+        {deal.project && (
+          <Button variant="secondary" size="sm" onClick={() => router.push(`/app/projects/${deal.project!.id}`)} className="gap-1.5" style={{ color: "var(--accent)" }}>
+            <FolderKanban className="w-3.5 h-3.5" /> View Project
+          </Button>
+        )}
         {deal.stage !== "WON" && (
           <Button variant="secondary" size="sm" onClick={() => moveStage("WON")} className="gap-1.5" style={{ color: "var(--success)" }}>
             <Trophy className="w-3.5 h-3.5" /> Mark Won

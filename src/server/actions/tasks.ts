@@ -15,6 +15,7 @@ export interface CreateTaskInput {
   relatedId?: string;
   dealId?: string;
   meetingId?: string;
+  projectId?: string;
 }
 
 export async function createTaskAction(input: CreateTaskInput) {
@@ -33,6 +34,7 @@ export async function createTaskAction(input: CreateTaskInput) {
       relatedId: input.relatedId,
       dealId: input.dealId,
       meetingId: input.meetingId,
+      projectId: input.projectId,
     },
   });
 
@@ -40,6 +42,7 @@ export async function createTaskAction(input: CreateTaskInput) {
   revalidatePath("/app/tasks");
   revalidatePath("/app");
   if (input.dealId) revalidatePath(`/app/deals/${input.dealId}`);
+  if (input.projectId) revalidatePath(`/app/projects/${input.projectId}`);
   return task;
 }
 
@@ -53,6 +56,7 @@ export async function completeTaskAction(id: string, done: boolean) {
   revalidatePath("/app/tasks");
   revalidatePath("/app");
   if (task.dealId) revalidatePath(`/app/deals/${task.dealId}`);
+  if (task.projectId) revalidatePath(`/app/projects/${task.projectId}`);
   return task;
 }
 
