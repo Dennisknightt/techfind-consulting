@@ -137,7 +137,7 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
             </Button>
           </>
         )}
-        <Button variant="secondary" size="sm" onClick={() => router.push(`/app/quotes?deal=${deal.id}`)} className="gap-1.5">
+        <Button variant="secondary" size="sm" onClick={() => router.push(`/app/quotes/new?deal=${deal.id}`)} className="gap-1.5">
           <FileText className="w-3.5 h-3.5" /> Create Proforma
         </Button>
         {deal.stage !== "WON" && (

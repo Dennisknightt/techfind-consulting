@@ -312,7 +312,7 @@ function ContextPanel({ context, currentUserId }: { context: Context | null; cur
         <Button size="sm" variant="secondary" onClick={() => setMeetingOpen(true)} className="gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> Meeting</Button>
         <Button size="sm" variant="secondary" onClick={quickTask} disabled={!deal} className="gap-1.5"><CheckSquare className="w-3.5 h-3.5" /> Task</Button>
         <Button size="sm" variant="secondary" asChild className="gap-1.5">
-          <Link href={deal ? `/app/quotes?deal=${deal.id}` : "/app/quotes"}><FileText className="w-3.5 h-3.5" /> Proforma</Link>
+          <Link href={deal ? `/app/quotes/new?deal=${deal.id}` : "/app/quotes/new"}><FileText className="w-3.5 h-3.5" /> Proforma</Link>
         </Button>
       </div>
 

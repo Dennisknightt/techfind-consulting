@@ -3,14 +3,18 @@ import { requireUser } from "@/server/auth/guard";
 import { can } from "@/server/auth/roles";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/os/ui/Tabs";
 import { ExperienceSettings } from "@/components/os/settings/ExperienceSettings";
+import { TaxSettings } from "@/components/os/settings/TaxSettings";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { ComingSoon } from "@/components/os/common/ComingSoon";
+import { getTaxConfigAction } from "@/server/actions/settings";
 
 export const metadata: Metadata = { title: "Settings — Techfind" };
 
 export default async function SettingsPage() {
   const user = await requireUser();
   const canManageSettings = can(user.role, "settings.write");
+  const canEditTax = can(user.role, "tax.write");
+  const taxConfig = await getTaxConfigAction();
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl">
@@ -46,10 +50,7 @@ export default async function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="tax" className="mt-5">
-          <ComingSoon
-            title="Tax configuration"
-            note={canManageSettings ? "Set tax-inclusive, tax-exclusive or no-tax treatment — arrives with Proformas." : "Only Super Admins can change tax configuration."}
-          />
+          <TaxSettings initial={taxConfig} canEdit={canEditTax} />
         </TabsContent>
 
         <TabsContent value="payments" className="mt-5">

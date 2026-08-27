@@ -78,7 +78,7 @@ export async function getAttentionItems(): Promise<AttentionItem[]> {
       description: "Proposal agreed. Proforma has not been sent.",
       valueAtRisk: d.value,
       actionLabel: "Create Proforma",
-      actionHref: `/app/quotes?deal=${d.id}`,
+      actionHref: `/app/quotes/new?deal=${d.id}`,
     });
   }
 
