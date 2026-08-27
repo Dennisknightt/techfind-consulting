@@ -487,7 +487,6 @@ model Receipt {
 // ─────────────────────────────────────────────────────────────────────────
 
 /// stage: DEPOSIT | REQUIREMENTS | DESIGN | DEVELOPMENT | CLIENT_REVIEW | CHANGES | DEPLOYMENT | TRAINING | LIVE | MAINTENANCE
-/// stage: DEPOSIT | REQUIREMENTS | DESIGN | DEVELOPMENT | CLIENT_REVIEW | CHANGES | DEPLOYMENT | TRAINING | LIVE | MAINTENANCE
 model Project {
   id             String    @id @default(cuid())
   dealId         String    @unique

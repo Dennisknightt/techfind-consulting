@@ -22,6 +22,7 @@ export type DealWithRelations = Deal & { company: Company; owner: User | null };
 const STALL_DAYS = 7;
 
 function isStalled(deal: DealWithRelations): boolean {
+  if (deal.stage === "WON" || deal.stage === "LOST") return false;
   return daysBetween(deal.stageEnteredAt) > STALL_DAYS;
 }
 

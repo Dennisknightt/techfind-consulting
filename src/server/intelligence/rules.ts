@@ -1,6 +1,7 @@
 import "server-only";
 import { db } from "@/server/db";
 import dayjs from "dayjs";
+import { formatKES } from "@/lib/os/money";
 
 /**
  * Rule-based "what needs attention / where's the money" engine.
@@ -113,7 +114,7 @@ export async function getAttentionItems(): Promise<AttentionItem[]> {
       id: "cold-leads",
       severity: "critical",
       title: `${coldLeads.length} lead${coldLeads.length === 1 ? "" : "s"} going cold`,
-      description: atRisk > 0 ? `${formatKESInline(atRisk)} potential revenue at risk.` : "Follow up before they go quiet for good.",
+      description: atRisk > 0 ? `${formatKES(atRisk)} potential revenue at risk.` : "Follow up before they go quiet for good.",
       valueAtRisk: atRisk,
       actionLabel: "Review & Follow Up",
       actionHref: "/app/leads",
@@ -144,7 +145,7 @@ export async function getAttentionItems(): Promise<AttentionItem[]> {
       id: `payment-${doc.id}`,
       severity: "critical",
       title: doc.company.name,
-      description: `${formatKESInline(doc.balance)} expected but overdue.`,
+      description: `${formatKES(doc.balance)} expected but overdue.`,
       valueAtRisk: doc.balance,
       actionLabel: "WhatsApp Reminder",
       actionHref: `/app/payments`,
@@ -206,8 +207,4 @@ export async function getOpportunityItems(): Promise<OpportunityItem[]> {
   }
 
   return items;
-}
-
-function formatKESInline(n: number): string {
-  return new Intl.NumberFormat("en-KE", { style: "currency", currency: "KES", maximumFractionDigits: 0 }).format(n);
 }
