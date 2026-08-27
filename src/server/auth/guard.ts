@@ -20,7 +20,8 @@ export async function requireUserOrThrow(): Promise<SessionUser> {
 
 export async function requirePermission(permission: Parameters<typeof can>[1]): Promise<SessionUser> {
   const user = await requireUserOrThrow();
-  if (!can(user.role, permission)) throw new Error("FORBIDDEN");
+  // Message is user-facing — several client components surface it directly via toast.error(e.message).
+  if (!can(user.role, permission)) throw new Error("You don't have permission to do this.");
   return user;
 }
 

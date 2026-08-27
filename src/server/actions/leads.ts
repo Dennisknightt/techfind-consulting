@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 
 export interface CreateLeadInput {
@@ -19,7 +19,7 @@ export interface CreateLeadInput {
 }
 
 export async function createLeadAction(input: CreateLeadInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   if (!input.name.trim()) throw new Error("Name is required");
 
   const lead = await db.lead.create({
@@ -44,7 +44,7 @@ export async function createLeadAction(input: CreateLeadInput) {
 }
 
 export async function updateLeadAction(id: string, patch: Partial<CreateLeadInput> & { status?: string; nextAction?: string; nextActionDue?: Date | null }) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   const before = await db.lead.findUnique({ where: { id } });
   if (!before) throw new Error("Lead not found");
 
@@ -78,7 +78,7 @@ export async function updateLeadAction(id: string, patch: Partial<CreateLeadInpu
  * somewhere to live, links the lead to the new deal, and marks it CONVERTED.
  */
 export async function convertLeadToDealAction(leadId: string) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   const lead = await db.lead.findUnique({ where: { id: leadId } });
   if (!lead) throw new Error("Lead not found");
   if (lead.convertedDealId) throw new Error("Lead already converted");
@@ -133,7 +133,7 @@ export async function convertLeadToDealAction(leadId: string) {
 }
 
 export async function deleteLeadAction(id: string) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   await db.lead.delete({ where: { id } });
   await writeAudit({ actorId: user.id, action: "DELETE_LEAD", entityType: "Lead", entityId: id });
   revalidatePath("/app/leads");

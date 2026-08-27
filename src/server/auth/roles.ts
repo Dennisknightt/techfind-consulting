@@ -26,6 +26,8 @@ type Permission =
   | "documents.write"      // quotes/proformas/invoices
   | "payments.write"       // record/reconcile payments, refunds
   | "projects.write"
+  | "tasks.write"          // create/complete/edit/delete tasks
+  | "meetings.write"       // schedule/complete/cancel meetings
   | "settings.write"       // catalogue, quick items, packages
   | "tax.write"            // change tax configuration
   | "users.write"          // manage team/roles
@@ -34,18 +36,20 @@ type Permission =
 const MATRIX: Record<Role, Permission[]> = {
   SUPER_ADMIN: [
     "pipeline.write", "clients.write", "communications.write", "documents.write",
-    "payments.write", "projects.write", "settings.write", "tax.write", "users.write",
-    "revenue.view",
+    "payments.write", "projects.write", "tasks.write", "meetings.write",
+    "settings.write", "tax.write", "users.write", "revenue.view",
   ],
   MANAGEMENT: [
     "pipeline.write", "clients.write", "communications.write", "documents.write",
-    "projects.write", "revenue.view",
+    "projects.write", "tasks.write", "meetings.write", "revenue.view",
   ],
   SALES: [
     "pipeline.write", "clients.write", "communications.write", "documents.write",
+    "tasks.write", "meetings.write",
   ],
   FINANCE: [
-    "documents.write", "payments.write", "projects.write", "revenue.view",
+    "documents.write", "payments.write", "projects.write", "tasks.write",
+    "meetings.write", "revenue.view",
   ],
   VIEWER: [],
 };

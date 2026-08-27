@@ -9,10 +9,15 @@ export const dynamic = "force-dynamic";
  * IntaSend webhook receiver. The payload's claimed status is never trusted
  * directly — it's only used to find which Payment to re-check, and
  * confirmPayment() re-verifies with an authoritative server-to-server call
- * back to IntaSend before crediting anything. This sidesteps needing an
- * exact signature-verification recipe (IntaSend's webhook signing isn't
- * documented in the SDK) while still being safe: a forged webhook can at
- * worst trigger a status re-check, never a false credit.
+ * back to IntaSend before crediting anything. This means a forged webhook
+ * can at worst trigger a status re-check, never a false credit — the
+ * reconciliation design is the real defense, not the check below.
+ *
+ * Defense-in-depth: IntaSend's webhook "challenge" mechanism — a static
+ * secret configured once in the IntaSend dashboard, echoed back in every
+ * webhook payload's `challenge` field — is verified here when configured,
+ * so unrelated requests are rejected before touching the database at all.
+ * Set INTASEND_WEBHOOK_CHALLENGE to the same value before going live.
  *
  * Register this URL (…/api/webhooks/payments/intasend) in the IntaSend
  * dashboard once ready to receive live events.
@@ -21,6 +26,14 @@ export async function POST(req: NextRequest) {
   const payload = await req.json().catch(() => null);
   if (!payload || typeof payload !== "object") {
     return NextResponse.json({ ok: false, error: "invalid payload" }, { status: 400 });
+  }
+
+  const expectedChallenge = process.env.INTASEND_WEBHOOK_CHALLENGE;
+  if (expectedChallenge) {
+    const challenge = (payload as Record<string, unknown>).challenge;
+    if (challenge !== expectedChallenge) {
+      return NextResponse.json({ ok: false, error: "invalid challenge" }, { status: 401 });
+    }
   }
 
   const gatewayReference = String(

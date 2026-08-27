@@ -8,15 +8,13 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { getAllCommunications } from "@/lib/store";
-import { cfg } from "@/lib/config";
+import { isAuthorizedAdmin } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
 
 export async function GET(req: NextRequest) {
-  const token    = req.headers.get("x-admin-token") ?? req.nextUrl.searchParams.get("token") ?? "";
-  const expected = cfg.admin.secret;
-  if (expected && token !== expected) {
+  if (!isAuthorizedAdmin(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.json({ communications: getAllCommunications() });

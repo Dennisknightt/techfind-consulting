@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requireUserOrThrow, requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 
 /** Minimal client creation — Name, Company, Phone only. No forced full CRM onboarding. */
@@ -14,7 +14,7 @@ export interface QuickClientInput {
 }
 
 export async function createQuickClientAction(input: QuickClientInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("clients.write");
   if (!input.companyName.trim()) throw new Error("Company name is required");
 
   const result = await db.$transaction(async (tx) => {
@@ -53,7 +53,7 @@ export interface FullClientInput extends QuickClientInput {
 }
 
 export async function createClientAction(input: FullClientInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("clients.write");
   const result = await db.$transaction(async (tx) => {
     const company = await tx.company.create({
       data: {
@@ -99,7 +99,7 @@ export async function searchCompaniesAction(query: string) {
 }
 
 export async function updateClientAction(id: string, patch: Partial<FullClientInput> & { ownerId?: string }) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("clients.write");
   const before = await db.company.findUnique({ where: { id } });
   if (!before) throw new Error("Client not found");
 

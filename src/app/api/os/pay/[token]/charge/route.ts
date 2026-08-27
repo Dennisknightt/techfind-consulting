@@ -3,7 +3,7 @@ import { randomBytes } from "crypto";
 import { db } from "@/server/db";
 import { getActiveProvider } from "@/server/payments/registry";
 import { rateLimit } from "@/lib/ratelimit";
-import { hashIp } from "@/lib/ip";
+import { getClientIp, hashIp } from "@/lib/ip";
 import { writeAudit } from "@/server/audit";
 import type { PaymentMethod } from "@/server/payments/provider";
 
@@ -21,7 +21,7 @@ const ALLOWED_METHODS: PaymentMethod[] = ["MPESA", "CARD"];
 export async function POST(req: NextRequest, { params }: { params: Promise<{ token: string }> }) {
   const { token } = await params;
 
-  const ip = req.headers.get("x-real-ip") ?? req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "127.0.0.1";
+  const ip = getClientIp(req);
   const limited = await rateLimit(`pay-charge:${hashIp(ip)}`, 5, 5 * 60_000);
   if (!limited.allowed) {
     return NextResponse.json({ error: "Too many attempts. Please try again shortly." }, { status: 429 });

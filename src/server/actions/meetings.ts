@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 
 export interface ScheduleMeetingInput {
@@ -14,7 +14,7 @@ export interface ScheduleMeetingInput {
 }
 
 export async function scheduleMeetingAction(input: ScheduleMeetingInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("meetings.write");
   const meeting = await db.meeting.create({
     data: {
       companyId: input.companyId,
@@ -42,7 +42,7 @@ export interface CompleteMeetingInput {
 }
 
 export async function completeMeetingAction(id: string, input: CompleteMeetingInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("meetings.write");
   const before = await db.meeting.findUnique({ where: { id } });
   if (!before) throw new Error("Meeting not found");
 
@@ -83,7 +83,7 @@ export async function completeMeetingAction(id: string, input: CompleteMeetingIn
 }
 
 export async function cancelMeetingAction(id: string) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("meetings.write");
   const meeting = await db.meeting.update({ where: { id }, data: { status: "CANCELLED" } });
   await writeAudit({ actorId: user.id, action: "CANCEL_MEETING", entityType: "Meeting", entityId: id });
   revalidatePath("/app/meetings");

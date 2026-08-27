@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requireUserOrThrow, requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 
 export interface LogCommunicationInput {
@@ -16,7 +16,7 @@ export interface LogCommunicationInput {
 }
 
 export async function logCommunicationAction(input: LogCommunicationInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("communications.write");
   if (!input.body.trim()) throw new Error("Message can't be empty");
 
   const comm = await db.communication.create({

@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requireUserOrThrow, requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 
 export interface CreateDealInput {
@@ -21,7 +21,7 @@ export async function dealsForCompanyAction(companyId: string) {
 }
 
 export async function createDealAction(input: CreateDealInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   const deal = await db.deal.create({
     data: {
       title: input.title,
@@ -40,7 +40,7 @@ export async function createDealAction(input: CreateDealInput) {
 }
 
 export async function updateDealStageAction(id: string, stage: string) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   const before = await db.deal.findUnique({ where: { id } });
   if (!before) throw new Error("Deal not found");
 
@@ -56,7 +56,7 @@ export async function updateDealStageAction(id: string, stage: string) {
 }
 
 export async function markDealLostAction(id: string, reason: string) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   const before = await db.deal.findUnique({ where: { id } });
   if (!before) throw new Error("Deal not found");
 
@@ -81,7 +81,7 @@ export async function updateDealAction(id: string, patch: {
   lastContactAt?: Date;
   ownerId?: string;
 }) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("pipeline.write");
   const before = await db.deal.findUnique({ where: { id } });
   if (!before) throw new Error("Deal not found");
 

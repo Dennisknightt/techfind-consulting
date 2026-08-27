@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 
 export interface CreateTaskInput {
@@ -19,7 +19,7 @@ export interface CreateTaskInput {
 }
 
 export async function createTaskAction(input: CreateTaskInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("tasks.write");
   if (!input.title.trim()) throw new Error("Title is required");
 
   const task = await db.task.create({
@@ -47,7 +47,7 @@ export async function createTaskAction(input: CreateTaskInput) {
 }
 
 export async function completeTaskAction(id: string, done: boolean) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("tasks.write");
   const task = await db.task.update({
     where: { id },
     data: { status: done ? "DONE" : "OPEN", completedAt: done ? new Date() : null },
@@ -61,7 +61,7 @@ export async function completeTaskAction(id: string, done: boolean) {
 }
 
 export async function updateTaskAction(id: string, patch: Partial<CreateTaskInput>) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("tasks.write");
   const before = await db.task.findUnique({ where: { id } });
   if (!before) throw new Error("Task not found");
 
@@ -82,7 +82,7 @@ export async function updateTaskAction(id: string, patch: Partial<CreateTaskInpu
 }
 
 export async function deleteTaskAction(id: string) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("tasks.write");
   await db.task.delete({ where: { id } });
   await writeAudit({ actorId: user.id, action: "DELETE_TASK", entityType: "Task", entityId: id });
   revalidatePath("/app/tasks");

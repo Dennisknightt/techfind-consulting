@@ -3,7 +3,7 @@
 import { randomBytes } from "crypto";
 import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
-import { requireUserOrThrow } from "@/server/auth/guard";
+import { requireUserOrThrow, requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
 import { nextDocumentNumber } from "@/server/documents/numbering";
 import { computeForSubmission, type DraftItemInput } from "@/server/documents/compute";
@@ -30,7 +30,7 @@ export interface CreateDocumentInput {
 const SESSION_TTL_DAYS = 30;
 
 export async function createDocumentAction(input: CreateDocumentInput) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("documents.write");
   if (input.items.length === 0) throw new Error("Add at least one item");
 
   const { totals, tax } = await computeForSubmission({
@@ -126,7 +126,7 @@ export async function getDocumentAction(id: string) {
 }
 
 export async function markDocumentSentAction(id: string, opts?: { channel?: string; message?: string }) {
-  const user = await requireUserOrThrow();
+  const user = await requirePermission("documents.write");
   const doc = await db.salesDocument.findUnique({ where: { id }, include: { deal: true, company: true } });
   if (!doc) throw new Error("Document not found");
 
