@@ -1,9 +1,11 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Zap, LogOut, ChevronsUpDown } from "lucide-react";
-import { DESKTOP_NAV } from "./nav";
+import { PRIMARY_NAV } from "./nav";
+import { MoreSheet } from "./MoreSheet";
 import { Avatar } from "@/components/os/ui/Avatar";
 import {
   DropdownMenu, DropdownMenuTrigger, DropdownMenuContent,
@@ -15,6 +17,7 @@ import type { SessionUser } from "@/server/auth/session";
 
 export function Sidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
+  const [moreOpen, setMoreOpen] = useState(false);
 
   return (
     <aside
@@ -34,7 +37,20 @@ export function Sidebar({ user }: { user: SessionUser }) {
       </Link>
 
       <nav className="flex-1 overflow-y-auto px-3 py-2 space-y-0.5">
-        {DESKTOP_NAV.map(({ label, href, icon: Icon }) => {
+        {PRIMARY_NAV.map(({ label, href, icon: Icon }) => {
+          if (href === "#more") {
+            return (
+              <button
+                key="more"
+                onClick={() => setMoreOpen(true)}
+                className="w-full flex items-center gap-3 px-3 py-2 rounded-[var(--radius-md)] text-sm transition-colors text-left"
+                style={{ color: "var(--text-muted)", fontWeight: 500 }}
+              >
+                <Icon className="w-[18px] h-[18px] shrink-0" />
+                {label}
+              </button>
+            );
+          }
           const active = href === "/app" ? pathname === "/app" : pathname.startsWith(href);
           return (
             <Link
@@ -53,6 +69,8 @@ export function Sidebar({ user }: { user: SessionUser }) {
           );
         })}
       </nav>
+
+      <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} />
 
       <div className="p-3 border-t" style={{ borderColor: "var(--border)" }}>
         <DropdownMenu>

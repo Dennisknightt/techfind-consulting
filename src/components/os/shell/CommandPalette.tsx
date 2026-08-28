@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
 import { Search, ArrowRight } from "lucide-react";
-import { DESKTOP_NAV } from "./nav";
+import { ALL_NAV } from "./nav";
 import { globalSearchAction, type SearchResult } from "@/server/actions/search";
 
 export function CommandPalette() {
@@ -74,7 +74,7 @@ export function CommandPalette() {
         <Command.List className="max-h-[60vh] overflow-y-auto p-2">
           {query.trim().length < 2 && (
             <Command.Group heading="Go to" className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--text-faint)]">
-              {DESKTOP_NAV.map(({ label, href, icon: Icon }) => (
+              {ALL_NAV.map(({ label, href, icon: Icon }) => (
                 <Command.Item
                   key={href}
                   onSelect={() => go(href)}
