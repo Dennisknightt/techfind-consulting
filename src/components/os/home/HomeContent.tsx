@@ -55,21 +55,21 @@ export function HomeContent({
 
       {/* What needs your attention */}
       <section className="mt-10">
-        <h2 className="os-heading-section mb-4" style={{ color: "var(--text)" }}>What needs your attention</h2>
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>What needs your attention</h2>
         {attention.length === 0 ? (
-          <motion.div
-            {...fadeInUp}
-            className="rounded-[var(--radius-lg)] p-8 text-center"
-            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-          >
-            <p className="os-text-body font-semibold" style={{ color: "var(--success)" }}>
+          <motion.div {...fadeInUp} className="py-6">
+            <p className="os-text-body font-medium" style={{ color: "var(--success)" }}>
               Nothing urgent — the pipeline is under control.
             </p>
           </motion.div>
         ) : (
-          <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-3">
+          <motion.div
+            variants={staggerContainer} initial="initial" animate="animate"
+            className="rounded-[var(--radius-lg)] border divide-y"
+            style={{ borderColor: "var(--border)" }}
+          >
             {attention.slice(0, 8).map(item => (
-              <AttentionCard key={item.id} item={item} />
+              <AttentionRow key={item.id} item={item} />
             ))}
           </motion.div>
         )}
@@ -78,12 +78,16 @@ export function HomeContent({
       {/* Opportunities */}
       {opportunities.length > 0 && (
         <section className="mt-10">
-          <h2 className="os-heading-section mb-4 flex items-center gap-2" style={{ color: "var(--text)" }}>
-            <Sparkles className="w-[18px] h-[18px]" style={{ color: "var(--accent)" }} /> Opportunities
+          <h2 className="os-heading-section mb-3 flex items-center gap-2" style={{ color: "var(--text)" }}>
+            <Sparkles className="w-4 h-4" style={{ color: "var(--accent)" }} /> Opportunities
           </h2>
-          <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-3">
+          <motion.div
+            variants={staggerContainer} initial="initial" animate="animate"
+            className="rounded-[var(--radius-lg)] border divide-y"
+            style={{ borderColor: "var(--border)" }}
+          >
             {opportunities.map(item => (
-              <OpportunityCard key={item.id} item={item} />
+              <OpportunityRow key={item.id} item={item} />
             ))}
           </motion.div>
         </section>
@@ -127,64 +131,45 @@ function StatPill({
   );
 }
 
-function AttentionCard({ item }: { item: AttentionItem }) {
+function AttentionRow({ item }: { item: AttentionItem }) {
   const critical = item.severity === "critical";
   const Icon = critical ? AlertCircle : AlertTriangle;
   const color = critical ? "var(--danger)" : "var(--warning)";
   return (
-    <motion.div
-      variants={staggerItem}
-      className="os-card-hover flex items-start gap-4 rounded-[var(--radius-lg)] p-5"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
-      <div
-        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-        style={{ background: critical ? "var(--danger-soft)" : "var(--warning-soft)" }}
-      >
-        <Icon className="w-[18px] h-[18px]" style={{ color }} />
-      </div>
+    <motion.div variants={staggerItem} className="os-row-hover flex items-center gap-3 px-4 py-3">
+      <Icon className="w-4 h-4 shrink-0" style={{ color }} />
       <div className="flex-1 min-w-[180px]">
-        <p className="os-text-body font-semibold" style={{ color: "var(--text)" }}>{item.title}</p>
+        <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>{item.title}</p>
         <p className="os-text-meta mt-0.5">{item.description}</p>
       </div>
-      <div className="flex flex-col items-end gap-2 shrink-0">
-        {item.valueAtRisk ? (
-          <span className="os-text-number text-sm" style={{ color: "var(--text)" }}>
-            {formatKES(item.valueAtRisk, { compact: true })}
-          </span>
-        ) : null}
-        <Button size="sm" variant="secondary" asChild>
-          <Link href={item.actionHref} className="flex items-center gap-1">
-            {item.actionLabel} <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
-        </Button>
-      </div>
+      {item.valueAtRisk ? (
+        <span className="os-text-number text-sm shrink-0" style={{ color: "var(--text)" }}>
+          {formatKES(item.valueAtRisk, { compact: true })}
+        </span>
+      ) : null}
+      <Button size="sm" variant="secondary" asChild className="shrink-0">
+        <Link href={item.actionHref} className="flex items-center gap-1">
+          {item.actionLabel} <ArrowRight className="w-3.5 h-3.5" />
+        </Link>
+      </Button>
     </motion.div>
   );
 }
 
-function OpportunityCard({ item }: { item: OpportunityItem }) {
+function OpportunityRow({ item }: { item: OpportunityItem }) {
   return (
-    <motion.div
-      variants={staggerItem}
-      className="os-card-hover flex items-start gap-4 rounded-[var(--radius-lg)] p-5"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
-      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--accent-soft)" }}>
-        <PartyPopper className="w-[18px] h-[18px]" style={{ color: "var(--accent)" }} />
-      </div>
+    <motion.div variants={staggerItem} className="os-row-hover flex items-center gap-3 px-4 py-3">
+      <PartyPopper className="w-4 h-4 shrink-0" style={{ color: "var(--accent)" }} />
       <div className="flex-1 min-w-[180px]">
-        <p className="os-text-body font-semibold" style={{ color: "var(--text)" }}>{item.title}</p>
-        <p className="os-text-meta mt-0.5" style={{ color: "var(--text-muted)" }}>{item.description}</p>
+        <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>{item.title}</p>
+        <p className="os-text-meta mt-0.5">{item.description}</p>
       </div>
-      <div className="flex flex-col items-end gap-2 shrink-0">
-        <span className="os-text-number text-sm" style={{ color: "var(--accent)" }}>
-          {formatKES(item.potentialValue, { compact: true })}
-        </span>
-        <Button size="sm" asChild>
-          <Link href={item.actionHref}>{item.actionLabel}</Link>
-        </Button>
-      </div>
+      <span className="os-text-number text-sm shrink-0" style={{ color: "var(--accent)" }}>
+        {formatKES(item.potentialValue, { compact: true })}
+      </span>
+      <Button size="sm" asChild className="shrink-0">
+        <Link href={item.actionHref}>{item.actionLabel}</Link>
+      </Button>
     </motion.div>
   );
 }

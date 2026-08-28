@@ -62,7 +62,7 @@ export function WelcomeExperience({
         <div
           className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500"
           style={{
-            background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
+            background: "var(--accent)",
             boxShadow: "var(--shadow-glow)",
             transform: phase === "logo" ? "scale(0.85)" : "scale(1)",
             opacity: 1,

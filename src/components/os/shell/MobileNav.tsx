@@ -38,8 +38,8 @@ export function MobileNav() {
               className="os-press -mt-6 rounded-full flex items-center justify-center text-white"
               style={{
                 width: 52, height: 52,
-                background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
-                boxShadow: "var(--shadow-glow)",
+                background: "var(--accent)",
+                boxShadow: "var(--shadow-md)",
               }}
             >
               <Plus className="w-6 h-6" />

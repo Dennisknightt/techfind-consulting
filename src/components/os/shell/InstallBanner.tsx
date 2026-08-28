@@ -99,7 +99,7 @@ export function InstallBanner() {
             <div className="flex items-start gap-3">
               <div
                 className="w-10 h-10 rounded-[var(--radius-md)] flex items-center justify-center shrink-0"
-                style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}
+                style={{ background: "var(--accent)" }}
               >
                 <Download className="w-4.5 h-4.5 text-white" />
               </div>

@@ -31,7 +31,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
       <Link href="/app" className="flex items-center gap-2 px-4 h-14 shrink-0">
         <div
           className="w-6 h-6 rounded-[7px] flex items-center justify-center shrink-0"
-          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))" }}
+          style={{ background: "var(--accent)" }}
         >
           <Zap className="w-3.5 h-3.5 text-white" />
         </div>
