@@ -13,9 +13,11 @@ import { NextRequest, NextResponse } from "next/server";
  * The CRM's hostname is whatever NEXT_PUBLIC_APP_URL points at (the same
  * variable already used to build payment links — one source of truth,
  * see .env.example). Until that's set to a real custom domain, this is a
- * no-op everywhere, and raw *.vercel.app deployment URLs are always a
- * no-op too — separation only applies once real custom domains are wired
- * up, so it never gets in the way of testing against a preview URL.
+ * no-op everywhere, and raw *.vercel.app deployment URLs and localhost are
+ * always a no-op too — separation only applies once real custom domains
+ * are wired up, so it never gets in the way of testing against a preview
+ * URL or local dev (whose default NEXT_PUBLIC_APP_URL is itself
+ * http://localhost:3000, per .env.example).
  */
 
 const CRM_PATH_PREFIXES = ["/login", "/app", "/pay"];
@@ -37,7 +39,9 @@ function crmHostname(): string | null {
 export function middleware(req: NextRequest) {
   const hostname = req.nextUrl.hostname;
 
-  if (hostname.endsWith(".vercel.app")) return NextResponse.next();
+  if (hostname.endsWith(".vercel.app") || hostname === "localhost" || hostname === "127.0.0.1") {
+    return NextResponse.next();
+  }
 
   const crmHost = crmHostname();
   if (!crmHost) return NextResponse.next(); // not configured — nothing to enforce yet
