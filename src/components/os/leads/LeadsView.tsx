@@ -4,7 +4,9 @@ import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Lead, User, Product } from "@prisma/client";
 import { Plus, Search, Phone, Mail, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
+import { fadeInUp } from "@/lib/os/motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
@@ -123,9 +125,10 @@ export function LeadsView({
 
       <div className="mt-5 space-y-2.5">
         {filtered.map(lead => (
-          <div
+          <motion.div
             key={lead.id}
-            className="rounded-[var(--radius-lg)] border p-4 flex flex-col sm:flex-row sm:items-center gap-3"
+            {...fadeInUp}
+            className="os-card-hover rounded-[var(--radius-lg)] border p-4 flex flex-col sm:flex-row sm:items-center gap-3"
             style={{ background: "var(--surface)", borderColor: "var(--border)" }}
           >
             <Avatar name={lead.name} size={38} />
@@ -157,7 +160,7 @@ export function LeadsView({
                 </Button>
               ) : null}
             </div>
-          </div>
+          </motion.div>
         ))}
       </div>
 
@@ -174,8 +177,13 @@ export function LeadsView({
 }
 
 const VALUE_BANDS = [50_000, 100_000, 150_000, 200_000, 300_000];
+const TEMPERATURES = [
+  { value: "HOT",  label: "Hot",  emoji: "🔥" },
+  { value: "WARM", label: "Warm", emoji: "☀️" },
+  { value: "COLD", label: "Cold", emoji: "❄️" },
+] as const;
 
-const STEPS = ["name", "company", "phone", "source", "product", "value", "owner"] as const;
+const STEPS = ["name", "company", "phone", "source", "product", "value", "temperature", "owner"] as const;
 type StepKey = (typeof STEPS)[number];
 const STEP_QUESTION: Record<StepKey, string> = {
   name: "Who's the lead?",
@@ -184,6 +192,7 @@ const STEP_QUESTION: Record<StepKey, string> = {
   source: "Where did this come from?",
   product: "What are they interested in?",
   value: "Rough deal size?",
+  temperature: "How promising?",
   owner: "Who's chasing this one?",
 };
 
@@ -210,6 +219,7 @@ function CreateLeadSheet({
   const [product, setProduct] = useState<string | null>(null);
   const [value, setValue] = useState<number | null>(null);
   const [customValue, setCustomValue] = useState("");
+  const [temperature, setTemperature] = useState<string>("WARM");
   const [ownerId, setOwnerId] = useState(currentUserId);
   const [saving, setSaving] = useState(false);
 
@@ -218,7 +228,7 @@ function CreateLeadSheet({
 
   function reset() {
     setStep(0); setName(""); setCompany(""); setPhone(""); setSource("MANUAL");
-    setProduct(null); setValue(null); setCustomValue(""); setOwnerId(currentUserId);
+    setProduct(null); setValue(null); setCustomValue(""); setTemperature("WARM"); setOwnerId(currentUserId);
   }
 
   function next() {
@@ -239,6 +249,7 @@ function CreateLeadSheet({
         source,
         interestedProduct: product || undefined,
         value: value ?? undefined,
+        temperature,
         ownerId: finalOwnerId,
       });
       const owner = users.find(u => u.id === finalOwnerId) ?? null;
@@ -254,6 +265,7 @@ function CreateLeadSheet({
   function selectSource(s: string) { setSource(s); next(); }
   function selectProduct(p: string) { setProduct(prev => (prev === p ? null : p)); next(); }
   function selectValue(v: number | null) { setValue(v); next(); }
+  function selectTemperature(t: string) { setTemperature(t); next(); }
   function selectOwner(id: string) { setOwnerId(id); submit(id); }
 
   return (
@@ -275,8 +287,16 @@ function CreateLeadSheet({
           </div>
         </SheetHeader>
 
-        <SheetBody className="flex-1 flex flex-col">
-          <p className="text-lg font-bold text-[var(--text)] mb-4" style={{ fontFamily: "var(--font-space)" }}>
+        <SheetBody className="flex-1 flex flex-col overflow-x-hidden">
+        <AnimatePresence mode="wait" initial={false}>
+        <motion.div
+          key={stepKey}
+          initial={{ opacity: 0, x: 16 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -16 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <p className="os-heading-section mb-4" style={{ color: "var(--text)" }}>
             {STEP_QUESTION[stepKey]}
           </p>
 
@@ -346,6 +366,26 @@ function CreateLeadSheet({
             </div>
           )}
 
+          {stepKey === "temperature" && (
+            <div className="flex flex-wrap gap-3">
+              {TEMPERATURES.map(t => (
+                <button
+                  key={t.value}
+                  onClick={() => selectTemperature(t.value)}
+                  className="os-card-hover os-press flex flex-col items-center gap-1.5 px-6 py-4 rounded-[var(--radius-lg)] text-sm font-semibold"
+                  style={{
+                    background: temperature === t.value ? "var(--accent-soft)" : "var(--surface-hover)",
+                    color: temperature === t.value ? "var(--accent)" : "var(--text)",
+                    border: `1px solid ${temperature === t.value ? "var(--accent)" : "var(--border)"}`,
+                  }}
+                >
+                  <span className="text-2xl">{t.emoji}</span>
+                  {t.label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {stepKey === "owner" && (
             <div className="flex flex-wrap gap-2">
               {users.map(u => (
@@ -364,6 +404,8 @@ function CreateLeadSheet({
               ))}
             </div>
           )}
+        </motion.div>
+        </AnimatePresence>
         </SheetBody>
 
         <SheetFooter className="justify-between">
@@ -395,10 +437,11 @@ function Chip({ children, active, onClick }: { children: React.ReactNode; active
   return (
     <button
       onClick={onClick}
-      className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+      className="os-press px-4 py-2 rounded-full text-sm font-medium transition-colors"
       style={{
         background: active ? "var(--accent-soft)" : "var(--surface-hover)",
         color: active ? "var(--accent)" : "var(--text-muted)",
+        border: `1px solid ${active ? "var(--accent)" : "transparent"}`,
       }}
     >
       {children}
