@@ -103,7 +103,7 @@ export function LeadsView({
             <button
               key={s}
               onClick={() => setStatusFilter(s)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+              className="os-press px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
               style={{
                 background: statusFilter === s ? "var(--accent-soft)" : "var(--surface-hover)",
                 color: statusFilter === s ? "var(--accent)" : "var(--text-muted)",

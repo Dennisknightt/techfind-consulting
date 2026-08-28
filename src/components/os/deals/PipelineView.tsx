@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Deal, Company, User, Product } from "@prisma/client";
-import { Plus, Kanban, List, Flame } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Plus, Kanban, List, Flame, Check, MessageCircle } from "lucide-react";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -26,6 +26,18 @@ const STALL_DAYS = 7;
 function isStalled(deal: DealWithRelations): boolean {
   if (deal.stage === "WON" || deal.stage === "LOST") return false;
   return daysBetween(deal.stageEnteredAt) > STALL_DAYS;
+}
+
+/** The stage a right-swipe advances to, or null once there's nowhere further forward to go. */
+function nextPipelineStage(stage: string): string | null {
+  const i = PIPELINE_STAGES.indexOf(stage as (typeof PIPELINE_STAGES)[number]);
+  if (i === -1 || i >= PIPELINE_STAGES.length - 1) return null;
+  return PIPELINE_STAGES[i + 1];
+}
+
+function waLink(phone: string, text: string) {
+  const digits = phone.replace(/[^\d]/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
 /** Contextual toast after a stage move — a nudge toward the obvious next step, not just a confirmation. */
@@ -296,6 +308,8 @@ function DealCard({
   );
 }
 
+const SWIPE_THRESHOLD = 90;
+
 function MobileDealCard({
   deal, onClick, onMoveStage,
 }: {
@@ -303,31 +317,63 @@ function MobileDealCard({
   onClick: () => void;
   onMoveStage: (deal: DealWithRelations, stage: string) => void;
 }) {
+  const [dragX, setDragX] = useState(0);
+  const nextStage = nextPipelineStage(deal.stage);
+  const canFollowUp = !!deal.company.phone;
+  const swipeable = !!nextStage || canFollowUp;
+
+  function handleDragEnd(_: unknown, info: PanInfo) {
+    setDragX(0);
+    if (info.offset.x > SWIPE_THRESHOLD && nextStage) {
+      onMoveStage(deal, nextStage);
+    } else if (info.offset.x < -SWIPE_THRESHOLD && canFollowUp) {
+      window.open(waLink(deal.company.phone!, `Hi, following up on ${deal.title} for ${deal.company.name}.`), "_blank");
+    }
+  }
+
   return (
-    <div
-      className="rounded-[var(--radius-lg)] p-4"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
-      <div onClick={onClick}>
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <p className="text-sm font-semibold text-[var(--text)]">{deal.company.name}</p>
-          <TemperatureBadge temperature={deal.temperature} />
+    <div className="relative">
+      {swipeable && (
+        <div className="absolute inset-0 rounded-[var(--radius-lg)] flex items-center justify-between px-5 pointer-events-none">
+          <span className="text-xs font-bold flex items-center gap-1.5 transition-opacity" style={{ color: "var(--accent)", opacity: dragX < -20 ? 1 : 0 }}>
+            <MessageCircle className="w-4 h-4" /> Follow up
+          </span>
+          <span className="text-xs font-bold flex items-center gap-1.5 ml-auto transition-opacity" style={{ color: "var(--success)", opacity: dragX > 20 ? 1 : 0 }}>
+            {nextStage ? STAGE_LABEL[nextStage] : ""} <Check className="w-4 h-4" />
+          </span>
         </div>
-        <p className="text-xs text-[var(--text-faint)] mb-2">{deal.title}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value, { compact: true })}</span>
-          <span className="text-[11px] text-[var(--text-faint)]">{timeAgo(deal.lastContactAt ?? deal.createdAt)}</span>
+      )}
+      <motion.div
+        drag={swipeable ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.7}
+        onDrag={(_, info) => setDragX(info.offset.x)}
+        onDragEnd={handleDragEnd}
+        whileDrag={{ scale: 1.02 }}
+        className="relative rounded-[var(--radius-lg)] p-4"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div onClick={onClick}>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <p className="text-sm font-semibold text-[var(--text)]">{deal.company.name}</p>
+            <TemperatureBadge temperature={deal.temperature} />
+          </div>
+          <p className="text-xs text-[var(--text-faint)] mb-2">{deal.title}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value, { compact: true })}</span>
+            <span className="text-[11px] text-[var(--text-faint)]">{timeAgo(deal.lastContactAt ?? deal.createdAt)}</span>
+          </div>
         </div>
-      </div>
-      <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }} onClick={e => e.stopPropagation()}>
-        <Select value={deal.stage} onValueChange={(v) => (v === "LOST" ? onMoveStage(deal, "LOST_TARGET") : onMoveStage(deal, v))}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}
-            <SelectItem value="LOST">Mark Lost</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }} onClick={e => e.stopPropagation()}>
+          <Select value={deal.stage} onValueChange={(v) => (v === "LOST" ? onMoveStage(deal, "LOST_TARGET") : onMoveStage(deal, v))}>
+            <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}
+              <SelectItem value="LOST">Mark Lost</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </motion.div>
     </div>
   );
 }
