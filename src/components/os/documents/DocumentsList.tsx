@@ -36,23 +36,26 @@ export function DocumentsList({ documents, title, subtitle, newHref }: { documen
           <p className="text-xs text-[var(--text-faint)] mt-1">Generate your first proforma — it takes under a minute.</p>
         </div>
       ) : (
-        <div className="mt-5 space-y-2">
-          {documents.map(doc => (
+        <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "110px 1fr 130px 110px", borderColor: "var(--border)" }}>
+            {["Number", "Client", "Status", "Total"].map(h => (
+              <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
+            ))}
+          </div>
+          {documents.map((doc, i) => (
             <Link
               key={doc.id}
               href={`/app/quotes/${doc.id}`}
-              className="flex items-center gap-4 px-4 py-3.5 rounded-[var(--radius-lg)] hover:bg-[var(--surface-hover)] transition-colors flex-wrap"
-              style={{ border: "1px solid var(--border)" }}
+              className="os-row-hover grid grid-cols-2 sm:grid-cols-[110px_1fr_130px_110px] items-center gap-3 px-4 py-2.5"
+              style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
-              <div className="min-w-[140px]">
-                <p className="text-sm font-bold text-[var(--text)]">{doc.number}</p>
-                <p className="text-[11px] text-[var(--text-faint)]">{friendlyDay(doc.createdAt)}</p>
+              <div>
+                <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{doc.number}</p>
+                <p className="os-text-meta">{friendlyDay(doc.createdAt)}</p>
               </div>
-              <div className="flex-1 min-w-[160px]">
-                <p className="text-sm text-[var(--text)]">{doc.company.name}</p>
-              </div>
-              <Badge tone={STATUS_TONE[doc.status] ?? "neutral"}>{doc.status.replace(/_/g, " ")}</Badge>
-              <span className="text-sm font-bold shrink-0" style={{ color: "var(--accent)" }}>{formatKES(doc.total, { compact: true })}</span>
+              <p className="hidden sm:block text-sm truncate" style={{ color: "var(--text)" }}>{doc.company.name}</p>
+              <div className="hidden sm:block"><Badge tone={STATUS_TONE[doc.status] ?? "neutral"}>{doc.status.replace(/_/g, " ")}</Badge></div>
+              <span className="os-text-number text-sm text-right sm:text-left" style={{ color: "var(--text)" }}>{formatKES(doc.total, { compact: true })}</span>
             </Link>
           ))}
         </div>

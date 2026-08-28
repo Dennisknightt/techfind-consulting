@@ -127,14 +127,16 @@ export function DocumentDetail({ doc: initialDoc }: { doc: Doc }) {
 
       {/* Deposit + payment */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-        <div className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface-hover)" }}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2">Payment</p>
+        <div className="rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+          <p className="os-text-meta font-semibold uppercase tracking-wider mb-2">Payment</p>
           <p className="text-sm text-[var(--text)]">Deposit: <strong>{formatKES(doc.depositRequired)}</strong></p>
           <p className="text-sm text-[var(--text)]">Balance: <strong>{formatKES(doc.balance)}</strong></p>
-          <p className="text-xs text-[var(--text-faint)] mt-2">Paid so far: {formatKES(doc.paidAmount)} — full reconciliation arrives with Payments (Phase 5).</p>
+          <p className="os-text-meta mt-2">Paid so far: {formatKES(doc.paidAmount)}{doc.payments.length > 0 ? " — " : ""}
+            {doc.payments.length > 0 && <Link href="/app/payments" className="hover:underline" style={{ color: "var(--accent)" }}>view payments</Link>}
+          </p>
         </div>
-        <div className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface-hover)" }}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2">Payment Link</p>
+        <div className="rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+          <p className="os-text-meta font-semibold uppercase tracking-wider mb-2">Payment Link</p>
           {paymentUrl ? (
             <>
               <p className="text-xs text-[var(--text-muted)] break-all">{paymentUrl}</p>
