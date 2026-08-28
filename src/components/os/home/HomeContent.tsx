@@ -2,7 +2,10 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { AlertCircle, AlertTriangle, ArrowRight, Flame, Users, CalendarDays, ListTodo, Wallet, Sparkles, PartyPopper, Clock } from "lucide-react";
+import {
+  AlertCircle, AlertTriangle, ArrowRight, Flame, Users, CalendarDays, ListTodo, Wallet,
+  Sparkles, PartyPopper, Clock, ShieldCheck, Handshake,
+} from "lucide-react";
 import { formatKES } from "@/lib/os/money";
 import { Button } from "@/components/os/ui/Button";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/os/motion";
@@ -14,6 +17,7 @@ export interface HomeContentProps {
   firstName: string;
   greeting: string;
   pipelineValue: number;
+  activeDealsCount: number;
   newLeads: number;
   hotDeals: number;
   upcomingMeetings: number;
@@ -24,24 +28,53 @@ export interface HomeContentProps {
   todaySchedule: ScheduleItem[];
 }
 
+function openCommandPalette() {
+  document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
+}
+
 export function HomeContent({
-  firstName, greeting, pipelineValue, newLeads, hotDeals, upcomingMeetings, openTasks, received, attention, opportunities, todaySchedule,
+  firstName, greeting, pipelineValue, activeDealsCount, newLeads, hotDeals, upcomingMeetings, openTasks, received, attention, opportunities, todaySchedule,
 }: HomeContentProps) {
+  const needsYou = attention.length + opportunities.length;
+
   return (
     <div className="p-6 lg:p-10 max-w-3xl">
       <motion.div {...fadeInUp}>
-        <p className="os-text-body" style={{ color: "var(--text-muted)" }}>
-          {greeting}, {firstName}.
+        <p className="os-heading-section" style={{ color: "var(--text)" }}>{greeting}, {firstName}.</p>
+        <p className="os-text-body mt-1" style={{ color: "var(--text-muted)" }}>
+          {needsYou === 0 ? "Business is running smoothly." : `Business is running smoothly. ${needsYou} thing${needsYou === 1 ? "" : "s"} need${needsYou === 1 ? "s" : ""} you.`}
         </p>
-        <div className="mt-1 flex items-baseline gap-2 flex-wrap">
-          <span className="os-text-hero" style={{ color: "var(--text)" }}>
-            {formatKES(pipelineValue, { compact: true })}
-          </span>
+
+        <div className="mt-6 flex items-end gap-8 flex-wrap">
+          <div>
+            <p className="os-text-hero" style={{ color: "var(--text)" }}>{formatKES(pipelineValue, { compact: true })}</p>
+            <p className="os-text-meta mt-1">Active pipeline</p>
+          </div>
+          {activeDealsCount > 0 && (
+            <div className="pb-1">
+              <p className="os-text-number text-3xl" style={{ color: "var(--text)" }}>{activeDealsCount}</p>
+              <p className="os-text-meta mt-1">deal{activeDealsCount === 1 ? "" : "s"}</p>
+            </div>
+          )}
         </div>
-        <p className="os-text-body mt-0.5" style={{ color: "var(--text-muted)" }}>
-          Active pipeline
-          {attention.length > 0 && <> · <span style={{ color: "var(--text)" }}>{attention.length} deal{attention.length === 1 ? "" : "s"} need{attention.length === 1 ? "s" : ""} you today</span></>}
-        </p>
+
+        {/* Big tappable summary rows — the "what do I do right now" entry points */}
+        <div className="mt-6 space-y-2">
+          {attention.length > 0 && (
+            <SummaryRow
+              icon={ShieldCheck}
+              label="Needs your attention"
+              count={attention.length}
+              href={attention[0].actionHref}
+              filled
+            />
+          )}
+          {opportunities.length > 0 && (
+            <SummaryRow icon={AlertTriangle} label="Opportunities to act on" count={opportunities.length} href={opportunities[0].actionHref} />
+          )}
+          <SummaryRow icon={Handshake} label="Pipeline" href="/app/deals" arrow />
+          <SummaryRow icon={Sparkles} label="Ask Techfind" onClick={openCommandPalette} arrow />
+        </div>
 
         {/* Secondary signal — small, quiet, never competing with the hero number */}
         <div className="flex flex-wrap gap-2 mt-5">
@@ -111,6 +144,54 @@ export function HomeContent({
         </section>
       )}
     </div>
+  );
+}
+
+function SummaryRow({
+  icon: Icon, label, count, href, onClick, filled, arrow,
+}: {
+  icon: typeof Flame;
+  label: string;
+  count?: number;
+  href?: string;
+  onClick?: () => void;
+  filled?: boolean;
+  arrow?: boolean;
+}) {
+  const content = (
+    <>
+      <Icon className="w-4 h-4 shrink-0" style={{ color: filled ? "white" : "var(--text-muted)" }} />
+      <span className="os-text-body font-medium flex-1 text-left" style={{ color: filled ? "white" : "var(--text)" }}>
+        {label}
+      </span>
+      {typeof count === "number" && (
+        <span
+          className="inline-flex items-center justify-center min-w-[1.5rem] h-6 px-1.5 rounded-full text-xs font-bold"
+          style={filled ? { background: "rgba(255,255,255,0.2)", color: "white" } : { background: "var(--surface-hover)", color: "var(--text)" }}
+        >
+          {count}
+        </span>
+      )}
+      {arrow && <ArrowRight className="w-4 h-4 shrink-0" style={{ color: "var(--text-faint)" }} />}
+    </>
+  );
+
+  const className = "os-press flex items-center gap-3 w-full rounded-[var(--radius-lg)] px-4 py-3.5 transition-colors";
+  const style: React.CSSProperties = filled
+    ? { background: "var(--accent)" }
+    : { background: "var(--surface)", border: "1px solid var(--border)" };
+
+  if (href) {
+    return (
+      <Link href={href} className={className} style={style}>
+        {content}
+      </Link>
+    );
+  }
+  return (
+    <button type="button" onClick={onClick} className={className} style={style}>
+      {content}
+    </button>
   );
 }
 

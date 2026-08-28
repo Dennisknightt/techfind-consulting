@@ -54,6 +54,7 @@ export default async function HomePage() {
       firstName={user.name.split(" ")[0]}
       greeting={greeting()}
       pipelineValue={pipelineValue}
+      activeDealsCount={activeDeals.length}
       newLeads={newLeads}
       hotDeals={hotDeals}
       upcomingMeetings={upcomingMeetings}
