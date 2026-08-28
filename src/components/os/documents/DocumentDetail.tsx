@@ -29,7 +29,7 @@ export function DocumentDetail({ doc: initialDoc }: { doc: Doc }) {
   const session = doc.paymentSessions[0];
   const paymentUrl = session ? `${baseUrl}/pay/${session.token}` : null;
   const pdfUrl = `/api/os/documents/${doc.id}/pdf`;
-  const docLabel = doc.type === "PROFORMA" ? "proforma" : "quote";
+  const docLabel = doc.type === "PROFORMA" ? "proforma" : doc.type === "INVOICE" ? "invoice" : "quote";
 
   async function sendWhatsApp() {
     if (!doc.company.phone) { toast.error("This client has no phone number on file"); return; }

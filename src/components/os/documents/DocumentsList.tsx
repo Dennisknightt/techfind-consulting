@@ -16,24 +16,36 @@ const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" |
   PARTIALLY_PAID: "warning", PAID: "success", EXPIRED: "danger", CANCELLED: "danger",
 };
 
-export function DocumentsList({ documents, title, subtitle, newHref }: { documents: DocRow[]; title: string; subtitle: string; newHref: string }) {
+export function DocumentsList({
+  documents, title, subtitle, newHref, newLabel = "New Proforma", emptyTitle = "Nothing here yet", emptyNote = "Generate your first proforma — it takes under a minute.",
+}: {
+  documents: DocRow[];
+  title: string;
+  subtitle: string;
+  newHref?: string;
+  newLabel?: string;
+  emptyTitle?: string;
+  emptyNote?: string;
+}) {
   return (
     <div className="p-6 lg:p-8">
       <PageHeader
         title={title}
         subtitle={`${documents.length} document${documents.length === 1 ? "" : "s"} · ${subtitle}`}
         actions={
-          <Button size="sm" asChild className="gap-1.5">
-            <Link href={newHref}><Plus className="w-4 h-4" /> New Proforma</Link>
-          </Button>
+          newHref ? (
+            <Button size="sm" asChild className="gap-1.5">
+              <Link href={newHref}><Plus className="w-4 h-4" /> {newLabel}</Link>
+            </Button>
+          ) : undefined
         }
       />
 
       {documents.length === 0 ? (
         <div className="mt-10 text-center py-14 rounded-[var(--radius-lg)] border border-dashed" style={{ borderColor: "var(--border-strong)" }}>
           <FileText className="w-6 h-6 mx-auto mb-3" style={{ color: "var(--text-faint)" }} />
-          <p className="text-sm font-semibold text-[var(--text)]">Nothing here yet</p>
-          <p className="text-xs text-[var(--text-faint)] mt-1">Generate your first proforma — it takes under a minute.</p>
+          <p className="text-sm font-semibold text-[var(--text)]">{emptyTitle}</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">{emptyNote}</p>
         </div>
       ) : (
         <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
