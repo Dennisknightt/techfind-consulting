@@ -3,22 +3,30 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Deal, Company, Contact, User, Meeting, Task, Project } from "@prisma/client";
-import { Phone, MessageCircle, Trophy, XCircle, FileText, Building2, Check, FolderKanban } from "lucide-react";
+import type { Deal, Company, Contact, User, Meeting, Task, Project, SalesDocument, Communication } from "@prisma/client";
+import { motion } from "framer-motion";
+import {
+  Phone, MessageCircle, Trophy, FileText, Building2, Check,
+  FolderKanban, CalendarPlus, StickyNote, Send,
+} from "lucide-react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { Avatar } from "@/components/os/ui/Avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
 import { formatKES } from "@/lib/os/money";
-import { friendlyDate, daysBetween } from "@/lib/os/dates";
-import { PIPELINE_STAGES, STAGE_LABEL } from "@/lib/os/pipeline";
+import { friendlyDate, friendlyDay, daysBetween, dayjs } from "@/lib/os/dates";
+import { STAGE_LABEL } from "@/lib/os/pipeline";
+import { fadeInUp, staggerContainer, staggerItem } from "@/lib/os/motion";
 import { updateDealStageAction, updateDealAction } from "@/server/actions/deals";
+import { logCommunicationAction } from "@/server/actions/communications";
 import { LostDealDialog } from "./LostDealDialog";
+import { StageTracker } from "./StageTracker";
+import { ScheduleMeetingSheet } from "@/components/os/meetings/MeetingsView";
 import { parseJsonArray } from "@/server/json";
 
+type CommunicationWithAuthor = Communication & { author: User | null };
 type DealFull = Deal & {
   company: Company;
   contact: Contact | null;
@@ -26,6 +34,8 @@ type DealFull = Deal & {
   meetings: Meeting[];
   tasks: (Task & { assignee: User | null })[];
   project: Project | null;
+  documents: SalesDocument[];
+  communications: CommunicationWithAuthor[];
 };
 
 function waLink(phone: string, text: string) {
@@ -37,10 +47,13 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
   const router = useRouter();
   const [deal, setDeal] = useState(initialDeal);
   const [lostOpen, setLostOpen] = useState(false);
+  const [meetingOpen, setMeetingOpen] = useState(false);
   const [nextAction, setNextAction] = useState(deal.nextAction ?? "");
   const [nextActionDue, setNextActionDue] = useState(deal.nextActionDue ? new Date(deal.nextActionDue).toISOString().slice(0, 10) : "");
   const [savingAction, setSavingAction] = useState(false);
   const [savingOwner, setSavingOwner] = useState(false);
+  const [note, setNote] = useState("");
+  const [savingNote, setSavingNote] = useState(false);
   const products = parseJsonArray<string>(deal.productKeys);
 
   async function changeOwner(ownerId: string) {
@@ -62,7 +75,8 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
     setDeal(d => ({ ...d, stage, stageEnteredAt: new Date() }));
     try {
       await updateDealStageAction(deal.id, stage);
-      if (stage === "WON") toast.success("Deal won! 🎉");
+      if (stage === "WON") toast.success(`${formatKES(deal.value)} WON 🎉`);
+      else toast.success(`Moved to ${STAGE_LABEL[stage]}`);
     } catch {
       toast.error("Couldn't move stage");
       setDeal(d => ({ ...d, stage: prev }));
@@ -78,7 +92,7 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
         lastContactAt: new Date(),
       });
       setDeal(d => ({ ...d, nextAction, nextActionDue: nextActionDue ? new Date(nextActionDue) : null, lastContactAt: new Date() }));
-      toast.success("Follow-up saved");
+      toast.success("Next action saved");
     } catch {
       toast.error("Couldn't save follow-up");
     } finally {
@@ -86,20 +100,73 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
     }
   }
 
+  async function saveNote() {
+    if (!note.trim()) return;
+    setSavingNote(true);
+    try {
+      const comm = await logCommunicationAction({
+        companyId: deal.companyId,
+        dealId: deal.id,
+        channel: "NOTE",
+        direction: "OUTBOUND",
+        body: note.trim(),
+      });
+      setDeal(d => ({ ...d, communications: [{ ...comm, author: null }, ...d.communications], lastContactAt: new Date() }));
+      setNote("");
+    } catch {
+      toast.error("Couldn't save note");
+    } finally {
+      setSavingNote(false);
+    }
+  }
+
+  function onMeetingScheduled(meeting: Meeting) {
+    setDeal(d => ({ ...d, meetings: [meeting, ...d.meetings] }));
+    setMeetingOpen(false);
+    toast.success("Meeting scheduled");
+  }
+
+  const upcomingMeetings = deal.meetings.filter(m => m.status === "SCHEDULED");
+
+  const quoted = deal.documents.reduce((s, d) => s + d.total, 0);
+  const paid = deal.documents.reduce((s, d) => s + d.paidAmount, 0);
+  const outstanding = deal.documents.reduce((s, d) => s + d.balance, 0);
+
+  const timeline = [
+    ...deal.communications.map(c => ({
+      id: `comm-${c.id}`,
+      at: c.createdAt,
+      text: c.channel === "NOTE" ? c.body : `${c.channel === "WHATSAPP" ? "WhatsApp" : c.channel.charAt(0) + c.channel.slice(1).toLowerCase()} ${c.direction === "INBOUND" ? "message received" : "message sent"}${c.channel === "NOTE" ? "" : `: ${c.body}`}`,
+      isNote: c.channel === "NOTE",
+    })),
+    ...deal.meetings.filter(m => m.status === "DONE").map(m => ({
+      id: `mtg-${m.id}`,
+      at: m.scheduledAt,
+      text: "Meeting completed",
+      isNote: false,
+    })),
+    { id: "created", at: deal.createdAt, text: "Deal created", isNote: false },
+  ].sort((a, b) => dayjs(b.at).valueOf() - dayjs(a.at).valueOf());
+
   return (
-    <div className="p-6 lg:p-8 max-w-4xl">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <Link href={`/app/clients/${deal.companyId}`} className="text-xs font-medium flex items-center gap-1 mb-1.5" style={{ color: "var(--accent)" }}>
-            <Building2 className="w-3 h-3" /> {deal.company.name}
-          </Link>
-          <h1 className="text-xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{deal.title}</h1>
-          <div className="flex items-center gap-2 mt-2 flex-wrap">
-            <span className="text-lg font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value)}</span>
-            <TemperatureBadge temperature={deal.temperature} />
+    <div className="p-6 lg:p-8 max-w-3xl">
+      <motion.div {...fadeInUp}>
+        <Link href={`/app/clients/${deal.companyId}`} className="text-xs font-medium flex items-center gap-1 mb-2" style={{ color: "var(--accent)" }}>
+          <Building2 className="w-3 h-3" /> {deal.company.name}
+        </Link>
+        <div className="flex items-start justify-between gap-4 flex-wrap">
+          <div>
+            <h1 className="os-heading-page" style={{ color: "var(--text)" }}>{deal.title}</h1>
+            <div className="flex items-center gap-2.5 mt-2 flex-wrap">
+              <span className="os-text-number text-2xl" style={{ color: "var(--accent)" }}>{formatKES(deal.value)}</span>
+              <TemperatureBadge temperature={deal.temperature} />
+            </div>
+            {products.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mt-3">
+                {products.map(p => <Badge key={p} tone="accent">{p}</Badge>)}
+              </div>
+            )}
           </div>
-        </div>
-        <div className="flex items-end gap-3">
           <div className="w-40">
             <Label>Owner</Label>
             <Select value={deal.ownerId ?? ""} onValueChange={changeOwner} disabled={savingOwner}>
@@ -109,102 +176,157 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
               </SelectContent>
             </Select>
           </div>
-          <div className="w-48">
-            <Label>Stage</Label>
-            <Select value={deal.stage} onValueChange={moveStage}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}
-                <SelectItem value="LOST">Mark Lost</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* Quick actions */}
-      <div className="flex flex-wrap gap-2 mt-5">
-        {deal.company.phone && (
-          <>
-            <Button variant="secondary" size="sm" onClick={() => window.open(`tel:${deal.company.phone}`)} className="gap-1.5">
-              <Phone className="w-3.5 h-3.5" /> Call
-            </Button>
-            <Button
-              variant="secondary" size="sm"
-              onClick={() => window.open(waLink(deal.company.phone!, `Hi, following up on ${deal.title} for ${deal.company.name}.`), "_blank")}
-              className="gap-1.5"
-            >
-              <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
-            </Button>
-          </>
-        )}
-        <Button variant="secondary" size="sm" onClick={() => router.push(`/app/quotes/new?deal=${deal.id}`)} className="gap-1.5">
-          <FileText className="w-3.5 h-3.5" /> Create Proforma
-        </Button>
-        {deal.project && (
-          <Button variant="secondary" size="sm" onClick={() => router.push(`/app/projects/${deal.project!.id}`)} className="gap-1.5" style={{ color: "var(--accent)" }}>
-            <FolderKanban className="w-3.5 h-3.5" /> View Project
-          </Button>
-        )}
-        {deal.stage !== "WON" && (
-          <Button variant="secondary" size="sm" onClick={() => moveStage("WON")} className="gap-1.5" style={{ color: "var(--success)" }}>
-            <Trophy className="w-3.5 h-3.5" /> Mark Won
-          </Button>
-        )}
-        {deal.stage !== "LOST" && (
-          <Button variant="ghost" size="sm" onClick={() => setLostOpen(true)} className="gap-1.5" style={{ color: "var(--danger)" }}>
-            <XCircle className="w-3.5 h-3.5" /> Mark Lost
-          </Button>
-        )}
-      </div>
-
-      {products.length > 0 && (
-        <div className="flex flex-wrap gap-1.5 mt-4">
-          {products.map(p => <Badge key={p} tone="accent">{p}</Badge>)}
-        </div>
-      )}
-
-      {/* Next action */}
-      <div className="mt-6 rounded-[var(--radius-lg)] p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-        <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-3">Next Action</p>
+      {/* Next Best Action */}
+      <motion.div
+        {...fadeInUp}
+        className="mt-6 rounded-[var(--radius-xl)] p-5"
+        style={{ background: "var(--accent-soft)", border: "1px solid var(--border-strong)" }}
+      >
+        <p className="os-text-meta font-bold uppercase tracking-wider mb-3" style={{ color: "var(--accent)" }}>Next Best Action</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Input value={nextAction} onChange={e => setNextAction(e.target.value)} placeholder="Send proforma, confirm decision maker…" className="flex-1" />
           <Input type="date" value={nextActionDue} onChange={e => setNextActionDue(e.target.value)} className="sm:w-44" />
           <Button size="sm" loading={savingAction} onClick={saveNextAction} className="gap-1.5"><Check className="w-3.5 h-3.5" /> Save</Button>
         </div>
-        <p className="text-xs text-[var(--text-faint)] mt-2.5">
+        <p className="os-text-meta mt-2.5">
           {daysBetween(deal.stageEnteredAt)} day{daysBetween(deal.stageEnteredAt) === 1 ? "" : "s"} in {STAGE_LABEL[deal.stage]}
           {deal.lastContactAt && ` · Last contact ${friendlyDate(deal.lastContactAt)}`}
         </p>
-      </div>
+      </motion.div>
 
-      {/* Meetings + tasks */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2.5">Meetings</p>
+      {/* Deal Journey */}
+      <section className="mt-8">
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Deal Journey</h2>
+        <StageTracker stage={deal.stage} onSelect={moveStage} />
+        {deal.stage !== "LOST" && (
+          <button onClick={() => setLostOpen(true)} className="mt-2 text-xs font-medium hover:underline" style={{ color: "var(--text-faint)" }}>
+            Mark as lost instead
+          </button>
+        )}
+      </section>
+
+      {/* Quick Actions */}
+      <section className="mt-8">
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Quick Actions</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-4 gap-2.5">
+          {deal.company.phone && (
+            <QuickActionTile icon={Phone} label="Call" onClick={() => window.open(`tel:${deal.company.phone}`)} />
+          )}
+          {deal.company.phone && (
+            <QuickActionTile
+              icon={MessageCircle}
+              label="WhatsApp"
+              onClick={() => window.open(waLink(deal.company.phone!, `Hi, following up on ${deal.title} for ${deal.company.name}.`), "_blank")}
+            />
+          )}
+          <QuickActionTile icon={CalendarPlus} label="Meeting" onClick={() => setMeetingOpen(true)} />
+          <QuickActionTile icon={FileText} label="Quotation" onClick={() => router.push(`/app/quotes/new?deal=${deal.id}`)} />
+          {deal.project && (
+            <QuickActionTile icon={FolderKanban} label="Project" onClick={() => router.push(`/app/projects/${deal.project!.id}`)} />
+          )}
+          {deal.stage !== "WON" && (
+            <QuickActionTile icon={Trophy} label="Mark Won" tone="success" onClick={() => moveStage("WON")} />
+          )}
+        </div>
+      </section>
+
+      {/* Upcoming meetings */}
+      {upcomingMeetings.length > 0 && (
+        <section className="mt-8">
+          <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Upcoming</h2>
           <div className="space-y-2">
-            {deal.meetings.length === 0 && <p className="text-xs text-[var(--text-faint)]">None yet.</p>}
-            {deal.meetings.map(m => (
-              <div key={m.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)]" style={{ background: "var(--surface-hover)" }}>
-                <span className="text-xs text-[var(--text)]">{friendlyDate(m.scheduledAt)}</span>
-                <Badge tone={m.status === "DONE" ? "success" : "neutral"}>{m.status}</Badge>
+            {upcomingMeetings.map(m => (
+              <div key={m.id} className="flex items-center justify-between px-4 py-3 rounded-[var(--radius-md)]" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+                <span className="os-text-body flex items-center gap-2" style={{ color: "var(--text)" }}>
+                  <CalendarPlus className="w-4 h-4" style={{ color: "var(--accent)" }} /> {friendlyDate(m.scheduledAt)}
+                </span>
+                <Badge tone="accent">Scheduled</Badge>
               </div>
             ))}
           </div>
+        </section>
+      )}
+
+      {/* Timeline */}
+      <section className="mt-8">
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Timeline</h2>
+        {timeline.length === 0 ? (
+          <p className="os-text-meta">Nothing logged yet.</p>
+        ) : (
+          <motion.div variants={staggerContainer} initial="initial" animate="animate" className="space-y-1">
+            {groupByDay(timeline).map(group => (
+              <div key={group.day} className="mb-4">
+                <p className="os-text-meta font-bold uppercase tracking-wider mb-2">{group.day}</p>
+                <div className="space-y-2.5">
+                  {group.items.map(item => (
+                    <motion.div key={item.id} variants={staggerItem} className="flex items-start gap-3">
+                      <span className="os-text-meta shrink-0 w-16 pt-0.5">{dayjs(item.at).format("h:mm A")}</span>
+                      <span className="w-1.5 h-1.5 rounded-full shrink-0 mt-1.5" style={{ background: item.isNote ? "var(--accent)" : "var(--text-faint)" }} />
+                      <span className="os-text-body flex-1" style={{ color: "var(--text)" }}>{item.text}</span>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </motion.div>
+        )}
+      </section>
+
+      {/* Commercial */}
+      <section className="mt-8">
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Commercial</h2>
+        <div className="rounded-[var(--radius-xl)] p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+          <div className="grid grid-cols-3 gap-4">
+            <CommercialStat label="Quoted" value={quoted} />
+            <CommercialStat label="Paid" value={paid} tone="success" />
+            <CommercialStat label="Outstanding" value={outstanding} tone={outstanding > 0 ? "warning" : undefined} />
+          </div>
+          {deal.documents.length === 0 && (
+            <Button size="sm" variant="secondary" className="mt-4 gap-1.5" onClick={() => router.push(`/app/quotes/new?deal=${deal.id}`)}>
+              <FileText className="w-3.5 h-3.5" /> Create quotation
+            </Button>
+          )}
         </div>
-        <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2.5">Open Tasks</p>
+      </section>
+
+      {/* Notes */}
+      <section className="mt-8 mb-4">
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Notes</h2>
+        <div className="flex items-center gap-2">
+          <StickyNote className="w-4 h-4 shrink-0" style={{ color: "var(--text-faint)" }} />
+          <Input
+            value={note}
+            onChange={e => setNote(e.target.value)}
+            onKeyDown={e => { if (e.key === "Enter" && note.trim()) saveNote(); }}
+            placeholder="Quick note — press Enter to save"
+            disabled={savingNote}
+            className="flex-1"
+          />
+          {note.trim() && (
+            <Button size="icon" variant="secondary" loading={savingNote} onClick={saveNote} aria-label="Save note">
+              <Send className="w-3.5 h-3.5" />
+            </Button>
+          )}
+        </div>
+      </section>
+
+      {/* Open tasks */}
+      {deal.tasks.length > 0 && (
+        <section className="mb-4">
+          <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Open Tasks</h2>
           <div className="space-y-2">
-            {deal.tasks.length === 0 && <p className="text-xs text-[var(--text-faint)]">None yet.</p>}
             {deal.tasks.map(t => (
               <div key={t.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)]" style={{ background: "var(--surface-hover)" }}>
-                <span className="text-xs text-[var(--text)]">{t.title}</span>
+                <span className="os-text-body" style={{ color: "var(--text)" }}>{t.title}</span>
                 {t.assignee && <Avatar name={t.assignee.name} color={t.assignee.avatarColor} size={20} />}
               </div>
             ))}
           </div>
-        </div>
-      </div>
+        </section>
+      )}
 
       <LostDealDialog
         dealId={deal.id}
@@ -213,6 +335,51 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
         onOpenChange={setLostOpen}
         onLost={() => router.push("/app/deals")}
       />
+      <ScheduleMeetingSheet
+        open={meetingOpen}
+        onOpenChange={setMeetingOpen}
+        onScheduled={onMeetingScheduled}
+        lockedCompany={deal.company}
+      />
+    </div>
+  );
+}
+
+function groupByDay(items: { id: string; at: Date | string; text: string; isNote: boolean }[]) {
+  const groups: { day: string; items: typeof items }[] = [];
+  for (const item of items) {
+    const day = friendlyDay(item.at);
+    const existing = groups.find(g => g.day === day);
+    if (existing) existing.items.push(item);
+    else groups.push({ day, items: [item] });
+  }
+  return groups;
+}
+
+function QuickActionTile({
+  icon: Icon, label, onClick, tone,
+}: { icon: typeof Phone; label: string; onClick: () => void; tone?: "success" }) {
+  const color = tone === "success" ? "var(--success)" : "var(--accent)";
+  return (
+    <button
+      onClick={onClick}
+      className="os-card-hover os-press flex flex-col items-center justify-center gap-2 py-5 rounded-[var(--radius-lg)] text-center"
+      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+    >
+      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: tone === "success" ? "var(--success-soft)" : "var(--accent-soft)" }}>
+        <Icon className="w-[18px] h-[18px]" style={{ color }} />
+      </div>
+      <span className="text-xs font-medium" style={{ color: "var(--text)" }}>{label}</span>
+    </button>
+  );
+}
+
+function CommercialStat({ label, value, tone }: { label: string; value: number; tone?: "success" | "warning" }) {
+  const color = tone === "success" ? "var(--success)" : tone === "warning" ? "var(--warning)" : "var(--text)";
+  return (
+    <div>
+      <p className="os-text-meta mb-1">{label}</p>
+      <p className="os-text-number text-lg" style={{ color }}>{formatKES(value, { compact: true })}</p>
     </div>
   );
 }

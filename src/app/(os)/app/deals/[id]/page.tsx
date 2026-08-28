@@ -19,6 +19,8 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
       meetings: { orderBy: { scheduledAt: "desc" } },
       tasks: { where: { status: "OPEN" }, include: { assignee: true }, orderBy: { dueAt: "asc" } },
       project: true,
+      documents: { orderBy: { createdAt: "desc" } },
+      communications: { include: { author: true }, orderBy: { createdAt: "desc" }, take: 30 },
     },
   });
 
