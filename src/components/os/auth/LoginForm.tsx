@@ -7,6 +7,7 @@ import Link from "next/link";
 import { loginAction, type LoginState } from "@/server/actions/auth";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
+import { primeSonicLogo } from "@/lib/os/sonicLogo";
 
 const initialState: LoginState = {};
 
@@ -29,7 +30,12 @@ export function LoginForm() {
         <p className="text-sm text-[var(--text-muted)] mt-1.5">Your business. In control.</p>
       </div>
 
-      <form action={formAction} className="space-y-4">
+      {/*
+        Unlock audio synchronously inside this real click/submit gesture,
+        before the redirect to /app — see sonicLogo.ts for why WelcomeExperience
+        can't reliably start audio on its own after landing there.
+      */}
+      <form action={formAction} onSubmit={() => primeSonicLogo()} className="space-y-4">
         <div>
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" autoComplete="username" required placeholder="you@techfind.co.ke" />
