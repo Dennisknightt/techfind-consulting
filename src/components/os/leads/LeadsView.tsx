@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Lead, User, Product } from "@prisma/client";
-import { Plus, Search, Phone, Mail, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
+import { Plus, Search, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { fadeInUp } from "@/lib/os/motion";
@@ -15,7 +15,7 @@ import { Avatar } from "@/components/os/ui/Avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/os/ui/Sheet";
 import { formatKES } from "@/lib/os/money";
 import { timeAgo } from "@/lib/os/dates";
-import { createLeadAction, convertLeadToDealAction } from "@/server/actions/leads";
+import { createLeadAction, convertLeadToDealAction, updateLeadAction } from "@/server/actions/leads";
 
 type LeadWithOwner = Lead & { owner: User | null };
 
@@ -81,6 +81,19 @@ export function LeadsView({
     startTransition(() => router.refresh());
   }
 
+  const TEMP_CYCLE = ["HOT", "WARM", "COLD"] as const;
+  async function cycleTemperature(lead: LeadWithOwner) {
+    const i = TEMP_CYCLE.indexOf(lead.temperature as (typeof TEMP_CYCLE)[number]);
+    const next = TEMP_CYCLE[(i + 1) % TEMP_CYCLE.length];
+    setLeads(prev => prev.map(l => (l.id === lead.id ? { ...l, temperature: next } : l)));
+    try {
+      await updateLeadAction(lead.id, { temperature: next });
+    } catch {
+      setLeads(prev => prev.map(l => (l.id === lead.id ? { ...l, temperature: lead.temperature } : l)));
+      toast.error("Couldn't update temperature");
+    }
+  }
+
   return (
     <div className="p-6 lg:p-8">
       <PageHeader
@@ -123,46 +136,65 @@ export function LeadsView({
         </div>
       )}
 
-      <div className="mt-5 space-y-2.5">
-        {filtered.map(lead => (
-          <motion.div
-            key={lead.id}
-            {...fadeInUp}
-            className="os-card-hover rounded-[var(--radius-lg)] border p-4 flex flex-col sm:flex-row sm:items-center gap-3"
-            style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+      {filtered.length > 0 && (
+        <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div
+            className="hidden sm:grid items-center gap-3 px-4 py-2 border-b"
+            style={{ gridTemplateColumns: "minmax(0,1fr) 130px 100px 100px 40px 120px", borderColor: "var(--border)" }}
           >
-            <Avatar name={lead.name} size={38} />
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="font-semibold text-sm text-[var(--text)]">{lead.name}</span>
-                {lead.companyNameRaw && <span className="text-xs text-[var(--text-faint)]">· {lead.companyNameRaw}</span>}
+            {["Lead", "Source", "Temp", "Value", "", ""].map((h, i) => (
+              <span key={i} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
+            ))}
+          </div>
+          {filtered.map((lead, i) => (
+            <motion.div
+              key={lead.id}
+              {...fadeInUp}
+              className="os-row-hover group grid grid-cols-1 sm:grid-cols-[minmax(0,1fr)_130px_100px_100px_40px_120px] items-center gap-x-3 gap-y-1.5 px-4 py-2.5"
+              style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Avatar name={lead.name} size={28} />
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{lead.name}</span>
+                    {lead.status === "CONVERTED" && <Badge tone="success">Converted</Badge>}
+                  </div>
+                  <p className="os-text-meta truncate">
+                    {lead.companyNameRaw || lead.phone || lead.email || timeAgo(lead.createdAt)}
+                  </p>
+                </div>
+              </div>
+
+              <span className="os-text-meta hidden sm:block truncate">{sourceLabel(lead.source)}</span>
+
+              <button onClick={() => cycleTemperature(lead)} className="hidden sm:flex justify-start" title="Click to change">
                 <TemperatureBadge temperature={lead.temperature} />
-                <Badge tone="neutral">{sourceLabel(lead.source)}</Badge>
-                {lead.status === "CONVERTED" && <Badge tone="success">Converted</Badge>}
+              </button>
+
+              <span className="hidden sm:block os-text-number text-sm text-right" style={{ color: "var(--text)" }}>
+                {lead.value > 0 ? formatKES(lead.value, { compact: true }) : "—"}
+              </span>
+
+              <span className="hidden sm:flex justify-center">
+                {lead.owner && <Avatar name={lead.owner.name} color={lead.owner.avatarColor} size={22} />}
+              </span>
+
+              <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                {lead.status !== "CONVERTED" ? (
+                  <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
+                    Convert <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                ) : lead.convertedDealId ? (
+                  <Button size="sm" variant="ghost" onClick={() => router.push(`/app/deals/${lead.convertedDealId}`)}>
+                    View Deal
+                  </Button>
+                ) : null}
               </div>
-              <div className="flex items-center gap-3 mt-1.5 text-xs text-[var(--text-faint)] flex-wrap">
-                {lead.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{lead.phone}</span>}
-                {lead.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{lead.email}</span>}
-                {lead.interestedProduct && <span>Interested: {lead.interestedProduct}</span>}
-                <span>{timeAgo(lead.createdAt)}</span>
-              </div>
-            </div>
-            <div className="flex items-center gap-3 shrink-0">
-              {lead.value > 0 && <span className="text-sm font-bold text-[var(--text)]">{formatKES(lead.value, { compact: true })}</span>}
-              {lead.owner && <Avatar name={lead.owner.name} color={lead.owner.avatarColor} size={26} />}
-              {lead.status !== "CONVERTED" ? (
-                <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
-                  Convert <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
-              ) : lead.convertedDealId ? (
-                <Button size="sm" variant="ghost" onClick={() => router.push(`/app/deals/${lead.convertedDealId}`)}>
-                  View Deal
-                </Button>
-              ) : null}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       <CreateLeadSheet
         open={createOpen}
