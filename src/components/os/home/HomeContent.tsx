@@ -2,11 +2,13 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { AlertCircle, AlertTriangle, ArrowRight, Flame, Users, CalendarDays, ListTodo, Wallet, Sparkles, PartyPopper } from "lucide-react";
+import { AlertCircle, AlertTriangle, ArrowRight, Flame, Users, CalendarDays, ListTodo, Wallet, Sparkles, PartyPopper, Clock } from "lucide-react";
 import { formatKES } from "@/lib/os/money";
 import { Button } from "@/components/os/ui/Button";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/os/motion";
 import type { AttentionItem, OpportunityItem } from "@/server/intelligence/rules";
+
+export interface ScheduleItem { id: string; at: Date; label: string }
 
 export interface HomeContentProps {
   firstName: string;
@@ -19,10 +21,11 @@ export interface HomeContentProps {
   received: number;
   attention: AttentionItem[];
   opportunities: OpportunityItem[];
+  todaySchedule: ScheduleItem[];
 }
 
 export function HomeContent({
-  firstName, greeting, pipelineValue, newLeads, hotDeals, upcomingMeetings, openTasks, received, attention, opportunities,
+  firstName, greeting, pipelineValue, newLeads, hotDeals, upcomingMeetings, openTasks, received, attention, opportunities, todaySchedule,
 }: HomeContentProps) {
   return (
     <div className="p-6 lg:p-10 max-w-3xl">
@@ -35,7 +38,10 @@ export function HomeContent({
             {formatKES(pipelineValue, { compact: true })}
           </span>
         </div>
-        <p className="os-text-body mt-0.5" style={{ color: "var(--text-muted)" }}>Active pipeline</p>
+        <p className="os-text-body mt-0.5" style={{ color: "var(--text-muted)" }}>
+          Active pipeline
+          {attention.length > 0 && <> · <span style={{ color: "var(--text)" }}>{attention.length} deal{attention.length === 1 ? "" : "s"} need{attention.length === 1 ? "s" : ""} you today</span></>}
+        </p>
 
         {/* Secondary signal — small, quiet, never competing with the hero number */}
         <div className="flex flex-wrap gap-2 mt-5">
@@ -53,8 +59,8 @@ export function HomeContent({
         {attention.length === 0 ? (
           <motion.div
             {...fadeInUp}
-            className="rounded-[var(--radius-xl)] p-8 text-center"
-            style={{ background: "var(--success-soft)" }}
+            className="rounded-[var(--radius-lg)] p-8 text-center"
+            style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
           >
             <p className="os-text-body font-semibold" style={{ color: "var(--success)" }}>
               Nothing urgent — the pipeline is under control.
@@ -80,6 +86,24 @@ export function HomeContent({
               <OpportunityCard key={item.id} item={item} />
             ))}
           </motion.div>
+        </section>
+      )}
+
+      {/* Today */}
+      {todaySchedule.length > 0 && (
+        <section className="mt-10">
+          <h2 className="os-heading-section mb-4" style={{ color: "var(--text)" }}>Today</h2>
+          <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+            {todaySchedule.map(item => (
+              <div key={item.id} className="flex items-center gap-3 px-4 py-3" style={{ borderColor: "var(--border)" }}>
+                <Clock className="w-3.5 h-3.5 shrink-0" style={{ color: "var(--text-faint)" }} />
+                <span className="os-text-number text-sm w-14 shrink-0" style={{ color: "var(--text)" }}>
+                  {item.at.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                </span>
+                <span className="os-text-body" style={{ color: "var(--text)" }}>{item.label}</span>
+              </div>
+            ))}
+          </div>
         </section>
       )}
     </div>
@@ -110,7 +134,7 @@ function AttentionCard({ item }: { item: AttentionItem }) {
   return (
     <motion.div
       variants={staggerItem}
-      className="os-card-hover flex items-start gap-4 rounded-[var(--radius-xl)] p-5"
+      className="os-card-hover flex items-start gap-4 rounded-[var(--radius-lg)] p-5"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
       <div
@@ -143,10 +167,10 @@ function OpportunityCard({ item }: { item: OpportunityItem }) {
   return (
     <motion.div
       variants={staggerItem}
-      className="os-card-hover flex items-start gap-4 rounded-[var(--radius-xl)] p-5"
-      style={{ background: "var(--accent-soft)", border: "1px solid var(--border-strong)" }}
+      className="os-card-hover flex items-start gap-4 rounded-[var(--radius-lg)] p-5"
+      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
-      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--surface)" }}>
+      <div className="w-9 h-9 rounded-full flex items-center justify-center shrink-0" style={{ background: "var(--accent-soft)" }}>
         <PartyPopper className="w-[18px] h-[18px]" style={{ color: "var(--accent)" }} />
       </div>
       <div className="flex-1 min-w-[180px]">

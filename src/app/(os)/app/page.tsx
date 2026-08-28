@@ -31,6 +31,24 @@ export default async function HomePage() {
   const pipelineValue = activeDeals.reduce((s, d) => s + d.value, 0);
   const received = await db.payment.aggregate({ _sum: { amount: true }, where: { status: "SUCCESSFUL" } });
 
+  const todayStart = now.startOf("day").toDate();
+  const todayEnd = now.endOf("day").toDate();
+  const [todayMeetings, todayTasks] = await Promise.all([
+    db.meeting.findMany({
+      where: { status: "SCHEDULED", scheduledAt: { gte: todayStart, lte: todayEnd } },
+      include: { company: true },
+      orderBy: { scheduledAt: "asc" },
+    }),
+    db.task.findMany({
+      where: { status: "OPEN", dueAt: { gte: todayStart, lte: todayEnd } },
+      orderBy: { dueAt: "asc" },
+    }),
+  ]);
+  const todaySchedule = [
+    ...todayMeetings.map(m => ({ id: `mtg-${m.id}`, at: m.scheduledAt, label: `Meeting · ${m.company.name}` })),
+    ...todayTasks.map(t => ({ id: `task-${t.id}`, at: t.dueAt ?? todayEnd, label: `Follow-up · ${t.title}` })),
+  ].sort((a, b) => a.at.getTime() - b.at.getTime());
+
   return (
     <HomeContent
       firstName={user.name.split(" ")[0]}
@@ -43,6 +61,7 @@ export default async function HomePage() {
       received={received._sum.amount ?? 0}
       attention={attention}
       opportunities={opportunities}
+      todaySchedule={todaySchedule}
     />
   );
 }

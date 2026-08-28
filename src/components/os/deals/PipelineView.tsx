@@ -279,7 +279,7 @@ function StageColumn({
       }}
     >
       <div className="flex items-center justify-between mb-3 px-1">
-        <span className="text-xs font-bold text-[var(--text)]">{STAGE_LABEL[stage]}</span>
+        <span className="text-xs font-semibold text-[var(--text)]">{STAGE_LABEL[stage]}</span>
         <span className="text-[11px] text-[var(--text-faint)]">{deals.length} · {formatKES(stageValue, { compact: true })}</span>
       </div>
       <div
@@ -322,7 +322,7 @@ function DealCard({
       draggable={draggable}
       onDragStart={onDragStart}
       onClick={onClick}
-      className="os-card-hover rounded-[var(--radius-lg)] p-3.5 cursor-pointer"
+      className="os-card-hover rounded-[var(--radius-lg)] p-3 cursor-pointer"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
