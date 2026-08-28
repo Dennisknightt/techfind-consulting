@@ -1,17 +1,23 @@
 // Techfind Revenue OS — database schema
 //
-// Provider: SQLite for local/dev (zero external credentials required).
-// The schema intentionally avoids SQLite-only features (no native enums,
-// no composite types) so it maps cleanly onto PostgreSQL/Supabase for
-// production — see /docs/DATABASE.md for the migration path and for the
-// string-union "enum" convention used throughout (documented per field).
+// Provider: PostgreSQL — required in any deployed environment (Vercel's
+// serverless functions have no persistent local disk, so the SQLite file
+// used during earlier local development cannot work there). The schema
+// was written from the start to avoid SQLite-only features (no native
+// enums, no composite types), so this remained a one-line provider swap —
+// see /docs/DATABASE.md for the string-union "enum" convention used
+// throughout and the rest of the migration notes.
+//
+// Local development against SQLite still works by pointing DATABASE_URL
+// at a local Postgres instead (see docs/DATABASE.md), or by checking out
+// the commit before this change for pure-SQLite local dev.
 
 generator client {
   provider = "prisma-client-js"
 }
 
 datasource db {
-  provider = "sqlite"
+  provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 

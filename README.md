@@ -26,11 +26,16 @@ Start with **`docs/ARCHITECTURE.md`** for how the two fit together in one Next.j
 
 ```bash
 npm install
-cp .env.example .env         # fill in real values — see .env.example for what each one does
-npx prisma db push           # sync the schema to a local SQLite dev.db
+cp .env.example .env         # fill in real values, including a Postgres DATABASE_URL — see below
+npx prisma db push           # sync the schema to your database
 npx prisma db seed           # users + product catalogue + settings (no demo business data)
 npm run dev
 ```
+
+`DATABASE_URL` must point at a real PostgreSQL database — a local instance, or a hosted one
+(Vercel Postgres, Supabase, Neon all work). SQLite cannot be used, including for local dev:
+the schema targets `postgresql` (see `docs/DATABASE.md`) because Vercel's serverless functions
+have no persistent local disk for a SQLite file to live on.
 
 Open [http://localhost:3000](http://localhost:3000) for the marketing site, or
 [http://localhost:3000/app](http://localhost:3000/app) for the OS (redirects to `/login`).
@@ -46,5 +51,5 @@ a real charge to fire.
 
 ## Stack
 
-Next.js 15 (App Router) · Prisma 6 · SQLite (dev) · Tailwind v4 · Radix primitives ·
+Next.js 15 (App Router) · Prisma 6 · PostgreSQL · Tailwind v4 · Radix primitives ·
 `@react-pdf/renderer` · `intasend-node`.

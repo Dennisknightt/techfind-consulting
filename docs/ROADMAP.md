@@ -31,9 +31,10 @@ order for a next pass:
 4. **Product catalogue management UI** — same story for `settings.write`; quick items, quick
    prices, and packages are seeded/edited by hand today, not through Settings → Catalogue.
 5. **Real WhatsApp Cloud API / email sending** — see `docs/INTEGRATIONS.md`.
-6. **Postgres migration** — move off `prisma db push` on SQLite to `prisma migrate` on Postgres
-   before any production deployment; the schema was written to make this a low-friction move
-   (see `docs/DATABASE.md`).
+6. **A real `prisma migrate` history on Postgres**, replacing the `prisma db push` schema-sync
+   still in use — the provider itself moved to Postgres already (required for the first Vercel
+   deploy, since SQLite cannot run there), but migrations, not just the provider, should be
+   real and reviewable before this holds data worth protecting (see `docs/DATABASE.md`).
 7. **Money as integer minor-units or `Decimal`** instead of `Float`, before transaction volume
    makes floating-point drift a real (rather than theoretical) concern.
 8. **Refunds** — `PaymentProvider.refund()` exists in the interface and both providers
