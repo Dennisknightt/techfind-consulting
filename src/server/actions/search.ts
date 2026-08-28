@@ -21,7 +21,7 @@ export async function globalSearchAction(rawQuery: string): Promise<SearchResult
   const q = rawQuery.trim();
   if (q.length < 2) return [];
 
-  const [companies, contacts, leads, deals, documents] = await Promise.all([
+  const [companies, contacts, leads, deals, documents, tasks] = await Promise.all([
     db.company.findMany({
       where: { OR: [{ name: { contains: q } }, { phone: { contains: q } }, { email: { contains: q } }] },
       take: 5,
@@ -45,14 +45,22 @@ export async function globalSearchAction(rawQuery: string): Promise<SearchResult
       include: { company: true },
       take: 5,
     }),
+    db.task.findMany({
+      where: { title: { contains: q }, status: "OPEN" },
+      take: 5,
+    }),
   ]);
 
   const results: SearchResult[] = [
     ...companies.map(c => ({ type: "Client", id: c.id, title: c.name, subtitle: c.industry ?? undefined, href: `/app/clients/${c.id}` })),
     ...contacts.map(c => ({ type: "Contact", id: c.id, title: c.name, subtitle: c.company?.name, href: `/app/clients/${c.companyId}` })),
-    ...leads.map(l => ({ type: "Lead", id: l.id, title: l.name, subtitle: l.companyNameRaw ?? undefined, href: `/app/leads/${l.id}` })),
+    // Leads have no detail route of their own (they become Deals) — link
+    // to the list rather than a per-lead URL that would 404.
+    ...leads.map(l => ({ type: "Lead", id: l.id, title: l.name, subtitle: l.companyNameRaw ?? undefined, href: `/app/leads` })),
     ...deals.map(d => ({ type: "Deal", id: d.id, title: d.title, subtitle: d.company?.name, href: `/app/deals/${d.id}` })),
     ...documents.map(doc => ({ type: doc.type, id: doc.id, title: doc.number, subtitle: doc.company?.name, href: `/app/quotes/${doc.id}` })),
+    // Tasks have no detail route either — link to the list.
+    ...tasks.map(t => ({ type: "Task", id: t.id, title: t.title, subtitle: t.dueAt ? undefined : "No due date", href: `/app/tasks` })),
   ];
 
   return results.slice(0, 20);
