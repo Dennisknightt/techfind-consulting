@@ -100,7 +100,7 @@ export function TasksView({
           <button
             key={v.key}
             onClick={() => setView(v.key)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            className="os-press flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
             style={{ background: view === v.key ? "var(--accent-soft)" : "var(--surface-hover)", color: view === v.key ? "var(--accent)" : "var(--text-muted)" }}
           >
             {v.label} <span className="opacity-60">{counts[v.key]}</span>
@@ -115,13 +115,9 @@ export function TasksView({
           <p className="text-xs text-[var(--text-faint)] mt-1">You&rsquo;re caught up on this view.</p>
         </div>
       ) : (
-        <div className="mt-5 space-y-2">
+        <div className="mt-5 rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
           {filtered.map(task => (
-            <div
-              key={task.id}
-              className="flex items-center gap-3 rounded-[var(--radius-lg)] p-3.5"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-            >
+            <div key={task.id} className="os-row-hover flex items-center gap-3 px-4 py-3">
               <button
                 onClick={() => complete(task)}
                 disabled={completing.has(task.id)}
@@ -131,7 +127,7 @@ export function TasksView({
                 <Check className="w-3 h-3 opacity-0 group-hover:opacity-60" style={{ color: "var(--accent)" }} />
               </button>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text)] truncate">{task.title}</p>
+                <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{task.title}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {task.dueAt && (
                     <span className="text-xs" style={{ color: isOverdue(task.dueAt) ? "var(--danger)" : "var(--text-faint)" }}>
