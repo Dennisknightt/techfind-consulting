@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Lead, User, Product } from "@prisma/client";
-import { Plus, Search, Phone, Mail, ArrowRight, Sparkles } from "lucide-react";
+import { Plus, Search, Phone, Mail, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -11,7 +11,6 @@ import { Input, Label } from "@/components/os/ui/Input";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { Avatar } from "@/components/os/ui/Avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/os/ui/Sheet";
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
 import { formatKES } from "@/lib/os/money";
 import { timeAgo } from "@/lib/os/dates";
 import { createLeadAction, convertLeadToDealAction } from "@/server/actions/leads";
@@ -174,6 +173,20 @@ export function LeadsView({
   );
 }
 
+const VALUE_BANDS = [50_000, 100_000, 150_000, 200_000, 300_000];
+
+const STEPS = ["name", "company", "phone", "source", "product", "value", "owner"] as const;
+type StepKey = (typeof STEPS)[number];
+const STEP_QUESTION: Record<StepKey, string> = {
+  name: "Who's the lead?",
+  company: "Which company?",
+  phone: "Phone number?",
+  source: "Where did this come from?",
+  product: "What are they interested in?",
+  value: "Rough deal size?",
+  owner: "Who's chasing this one?",
+};
+
 function CreateLeadSheet({
   open,
   onOpenChange,
@@ -189,36 +202,46 @@ function CreateLeadSheet({
   currentUserId: string;
   onCreated: (lead: LeadWithOwner) => void;
 }) {
+  const [step, setStep] = useState(0);
   const [name, setName] = useState("");
   const [company, setCompany] = useState("");
   const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
   const [source, setSource] = useState("MANUAL");
   const [product, setProduct] = useState<string | null>(null);
-  const [value, setValue] = useState("");
+  const [value, setValue] = useState<number | null>(null);
+  const [customValue, setCustomValue] = useState("");
   const [ownerId, setOwnerId] = useState(currentUserId);
   const [saving, setSaving] = useState(false);
 
+  const stepKey = STEPS[step];
+  const canFinishEarly = name.trim().length > 0;
+
   function reset() {
-    setName(""); setCompany(""); setPhone(""); setEmail(""); setSource("MANUAL");
-    setProduct(null); setValue(""); setOwnerId(currentUserId);
+    setStep(0); setName(""); setCompany(""); setPhone(""); setSource("MANUAL");
+    setProduct(null); setValue(null); setCustomValue(""); setOwnerId(currentUserId);
   }
 
-  async function submit() {
-    if (!name.trim()) { toast.error("Name is required"); return; }
+  function next() {
+    setStep(s => Math.min(s + 1, STEPS.length - 1));
+  }
+  function back() {
+    setStep(s => Math.max(s - 1, 0));
+  }
+
+  async function submit(finalOwnerId: string) {
+    if (!name.trim()) { toast.error("Name is required"); setStep(0); return; }
     setSaving(true);
     try {
       const lead = await createLeadAction({
         name,
         companyNameRaw: company || undefined,
         phone: phone || undefined,
-        email: email || undefined,
         source,
         interestedProduct: product || undefined,
-        value: value ? Number(value) : undefined,
-        ownerId,
+        value: value ?? undefined,
+        ownerId: finalOwnerId,
       });
-      const owner = users.find(u => u.id === ownerId) ?? null;
+      const owner = users.find(u => u.id === finalOwnerId) ?? null;
       onCreated({ ...lead, owner } as LeadWithOwner);
       reset();
     } catch (e) {
@@ -228,91 +251,157 @@ function CreateLeadSheet({
     }
   }
 
+  function selectSource(s: string) { setSource(s); next(); }
+  function selectProduct(p: string) { setProduct(prev => (prev === p ? null : p)); next(); }
+  function selectValue(v: number | null) { setValue(v); next(); }
+  function selectOwner(id: string) { setOwnerId(id); submit(id); }
+
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="right">
+    <Sheet open={open} onOpenChange={v => { onOpenChange(v); if (!v) reset(); }}>
+      <SheetContent side="right" className="flex flex-col">
         <SheetHeader>
-          <SheetTitle>New Lead</SheetTitle>
+          <div className="flex items-center gap-2">
+            {step > 0 && (
+              <button onClick={back} className="shrink-0 p-1 -ml-1 rounded-full hover:bg-[var(--surface-hover)]" aria-label="Back">
+                <ChevronLeft className="w-4 h-4" style={{ color: "var(--text-faint)" }} />
+              </button>
+            )}
+            <SheetTitle>New Lead</SheetTitle>
+          </div>
+          <div className="flex gap-1 mt-3">
+            {STEPS.map((s, i) => (
+              <div key={s} className="h-1 flex-1 rounded-full" style={{ background: i <= step ? "var(--accent)" : "var(--surface-hover)" }} />
+            ))}
+          </div>
         </SheetHeader>
-        <SheetBody className="space-y-4">
-          <div>
-            <Label htmlFor="lead-name">Name *</Label>
-            <Input id="lead-name" value={name} onChange={e => setName(e.target.value)} placeholder="Lucy Macharia" autoFocus />
-          </div>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="lead-company">Company</Label>
-              <Input id="lead-company" value={company} onChange={e => setCompany(e.target.value)} placeholder="Xpress Shine" />
-            </div>
-            <div>
-              <Label htmlFor="lead-phone">Phone</Label>
-              <Input id="lead-phone" value={phone} onChange={e => setPhone(e.target.value)} placeholder="+254712345678" />
-            </div>
-          </div>
-          <div>
-            <Label htmlFor="lead-email">Email</Label>
-            <Input id="lead-email" type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="lucy@xpressshine.co.ke" />
-          </div>
 
-          <div>
-            <Label>Source</Label>
-            <div className="flex flex-wrap gap-1.5">
+        <SheetBody className="flex-1 flex flex-col">
+          <p className="text-lg font-bold text-[var(--text)] mb-4" style={{ fontFamily: "var(--font-space)" }}>
+            {STEP_QUESTION[stepKey]}
+          </p>
+
+          {stepKey === "name" && (
+            <Input
+              value={name}
+              onChange={e => setName(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter" && name.trim()) next(); }}
+              placeholder="Lucy Macharia"
+              autoFocus
+            />
+          )}
+
+          {stepKey === "company" && (
+            <Input
+              value={company}
+              onChange={e => setCompany(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") next(); }}
+              placeholder="Xpress Shine"
+              autoFocus
+            />
+          )}
+
+          {stepKey === "phone" && (
+            <Input
+              value={phone}
+              onChange={e => setPhone(e.target.value)}
+              onKeyDown={e => { if (e.key === "Enter") next(); }}
+              placeholder="+254712345678"
+              autoFocus
+            />
+          )}
+
+          {stepKey === "source" && (
+            <div className="flex flex-wrap gap-2">
               {SOURCES.map(s => (
-                <button
-                  key={s}
-                  onClick={() => setSource(s)}
-                  className="px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors"
-                  style={{
-                    background: source === s ? "var(--accent-soft)" : "var(--surface-hover)",
-                    color: source === s ? "var(--accent)" : "var(--text-muted)",
-                  }}
-                >
-                  {sourceLabel(s)}
-                </button>
+                <Chip key={s} active={source === s} onClick={() => selectSource(s)}>{sourceLabel(s)}</Chip>
               ))}
             </div>
-          </div>
+          )}
 
-          <div>
-            <Label>Interested product</Label>
-            <div className="flex flex-wrap gap-1.5">
+          {stepKey === "product" && (
+            <div className="flex flex-wrap gap-2">
               {products.map(p => (
+                <Chip key={p.key} active={product === p.name} onClick={() => selectProduct(p.name)}>{p.name}</Chip>
+              ))}
+            </div>
+          )}
+
+          {stepKey === "value" && (
+            <div className="space-y-3">
+              <div className="flex flex-wrap gap-2">
+                {VALUE_BANDS.map(v => (
+                  <Chip key={v} active={value === v} onClick={() => selectValue(v)}>{formatKES(v, { compact: true })}</Chip>
+                ))}
+              </div>
+              <div className="flex items-center gap-2">
+                <Input
+                  value={customValue}
+                  onChange={e => setCustomValue(e.target.value.replace(/[^\d]/g, ""))}
+                  onKeyDown={e => { if (e.key === "Enter" && customValue) selectValue(Number(customValue)); }}
+                  type="text" inputMode="numeric" placeholder="Custom amount"
+                  className="flex-1"
+                />
+                <Button size="sm" variant="secondary" disabled={!customValue} onClick={() => selectValue(Number(customValue))}>Use</Button>
+              </div>
+            </div>
+          )}
+
+          {stepKey === "owner" && (
+            <div className="flex flex-wrap gap-2">
+              {users.map(u => (
                 <button
-                  key={p.key}
-                  onClick={() => setProduct(prev => (prev === p.name ? null : p.name))}
-                  className="px-2.5 py-1.5 rounded-full text-xs font-medium transition-colors"
+                  key={u.id}
+                  disabled={saving}
+                  onClick={() => selectOwner(u.id)}
+                  className="flex items-center gap-2 pl-1.5 pr-3 py-1.5 rounded-full text-sm font-medium transition-colors disabled:opacity-50"
                   style={{
-                    background: product === p.name ? "var(--accent-soft)" : "var(--surface-hover)",
-                    color: product === p.name ? "var(--accent)" : "var(--text-muted)",
+                    background: ownerId === u.id ? "var(--accent-soft)" : "var(--surface-hover)",
+                    color: ownerId === u.id ? "var(--accent)" : "var(--text-muted)",
                   }}
                 >
-                  {p.name}
+                  <Avatar name={u.name} color={u.avatarColor} size={22} /> {u.name}
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <Label htmlFor="lead-value">Est. value (KES)</Label>
-              <Input id="lead-value" type="number" value={value} onChange={e => setValue(e.target.value)} placeholder="150000" />
-            </div>
-            <div>
-              <Label>Owner</Label>
-              <Select value={ownerId} onValueChange={setOwnerId}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {users.map(u => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+          )}
         </SheetBody>
-        <SheetFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button loading={saving} onClick={submit}>Add Lead</Button>
+
+        <SheetFooter className="justify-between">
+          <div>
+            {stepKey !== "name" && stepKey !== "owner" && (
+              <Button variant="ghost" size="sm" onClick={next}>Skip</Button>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            {canFinishEarly && stepKey !== "owner" && (
+              <Button variant="secondary" size="sm" loading={saving} onClick={() => submit(ownerId)} className="gap-1.5">
+                <Zap className="w-3.5 h-3.5" /> Save now
+              </Button>
+            )}
+            {stepKey === "name" && (
+              <Button size="sm" disabled={!name.trim()} onClick={next} className="gap-1.5">Next <ArrowRight className="w-3.5 h-3.5" /></Button>
+            )}
+            {stepKey === "owner" && (
+              <Button size="sm" loading={saving} onClick={() => selectOwner(ownerId)} className="gap-1.5"><Check className="w-3.5 h-3.5" /> Add Lead</Button>
+            )}
+          </div>
         </SheetFooter>
       </SheetContent>
     </Sheet>
+  );
+}
+
+function Chip({ children, active, onClick }: { children: React.ReactNode; active?: boolean; onClick: () => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="px-3 py-1.5 rounded-full text-sm font-medium transition-colors"
+      style={{
+        background: active ? "var(--accent-soft)" : "var(--surface-hover)",
+        color: active ? "var(--accent)" : "var(--text-muted)",
+      }}
+    >
+      {children}
+    </button>
   );
 }

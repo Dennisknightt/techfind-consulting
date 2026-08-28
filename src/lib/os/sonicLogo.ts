@@ -1,13 +1,43 @@
 /**
- * Techfind "sonic logo" — a single bright bell-like "ding" (the classic
- * car-startup/seatbelt-chime style cue), synthesized in the browser via
- * the Web Audio API so V1 doesn't depend on a shipped audio asset. A real
- * bell strike is inharmonic (its overtones aren't clean integer multiples
- * of the fundamental) — that's what makes it read as "ding" rather than
- * a plain synth blip — so this layers a few inharmonic partials rather
- * than a single tone. Swap `playSonicLogo` for a mastered audio asset
- * later if wanted; callers only depend on the promise-based signature.
+ * Techfind "sonic logo" — a bright bell-like "ding" struck three times in
+ * quick succession (the 2020+ BMW comfort-access/start chime pattern),
+ * synthesized in the browser via the Web Audio API so V1 doesn't depend
+ * on a shipped audio asset. A real bell strike is inharmonic (its
+ * overtones aren't clean integer multiples of the fundamental) — that's
+ * what makes it read as "ding" rather than a plain synth blip — so each
+ * strike layers a few inharmonic partials rather than a single tone.
+ * Swap `playSonicLogo` for a mastered audio asset later if wanted;
+ * callers only depend on the promise-based signature.
  */
+
+const STRIKE_COUNT = 3;
+const STRIKE_GAP = 0.38; // seconds between the start of each ding
+
+// Bell partials: (frequency ratio, relative level, decay time). Slightly
+// inharmonic ratios + a fast-decaying high partial give the metallic
+// "shimmer" on the attack that a pure sine lacks.
+const PARTIALS: Array<{ ratio: number; level: number; dur: number }> = [
+  { ratio: 1,    level: 1.00, dur: 0.42 },
+  { ratio: 2.76, level: 0.45, dur: 0.30 },
+  { ratio: 5.40, level: 0.18, dur: 0.18 },
+];
+
+function strikeBell(ctx: AudioContext, master: GainNode, at: number, fundamental: number) {
+  PARTIALS.forEach(({ ratio, level, dur }) => {
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = "sine";
+    osc.frequency.value = fundamental * ratio;
+    gain.gain.setValueAtTime(0, at);
+    gain.gain.linearRampToValueAtTime(level, at + 0.006); // near-instant strike attack
+    gain.gain.exponentialRampToValueAtTime(0.001, at + dur);
+    osc.connect(gain);
+    gain.connect(master);
+    osc.start(at);
+    osc.stop(at + dur + 0.05);
+  });
+}
+
 export async function playSonicLogo(volume = 0.6): Promise<void> {
   if (typeof window === "undefined") return;
   const Ctor = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
@@ -32,30 +62,12 @@ export async function playSonicLogo(volume = 0.6): Promise<void> {
     const now = ctx.currentTime;
     const fundamental = 880; // A5 — the classic bright "ding" pitch
 
-    // Bell partials: (frequency ratio, relative level, decay time). Slightly
-    // inharmonic ratios + a fast-decaying high partial give the metallic
-    // "shimmer" on the attack that a pure sine lacks.
-    const partials: Array<{ ratio: number; level: number; dur: number }> = [
-      { ratio: 1,    level: 1.00, dur: 1.10 },
-      { ratio: 2.76, level: 0.45, dur: 0.70 },
-      { ratio: 5.40, level: 0.18, dur: 0.35 },
-    ];
+    for (let i = 0; i < STRIKE_COUNT; i++) {
+      strikeBell(ctx, master, now + i * STRIKE_GAP, fundamental);
+    }
 
-    partials.forEach(({ ratio, level, dur }) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = "sine";
-      osc.frequency.value = fundamental * ratio;
-      gain.gain.setValueAtTime(0, now);
-      gain.gain.linearRampToValueAtTime(level, now + 0.006); // near-instant strike attack
-      gain.gain.exponentialRampToValueAtTime(0.001, now + dur);
-      osc.connect(gain);
-      gain.connect(master);
-      osc.start(now);
-      osc.stop(now + dur + 0.05);
-    });
-
-    await new Promise(resolve => setTimeout(resolve, 900));
+    const totalMs = (STRIKE_GAP * (STRIKE_COUNT - 1) + PARTIALS[0].dur + 0.1) * 1000;
+    await new Promise(resolve => setTimeout(resolve, totalMs));
   } finally {
     ctx.close().catch(() => {});
   }
