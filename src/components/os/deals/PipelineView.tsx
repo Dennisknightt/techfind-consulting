@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Deal, Company, User, Product } from "@prisma/client";
 import { Plus, Kanban, List, Flame } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -13,6 +14,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { formatKES } from "@/lib/os/money";
 import { timeAgo, daysBetween } from "@/lib/os/dates";
 import { PIPELINE_STAGES, STAGE_LABEL } from "@/lib/os/pipeline";
+import { springy } from "@/lib/os/motion";
 import { updateDealStageAction } from "@/server/actions/deals";
 import { CreateDealSheet } from "./CreateDealSheet";
 import { LostDealDialog } from "./LostDealDialog";
@@ -24,6 +26,25 @@ const STALL_DAYS = 7;
 function isStalled(deal: DealWithRelations): boolean {
   if (deal.stage === "WON" || deal.stage === "LOST") return false;
   return daysBetween(deal.stageEnteredAt) > STALL_DAYS;
+}
+
+/** Contextual toast after a stage move — a nudge toward the obvious next step, not just a confirmation. */
+function celebrateMove(deal: DealWithRelations, stage: string, router: ReturnType<typeof useRouter>) {
+  if (stage === "WON") {
+    toast.success(`${formatKES(deal.value, { compact: true })} WON 🎉`, {
+      description: deal.company.name,
+      action: { label: "Create Proforma", onClick: () => router.push(`/app/quotes/new?deal=${deal.id}`) },
+    });
+    return;
+  }
+  if (stage === "PROPOSAL" || stage === "PROFORMA_SENT") {
+    toast.success("Moved to Proposal ✨", {
+      description: "Create a quotation for this deal?",
+      action: { label: "Create Quote", onClick: () => router.push(`/app/quotes/new?deal=${deal.id}`) },
+    });
+    return;
+  }
+  toast.success(`Moved to ${STAGE_LABEL[stage]} ✨`);
 }
 
 export function PipelineView({
@@ -62,7 +83,7 @@ export function PipelineView({
     setDeals(prev => prev.map(d => (d.id === deal.id ? { ...d, stage, stageEnteredAt: new Date() } : d)));
     try {
       await updateDealStageAction(deal.id, stage);
-      if (stage === "WON") toast.success(`${deal.company.name} — deal won! 🎉`);
+      celebrateMove(deal, stage, router);
     } catch {
       toast.error("Couldn't move that deal — reverting");
       setDeals(prev => prev.map(d => (d.id === deal.id ? deal : d)));
@@ -208,9 +229,11 @@ function StageColumn({
         className="space-y-2.5 min-h-24 rounded-[var(--radius-lg)] p-1.5 transition-colors"
         style={{ background: over ? "var(--accent-soft)" : "transparent" }}
       >
-        {deals.map(deal => (
-          <DealCard key={deal.id} deal={deal} draggable onDragStart={() => onDragStart(deal.id)} onClick={() => onCardClick(deal.id)} onMarkLost={() => onMarkLost(deal)} />
-        ))}
+        <AnimatePresence mode="popLayout">
+          {deals.map(deal => (
+            <DealCard key={deal.id} deal={deal} draggable onDragStart={() => onDragStart(deal.id)} onClick={() => onCardClick(deal.id)} onMarkLost={() => onMarkLost(deal)} />
+          ))}
+        </AnimatePresence>
         {deals.length === 0 && (
           <div className="rounded-[var(--radius-md)] border-2 border-dashed h-16 flex items-center justify-center" style={{ borderColor: "var(--border)" }}>
             <span className="text-[11px] text-[var(--text-faint)]">Empty</span>
@@ -232,11 +255,17 @@ function DealCard({
 }) {
   const stalled = isStalled(deal);
   return (
-    <div
+    <motion.div
+      layout
+      layoutId={`deal-${deal.id}`}
+      transition={springy}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
       draggable={draggable}
       onDragStart={onDragStart}
       onClick={onClick}
-      className="rounded-[var(--radius-lg)] p-3.5 cursor-pointer transition-shadow hover:shadow-[var(--shadow-sm)]"
+      className="os-card-hover rounded-[var(--radius-lg)] p-3.5 cursor-pointer"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -248,19 +277,22 @@ function DealCard({
         <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value, { compact: true })}</span>
         {deal.owner && <Avatar name={deal.owner.name} color={deal.owner.avatarColor} size={22} />}
       </div>
-      <div className="flex items-center justify-between text-[10px] text-[var(--text-faint)]">
-        <span>{deal.nextAction ? deal.nextAction : "No next action"}</span>
-        {stalled && (
-          <span
-            className="flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded-full"
-            style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
-            onClick={(e) => { e.stopPropagation(); onMarkLost(); }}
-          >
-            <Flame className="w-2.5 h-2.5" /> {daysBetween(deal.stageEnteredAt)}d
-          </span>
-        )}
+      <div className="text-[10px] text-[var(--text-faint)] space-y-1">
+        <p className="truncate">Last contact: {timeAgo(deal.lastContactAt ?? deal.createdAt)}</p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate">{deal.nextAction ? `Next: ${deal.nextAction}` : "No next action"}</span>
+          {stalled && (
+            <span
+              className="flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded-full shrink-0"
+              style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
+              onClick={(e) => { e.stopPropagation(); onMarkLost(); }}
+            >
+              <Flame className="w-2.5 h-2.5" /> {daysBetween(deal.stageEnteredAt)}d
+            </span>
+          )}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
 
