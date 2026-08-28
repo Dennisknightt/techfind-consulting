@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Deal, Company, Contact, User, Meeting, Task, Project, SalesDocument, Communication } from "@prisma/client";
@@ -27,7 +27,7 @@ import { ScheduleMeetingSheet } from "@/components/os/meetings/MeetingsView";
 import { parseJsonArray } from "@/server/json";
 
 type CommunicationWithAuthor = Communication & { author: User | null };
-type DealFull = Deal & {
+export type DealFull = Deal & {
   company: Company;
   contact: Contact | null;
   owner: User | null;
@@ -43,10 +43,24 @@ function waLink(phone: string, text: string) {
   return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
 }
 
-export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users: User[] }) {
+export function DealDetail({
+  deal: initialDeal, users, onDealChange, onLost: onLostProp,
+}: {
+  deal: DealFull;
+  users: User[];
+  /** Fires whenever the local deal state changes — lets a drawer host (Pipeline) keep its own list in sync. */
+  onDealChange?: (deal: DealFull) => void;
+  /** Drawer context: called instead of navigating to /app/deals after marking lost. */
+  onLost?: (reason: string) => void;
+}) {
   const router = useRouter();
   const [deal, setDeal] = useState(initialDeal);
   const [lostOpen, setLostOpen] = useState(false);
+
+  // Only re-fire when `deal` itself changes — including `onDealChange` here would
+  // re-run on every parent re-render (it's typically an inline arrow function),
+  // which risks a render loop if the parent updates its own state in response.
+  useEffect(() => { onDealChange?.(deal); }, [deal]); // eslint-disable-line react-hooks/exhaustive-deps
   const [meetingOpen, setMeetingOpen] = useState(false);
   const [nextAction, setNextAction] = useState(deal.nextAction ?? "");
   const [nextActionDue, setNextActionDue] = useState(deal.nextActionDue ? new Date(deal.nextActionDue).toISOString().slice(0, 10) : "");
@@ -333,7 +347,7 @@ export function DealDetail({ deal: initialDeal, users }: { deal: DealFull; users
         dealTitle={deal.title}
         open={lostOpen}
         onOpenChange={setLostOpen}
-        onLost={() => router.push("/app/deals")}
+        onLost={(_dealId, reason) => (onLostProp ? onLostProp(reason) : router.push("/app/deals"))}
       />
       <ScheduleMeetingSheet
         open={meetingOpen}

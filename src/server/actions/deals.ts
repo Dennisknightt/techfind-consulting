@@ -20,6 +20,28 @@ export async function dealsForCompanyAction(companyId: string) {
   return db.deal.findMany({ where: { companyId, stage: { not: "LOST" } }, orderBy: { createdAt: "desc" } });
 }
 
+/**
+ * The full record a deal's one-pager needs — shared by the standalone
+ * /app/deals/[id] page and Pipeline's drawer, so opening a deal from the
+ * board doesn't need a second, drifting copy of this query.
+ */
+export async function getDealDetailAction(id: string) {
+  await requireUserOrThrow();
+  return db.deal.findUnique({
+    where: { id },
+    include: {
+      company: true,
+      contact: true,
+      owner: true,
+      meetings: { orderBy: { scheduledAt: "desc" } },
+      tasks: { where: { status: "OPEN" }, include: { assignee: true }, orderBy: { dueAt: "asc" } },
+      project: true,
+      documents: { orderBy: { createdAt: "desc" } },
+      communications: { include: { author: true }, orderBy: { createdAt: "desc" }, take: 30 },
+    },
+  });
+}
+
 export async function createDealAction(input: CreateDealInput) {
   const user = await requirePermission("pipeline.write");
   const deal = await db.deal.create({

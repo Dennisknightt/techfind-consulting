@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Deal, Company, User, Product } from "@prisma/client";
 import { Plus, Kanban, List, Flame, Check, MessageCircle } from "lucide-react";
@@ -11,13 +11,15 @@ import { Button } from "@/components/os/ui/Button";
 import { Avatar } from "@/components/os/ui/Avatar";
 import { TemperatureBadge, Badge } from "@/components/os/ui/Badge";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
+import { Sheet, SheetContent } from "@/components/os/ui/Sheet";
 import { formatKES } from "@/lib/os/money";
 import { timeAgo, daysBetween } from "@/lib/os/dates";
 import { PIPELINE_STAGES, STAGE_LABEL } from "@/lib/os/pipeline";
 import { springy } from "@/lib/os/motion";
-import { updateDealStageAction } from "@/server/actions/deals";
+import { updateDealStageAction, getDealDetailAction } from "@/server/actions/deals";
 import { CreateDealSheet } from "./CreateDealSheet";
 import { LostDealDialog } from "./LostDealDialog";
+import { DealDetail, type DealFull } from "./DealDetail";
 
 export type DealWithRelations = Deal & { company: Company; owner: User | null };
 
@@ -78,6 +80,29 @@ export function PipelineView({
   const [createOpen, setCreateOpen] = useState(openCreateOnLoad);
   const [dragDealId, setDragDealId] = useState<string | null>(null);
   const [lostTarget, setLostTarget] = useState<DealWithRelations | null>(null);
+  const [drawerDealId, setDrawerDealId] = useState<string | null>(null);
+  const [drawerDeal, setDrawerDeal] = useState<DealFull | null>(null);
+
+  // Opening a deal from Pipeline shows it in a drawer instead of navigating
+  // away — preserves board scroll position/context per the redesign brief.
+  useEffect(() => {
+    if (!drawerDealId) { setDrawerDeal(null); return; }
+    let cancelled = false;
+    getDealDetailAction(drawerDealId).then(d => { if (!cancelled) setDrawerDeal(d); });
+    return () => { cancelled = true; };
+  }, [drawerDealId]);
+
+  function openDrawer(id: string) { setDrawerDealId(id); }
+  function closeDrawer() { setDrawerDealId(null); }
+
+  function onDrawerDealChange(updated: DealFull) {
+    setDeals(prev => prev.map(d => (d.id === updated.id ? { ...d, ...updated } : d)));
+  }
+
+  function onDrawerDealLost(reason: string) {
+    if (drawerDealId) onDealLost(drawerDealId, reason);
+    closeDrawer();
+  }
 
   const pipelineValue = deals.reduce((sum, d) => sum + d.value, 0);
   const stalledCount = deals.filter(isStalled).length;
@@ -152,7 +177,7 @@ export function PipelineView({
                 dragDealId={dragDealId}
                 onDragStart={setDragDealId}
                 onDrop={(deal) => moveStage(deal, stage)}
-                onCardClick={(id) => router.push(`/app/deals/${id}`)}
+                onCardClick={openDrawer}
                 onMarkLost={(deal) => setLostTarget(deal)}
               />
             ))}
@@ -171,7 +196,7 @@ export function PipelineView({
             </div>
           </div>
         ) : (
-          <DealListTable deals={deals} onRowClick={(id) => router.push(`/app/deals/${id}`)} onMoveStage={moveStage} />
+          <DealListTable deals={deals} onRowClick={openDrawer} onMoveStage={moveStage} />
         )}
       </div>
 
@@ -188,7 +213,7 @@ export function PipelineView({
               </div>
               <div className="space-y-2.5">
                 {stageDeals.map(deal => (
-                  <MobileDealCard key={deal.id} deal={deal} onClick={() => router.push(`/app/deals/${deal.id}`)} onMoveStage={moveStage} />
+                  <MobileDealCard key={deal.id} deal={deal} onClick={() => openDrawer(deal.id)} onMoveStage={moveStage} />
                 ))}
               </div>
             </div>
@@ -204,6 +229,26 @@ export function PipelineView({
         onOpenChange={(v) => !v && setLostTarget(null)}
         onLost={onDealLost}
       />
+
+      <Sheet open={!!drawerDealId} onOpenChange={(v) => !v && closeDrawer()}>
+        <SheetContent side="right" className="max-w-2xl sm:max-w-2xl overflow-y-auto">
+          {drawerDeal ? (
+            <DealDetail
+              key={drawerDeal.id}
+              deal={drawerDeal}
+              users={users}
+              onDealChange={onDrawerDealChange}
+              onLost={onDrawerDealLost}
+            />
+          ) : (
+            <div className="p-8 space-y-3">
+              <div className="h-6 w-40 rounded os-skeleton" />
+              <div className="h-4 w-64 rounded os-skeleton" />
+              <div className="h-24 w-full rounded os-skeleton" />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
