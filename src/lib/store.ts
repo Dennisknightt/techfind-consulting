@@ -111,3 +111,55 @@ export function stageFromQualification(qualified: boolean, budget?: string): Lea
   if (budget === "$10k+" || budget === "$3k-$10k") return "Qualified";
   return "Audited";
 }
+
+/* ─── Communications (per-lead message / call / note log) ─────────── */
+
+export type CommChannel = "email" | "call" | "linkedin" | "sms" | "note";
+export type CommDirection = "outbound" | "inbound";
+
+export interface Communication {
+  id: string;
+  leadId: string;
+  createdAt: string;
+  channel: CommChannel;
+  direction: CommDirection;
+  subject?: string;
+  body: string;
+  author?: string;
+}
+
+declare global {
+  // eslint-disable-next-line no-var
+  var __commStore: Map<string, Communication> | undefined;
+}
+
+function getCommStore(): Map<string, Communication> {
+  if (!globalThis.__commStore) {
+    globalThis.__commStore = new Map();
+  }
+  return globalThis.__commStore;
+}
+
+export function addCommunication(input: Omit<Communication, "id" | "createdAt">): Communication {
+  const comm: Communication = {
+    ...input,
+    id: `comm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
+    createdAt: new Date().toISOString(),
+  };
+  getCommStore().set(comm.id, comm);
+  return comm;
+}
+
+export function getAllCommunications(): Communication[] {
+  return Array.from(getCommStore().values()).sort(
+    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  );
+}
+
+export function getCommunicationsForLead(leadId: string): Communication[] {
+  return getAllCommunications().filter(c => c.leadId === leadId);
+}
+
+export function deleteCommunication(id: string): boolean {
+  return getCommStore().delete(id);
+}

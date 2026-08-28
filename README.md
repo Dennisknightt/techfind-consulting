@@ -1,36 +1,55 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Techfind Consulting
 
-## Getting Started
+Two things live in this repository:
 
-First, run the development server:
+- **The public marketing site** (`src/app/(marketing)/*`) — TechFind Consulting's AEO/AI-search
+  agency site.
+- **Techfind Revenue OS** (`src/app/(os)/*`, mounted at `/login` and `/app/*`) — the internal
+  CRM/communications/sales/invoicing/payments/projects/business-intelligence operating system
+  the team actually runs the business on.
+
+Start with **`docs/ARCHITECTURE.md`** for how the two fit together in one Next.js app, then:
+
+| Doc | What's in it |
+|---|---|
+| `docs/ARCHITECTURE.md` | Route groups, layering, the Server Action pattern, PWA |
+| `docs/DATABASE.md` | Schema conventions, the domain model, money/JSON-field notes |
+| `docs/DESIGN_SYSTEM.md` | Tokens, type, the OS component layer |
+| `docs/CRM_RULES.md` | Roles/permissions, pipeline stages, the sales → delivery handoff |
+| `docs/PAYMENTS.md` | The gateway abstraction, dev-safety guard, reconciliation |
+| `docs/INTEGRATIONS.md` | What's real, what's stubbed, how to connect the rest |
+| `docs/SECURITY.md` | Auth, the audit findings and fixes, known gaps |
+| `docs/ROADMAP.md` | What's shipped, what's deliberately not built yet |
+| `docs/CHANGELOG.md` | Phase-by-phase build history |
+
+## Getting started
 
 ```bash
+npm install
+cp .env.example .env         # fill in real values, including a Postgres DATABASE_URL — see below
+npx prisma db push           # sync the schema to your database
+npx prisma db seed           # users + product catalogue + settings (no demo business data)
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+`DATABASE_URL` must point at a real PostgreSQL database — a local instance, or a hosted one
+(Vercel Postgres, Supabase, Neon all work). SQLite cannot be used, including for local dev:
+the schema targets `postgresql` (see `docs/DATABASE.md`) because Vercel's serverless functions
+have no persistent local disk for a SQLite file to live on.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Open [http://localhost:3000](http://localhost:3000) for the marketing site, or
+[http://localhost:3000/app](http://localhost:3000/app) for the OS (redirects to `/login`).
+Seeded team accounts all use the password from `SEED_DEFAULT_PASSWORD` in `.env`
+(`techfind2026` if unset) — see `prisma/seed/users.ts` for the account list and roles.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Payments — read this before touching `/app/quotes` or `/pay/[token]`
 
-## Learn More
+Outside `NODE_ENV=production`, payments always run against a safe, no-external-calls mock
+provider regardless of what's configured in Settings → Payment Provider — see
+`docs/PAYMENTS.md`. Never set `ALLOW_LIVE_PAYMENTS_IN_DEV=true` unless you specifically intend
+a real charge to fire.
 
-To learn more about Next.js, take a look at the following resources:
+## Stack
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Next.js 15 (App Router) · Prisma 6 · PostgreSQL · Tailwind v4 · Radix primitives ·
+`@react-pdf/renderer` · `intasend-node`.

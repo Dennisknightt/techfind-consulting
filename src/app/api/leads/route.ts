@@ -25,6 +25,7 @@ import { getClientIp, hashIp, hashId } from "@/lib/ip";
 import { rateLimit } from "@/lib/ratelimit";
 import { validateAuditPayload, dupeKey } from "@/lib/validate";
 import { cfg } from "@/lib/config";
+import { isAuthorizedAdmin } from "@/lib/adminAuth";
 import { trackEvent } from "@/lib/metrics";
 
 export const runtime = "nodejs";
@@ -33,9 +34,7 @@ export const dynamic = "force-dynamic";
 /* ─── GET /api/leads ─────────────────────────────────────────────── */
 
 export async function GET(req: NextRequest) {
-  const token    = req.headers.get("x-admin-token") ?? req.nextUrl.searchParams.get("token") ?? "";
-  const expected = cfg.admin.secret;
-  if (expected && token !== expected) {
+  if (!isAuthorizedAdmin(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.json({ leads: getAllLeads() });

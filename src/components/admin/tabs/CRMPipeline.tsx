@@ -1,8 +1,9 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
-import { Kanban, List, RefreshCw, ExternalLink } from "lucide-react";
+import { Kanban, List, RefreshCw, ExternalLink, MessageSquare } from "lucide-react";
 import { useLeads } from "../useLeads";
 import type { LeadStage } from "@/lib/store";
 
@@ -131,12 +132,18 @@ export function CRMPipeline() {
                           <span className="text-[10px] font-bold" style={{ color: gradeColor(lead.grade) }}>
                             {lead.overallScore}/100
                           </span>
-                          {lead.email && (
-                            <a href={`mailto:${lead.email}`}
+                          <div className="flex items-center gap-2">
+                            <Link href={`/admin/revenue-engine?tab=communications&lead=${lead.id}`}
                               className="text-[10px] text-[var(--accent)] hover:underline flex items-center gap-0.5">
-                              Email <ExternalLink className="w-2.5 h-2.5" />
-                            </a>
-                          )}
+                              <MessageSquare className="w-2.5 h-2.5" /> Log
+                            </Link>
+                            {lead.email && (
+                              <a href={`mailto:${lead.email}`}
+                                className="text-[10px] text-[var(--accent)] hover:underline flex items-center gap-0.5">
+                                Email <ExternalLink className="w-2.5 h-2.5" />
+                              </a>
+                            )}
+                          </div>
                         </div>
                         <div className="flex gap-1">
                           <button
@@ -177,7 +184,7 @@ export function CRMPipeline() {
             <table className="w-full text-sm">
               <thead>
                 <tr className="border-b" style={{ borderColor: "var(--border)" }}>
-                  {["Company", "Industry", "Score", "Grade", "Budget", "Email", "Stage", "Move"].map(h => (
+                  {["Company", "Industry", "Score", "Grade", "Budget", "Email", "Stage", "Move", ""].map(h => (
                     <th key={h} className="text-left px-5 py-3 text-xs font-semibold uppercase tracking-wider"
                       style={{ color: "var(--muted)" }}>{h}</th>
                   ))}
@@ -219,6 +226,12 @@ export function CRMPipeline() {
                           style={{ background: "var(--card-hover)", border: "1px solid var(--border)", color: "var(--text)" }}>
                           {allStages.map(s => <option key={s} value={s}>{s}</option>)}
                         </select>
+                      </td>
+                      <td className="px-5 py-3">
+                        <Link href={`/admin/revenue-engine?tab=communications&lead=${l.id}`}
+                          className="text-xs text-[var(--accent)] hover:underline flex items-center gap-1 whitespace-nowrap">
+                          <MessageSquare className="w-3 h-3" /> Log
+                        </Link>
                       </td>
                     </tr>
                   );
