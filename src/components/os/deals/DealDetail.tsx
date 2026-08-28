@@ -68,7 +68,38 @@ export function DealDetail({
   const [savingOwner, setSavingOwner] = useState(false);
   const [note, setNote] = useState("");
   const [savingNote, setSavingNote] = useState(false);
+  const [editingValue, setEditingValue] = useState(false);
+  const [valueInput, setValueInput] = useState(String(deal.value));
   const products = parseJsonArray<string>(deal.productKeys);
+
+  const TEMP_CYCLE = ["HOT", "WARM", "COLD"] as const;
+  async function cycleTemperature() {
+    const i = TEMP_CYCLE.indexOf(deal.temperature as (typeof TEMP_CYCLE)[number]);
+    const next = TEMP_CYCLE[(i + 1) % TEMP_CYCLE.length];
+    const prev = deal.temperature;
+    setDeal(d => ({ ...d, temperature: next }));
+    try {
+      await updateDealAction(deal.id, { temperature: next });
+    } catch {
+      setDeal(d => ({ ...d, temperature: prev }));
+      toast.error("Couldn't update temperature");
+    }
+  }
+
+  async function saveValue() {
+    const next = Number(valueInput.replace(/[^\d]/g, ""));
+    setEditingValue(false);
+    if (!next || next === deal.value) { setValueInput(String(deal.value)); return; }
+    const prev = deal.value;
+    setDeal(d => ({ ...d, value: next }));
+    try {
+      await updateDealAction(deal.id, { value: next });
+    } catch {
+      setDeal(d => ({ ...d, value: prev }));
+      setValueInput(String(prev));
+      toast.error("Couldn't update value");
+    }
+  }
 
   async function changeOwner(ownerId: string) {
     setSavingOwner(true);
@@ -106,7 +137,6 @@ export function DealDetail({
         lastContactAt: new Date(),
       });
       setDeal(d => ({ ...d, nextAction, nextActionDue: nextActionDue ? new Date(nextActionDue) : null, lastContactAt: new Date() }));
-      toast.success("Next action saved");
     } catch {
       toast.error("Couldn't save follow-up");
     } finally {
@@ -172,8 +202,25 @@ export function DealDetail({
           <div>
             <h1 className="os-heading-page" style={{ color: "var(--text)" }}>{deal.title}</h1>
             <div className="flex items-center gap-2.5 mt-2 flex-wrap">
-              <span className="os-text-number text-2xl" style={{ color: "var(--accent)" }}>{formatKES(deal.value)}</span>
-              <TemperatureBadge temperature={deal.temperature} />
+              {editingValue ? (
+                <input
+                  autoFocus
+                  value={valueInput}
+                  onChange={e => setValueInput(e.target.value.replace(/[^\d]/g, ""))}
+                  onBlur={saveValue}
+                  onKeyDown={e => { if (e.key === "Enter") saveValue(); if (e.key === "Escape") { setValueInput(String(deal.value)); setEditingValue(false); } }}
+                  inputMode="numeric"
+                  className="os-text-number text-2xl bg-transparent outline-none border-b w-32"
+                  style={{ color: "var(--accent)", borderColor: "var(--accent)" }}
+                />
+              ) : (
+                <button onClick={() => { setValueInput(String(deal.value)); setEditingValue(true); }} className="os-text-number text-2xl hover:opacity-70 transition-opacity" style={{ color: "var(--accent)" }}>
+                  {formatKES(deal.value)}
+                </button>
+              )}
+              <button onClick={cycleTemperature} title="Click to change">
+                <TemperatureBadge temperature={deal.temperature} />
+              </button>
             </div>
             {products.length > 0 && (
               <div className="flex flex-wrap gap-1.5 mt-3">
@@ -196,10 +243,10 @@ export function DealDetail({
       {/* Next Best Action */}
       <motion.div
         {...fadeInUp}
-        className="mt-6 rounded-[var(--radius-xl)] p-5"
-        style={{ background: "var(--accent-soft)", border: "1px solid var(--border-strong)" }}
+        className="mt-6 rounded-[var(--radius-lg)] p-5"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
-        <p className="os-text-meta font-bold uppercase tracking-wider mb-3" style={{ color: "var(--accent)" }}>Next Best Action</p>
+        <p className="os-text-meta font-semibold uppercase tracking-wider mb-3">Next Best Action</p>
         <div className="flex flex-col sm:flex-row gap-3">
           <Input value={nextAction} onChange={e => setNextAction(e.target.value)} placeholder="Send proforma, confirm decision maker…" className="flex-1" />
           <Input type="date" value={nextActionDue} onChange={e => setNextActionDue(e.target.value)} className="sm:w-44" />
