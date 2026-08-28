@@ -4,8 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task } from "@prisma/client";
-import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban } from "lucide-react";
-import { PageHeader } from "@/components/os/common/PageHeader";
+import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban, CreditCard, ArrowRight } from "lucide-react";
 import { Button } from "@/components/os/ui/Button";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
@@ -87,26 +86,26 @@ export function ClientDetail({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
         {[
           { label: "Lifetime Value", value: formatKES(lifetimeValue, { compact: true }) },
           { label: "Open Pipeline", value: `${formatKES(pipelineValue, { compact: true })} (${openDeals.length})` },
           { label: "Recurring Revenue", value: recurring > 0 ? `${formatKES(recurring, { compact: true })}/mo` : "—" },
           { label: "Outstanding Balance", value: "—" },
         ].map(s => (
-          <div key={s.label} className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <p className="text-lg font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{s.value}</p>
-            <p className="text-xs text-[var(--text-faint)] mt-0.5">{s.label}</p>
+          <div key={s.label}>
+            <p className="os-text-number text-base" style={{ color: "var(--text)" }}>{s.value}</p>
+            <p className="os-text-meta mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
 
       {recommendation && (
-        <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-start gap-3" style={{ background: "var(--accent-soft)", border: "1px solid var(--border-strong)" }}>
+        <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-start gap-3 border" style={{ borderColor: "var(--border)" }}>
           <Star className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-[var(--text)]">Recommended Next Product: {recommendation.name}</p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">{recommendation.reason}</p>
+            <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>Recommended next: {recommendation.name}</p>
+            <p className="os-text-meta mt-0.5">{recommendation.reason}</p>
           </div>
           <Button size="sm" variant="secondary" onClick={() => setDealOpen(true)} className="shrink-0">Create Opportunity</Button>
         </div>
@@ -155,20 +154,25 @@ export function ClientDetail({
           </div>
         </TabsContent>
 
-        <TabsContent value="opportunities" className="mt-5 space-y-2">
-          {company.deals.length === 0 && <ComingSoon title="No opportunities yet" note="Create one to start tracking this client through the pipeline." />}
-          {company.deals.map(d => (
-            <Link key={d.id} href={`/app/deals/${d.id}`} className="flex items-center justify-between gap-3 px-4 py-3 rounded-[var(--radius-lg)] hover:bg-[var(--surface-hover)] transition-colors" style={{ border: "1px solid var(--border)" }}>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--text)] truncate">{d.title}</p>
-                <p className="text-xs text-[var(--text-faint)] mt-0.5">{d.stage.replace(/_/g, " ")}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <TemperatureBadge temperature={d.temperature} />
-                <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>{formatKES(d.value, { compact: true })}</span>
-              </div>
-            </Link>
-          ))}
+        <TabsContent value="opportunities" className="mt-5">
+          {company.deals.length === 0 ? (
+            <ComingSoon title="No opportunities yet" note="Create one to start tracking this client through the pipeline." />
+          ) : (
+            <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+              {company.deals.map(d => (
+                <Link key={d.id} href={`/app/deals/${d.id}`} className="os-row-hover flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{d.title}</p>
+                    <p className="os-text-meta mt-0.5">{d.stage.replace(/_/g, " ")}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <TemperatureBadge temperature={d.temperature} />
+                    <span className="os-text-number text-sm" style={{ color: "var(--text)" }}>{formatKES(d.value, { compact: true })}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="meetings" className="mt-5 space-y-2">
@@ -195,9 +199,10 @@ export function ClientDetail({
         </TabsContent>
 
         <TabsContent value="more" className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <ComingSoonCard icon={MessageSquare} title="Conversations" note="WhatsApp, email and call history — Phase 3." />
-          <ComingSoonCard icon={FileText} title="Quotes, Proformas & Invoices" note="Full document history — Phase 4." />
-          <ComingSoonCard icon={FolderKanban} title="Payments & Projects" note="Reconciled payments and project delivery — Phase 5–6." />
+          <LinkOutCard icon={MessageSquare} title="Conversations" note="WhatsApp, email and call history" href={`/app/communications?company=${company.id}`} />
+          <LinkOutCard icon={FileText} title="Quotes & Proformas" note="Documents sent to this client" href="/app/quotes" />
+          <LinkOutCard icon={CreditCard} title="Payments" note="Reconciled payments" href="/app/payments" />
+          <LinkOutCard icon={FolderKanban} title="Projects" note="Delivery once a deal is won" href="/app/projects" />
         </TabsContent>
       </Tabs>
 
@@ -220,12 +225,17 @@ export function ClientDetail({
   );
 }
 
-function ComingSoonCard({ icon: Icon, title, note }: { icon: typeof MessageSquare; title: string; note: string }) {
+function LinkOutCard({ icon: Icon, title, note, href }: { icon: typeof MessageSquare; title: string; note: string; href: string }) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-dashed p-5" style={{ borderColor: "var(--border-strong)" }}>
-      <Icon className="w-4 h-4 mb-2" style={{ color: "var(--text-faint)" }} />
-      <p className="text-sm font-semibold text-[var(--text)]">{title}</p>
-      <p className="text-xs text-[var(--text-faint)] mt-1">{note}</p>
-    </div>
+    <Link href={href} className="os-row-hover flex items-start justify-between gap-3 rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+      <div className="flex items-start gap-3 min-w-0">
+        <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--text-faint)" }} />
+        <div className="min-w-0">
+          <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>{title}</p>
+          <p className="os-text-meta mt-0.5">{note}</p>
+        </div>
+      </div>
+      <ArrowRight className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "var(--text-faint)" }} />
+    </Link>
   );
 }

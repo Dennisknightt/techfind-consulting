@@ -56,27 +56,32 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
           <p className="text-sm font-semibold text-[var(--text)]">No clients yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
-          {filtered.map(c => {
+        <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "1fr 140px 120px", borderColor: "var(--border)" }}>
+            {["Company", "Opportunities", "Lifetime value"].map(h => (
+              <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
+            ))}
+          </div>
+          {filtered.map((c, i) => {
             const lifetimeValue = c.deals.reduce((s, d) => s + d.value, 0);
             return (
               <button
                 key={c.id}
                 onClick={() => router.push(`/app/clients/${c.id}`)}
-                className="text-left rounded-[var(--radius-lg)] p-4 transition-shadow hover:shadow-[var(--shadow-sm)]"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                className="os-row-hover w-full grid grid-cols-1 sm:grid-cols-[1fr_140px_120px] items-center gap-3 px-4 py-2.5 text-left"
+                style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <CompanyAvatar name={c.name} size={38} />
+                <div className="flex items-center gap-2.5 min-w-0">
+                  <CompanyAvatar name={c.name} size={28} />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--text)] truncate">{c.name}</p>
-                    <p className="text-xs text-[var(--text-faint)] truncate">{c.industry ?? "—"}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{c.name}</p>
+                    <p className="os-text-meta truncate">{c.industry ?? "—"}</p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[var(--text-faint)]">{c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}</span>
-                  {lifetimeValue > 0 && <span className="font-bold" style={{ color: "var(--accent)" }}>{formatKES(lifetimeValue, { compact: true })}</span>}
-                </div>
+                <span className="hidden sm:block os-text-meta">{c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}</span>
+                <span className="hidden sm:block os-text-number text-sm" style={{ color: "var(--text)" }}>
+                  {lifetimeValue > 0 ? formatKES(lifetimeValue, { compact: true }) : "—"}
+                </span>
               </button>
             );
           })}

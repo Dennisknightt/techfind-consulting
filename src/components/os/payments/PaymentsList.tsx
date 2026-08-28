@@ -31,37 +31,46 @@ export function PaymentsList({ payments }: { payments: PaymentRow[] }) {
         </div>
       ) : (
         <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b" style={{ borderColor: "var(--border)", background: "var(--surface-hover)" }}>
-                {["Reference", "Client", "Document", "Method", "Amount", "Status", "Date", ""].map(h => (
-                  <th key={h} className="text-left px-4 py-2.5 text-[11px] font-semibold uppercase tracking-wider" style={{ color: "var(--text-faint)" }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {payments.map(p => (
-                <tr key={p.id} className="border-b last:border-0" style={{ borderColor: "var(--border)" }}>
-                  <td className="px-4 py-3 text-xs text-[var(--text-faint)]">{p.reference}</td>
-                  <td className="px-4 py-3 font-medium text-[var(--text)]">{p.company?.name ?? "—"}</td>
-                  <td className="px-4 py-3">
-                    {p.document ? <Link href={`/app/quotes/${p.document.id}`} className="hover:underline" style={{ color: "var(--accent)" }}>{p.document.number}</Link> : "—"}
-                  </td>
-                  <td className="px-4 py-3 text-[var(--text-muted)]">{p.method}</td>
-                  <td className="px-4 py-3 font-bold text-[var(--text)]">{formatKES(p.amount, { compact: true })}</td>
-                  <td className="px-4 py-3"><Badge tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status.replace(/_/g, " ")}</Badge></td>
-                  <td className="px-4 py-3 text-xs text-[var(--text-faint)]">{friendlyDate(p.createdAt)}</td>
-                  <td className="px-4 py-3">
-                    {p.receipt && (
-                      <a href={`/api/os/receipts/${p.receipt.id}/pdf`} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1 text-xs hover:underline" style={{ color: "var(--accent)" }}>
-                        <Download className="w-3 h-3" /> Receipt
-                      </a>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+          <div
+            className="hidden sm:grid items-center gap-3 px-4 py-2 border-b"
+            style={{ gridTemplateColumns: "1fr 1fr 90px 100px 110px 90px 32px", borderColor: "var(--border)" }}
+          >
+            {["Client", "Document", "Method", "Amount", "Status", "Date", ""].map(h => (
+              <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
+            ))}
+          </div>
+          {payments.map((p, i) => (
+            <div
+              key={p.id}
+              className="os-row-hover grid grid-cols-2 sm:grid-cols-[1fr_1fr_90px_100px_110px_90px_32px] items-center gap-3 px-4 py-2.5"
+              style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
+            >
+              <div className="min-w-0">
+                <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{p.company?.name ?? "—"}</p>
+                <p className="os-text-meta truncate sm:hidden">{p.reference}</p>
+              </div>
+              <div className="hidden sm:block min-w-0">
+                {p.document ? (
+                  <Link href={`/app/quotes/${p.document.id}`} className="text-sm hover:underline truncate block" style={{ color: "var(--accent)" }}>
+                    {p.document.number}
+                  </Link>
+                ) : (
+                  <span className="os-text-meta">—</span>
+                )}
+              </div>
+              <span className="hidden sm:block os-text-meta">{p.method}</span>
+              <span className="hidden sm:block os-text-number text-sm" style={{ color: "var(--text)" }}>{formatKES(p.amount, { compact: true })}</span>
+              <div className="hidden sm:block"><Badge tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status.replace(/_/g, " ")}</Badge></div>
+              <span className="hidden sm:block os-text-meta">{friendlyDate(p.createdAt)}</span>
+              <div className="flex justify-end">
+                {p.receipt && (
+                  <a href={`/api/os/receipts/${p.receipt.id}/pdf`} target="_blank" rel="noopener noreferrer" aria-label="Download receipt" style={{ color: "var(--text-faint)" }}>
+                    <Download className="w-3.5 h-3.5" />
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
     </div>
