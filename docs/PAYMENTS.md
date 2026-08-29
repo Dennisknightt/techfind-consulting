@@ -1,5 +1,29 @@
 # Payments
 
+## Philosophy: automation, not administration
+
+Techfind has no walk-in customers, so there is no cash/POS/manual-receipt workflow to
+digitize — there's manual work to eliminate instead. The standard journey is:
+
+```
+Deal Closed → Invoice Created → Payment Link Generated → Link Sent →
+STK Push → M-Pesa Confirms → CRM Updates → Receipt Generated
+```
+
+Concretely: every proforma/invoice gets a `PaymentSession` the moment it's created
+(`createDocumentAction`), scoped to whatever's due right now (deposit, then balance).
+From anywhere the CRM already shows that document — the document itself, its deal, its
+client, the Money view — a one-click **Request Payment** (`RequestPaymentButton`) sends
+that link with zero re-entry, and **Send M-Pesa Prompt** (`SendStkPushButton`) fires the
+STK push directly against the phone on file, no link needed. Both call
+`src/server/actions/payments.ts`, which always resolves the session to the document's
+*current* outstanding balance — so "Request Payment" before anything is paid and
+"Request Balance" after a deposit are the same code path, just a different button label.
+
+The only manual/administrative path is `payments.write` (Finance/Super Admin) —
+reconciliation and refunds for genuine edge cases, never the normal flow. There is
+deliberately no cash-collection screen, POS flow, or manual "mark as paid" button.
+
 ## Provider abstraction
 
 `src/server/payments/provider.ts` defines the `PaymentProvider` interface every gateway
@@ -46,6 +70,15 @@ simulating provider response" notice under the same condition.
 **Before ever enabling `ALLOW_LIVE_PAYMENTS_IN_DEV`, or deploying with `NODE_ENV=production`
 and a real provider configured, confirm real credentials are what's actually wanted for that
 run.** There is no other gate.
+
+## Direct STK push — rate limits
+
+`sendStkPushAction` (`src/server/actions/payments.ts`) is the CRM-triggered version of
+the public checkout's M-Pesa flow — same provider, same trust rules, but authenticated
+and against the client's phone on file rather than one they type in. To avoid buzzing a
+non-responsive customer repeatedly, it enforces per-document limits before calling the
+provider: a 60-second cooldown between attempts, and a hard cap of 3 attempts per hour.
+Both are checked against `Payment` rows already on record — no separate rate-limit store.
 
 ## Reconciliation — the trust boundary
 

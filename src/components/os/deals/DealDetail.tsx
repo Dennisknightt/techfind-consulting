@@ -15,6 +15,7 @@ import { Input, Label } from "@/components/os/ui/Input";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { Avatar } from "@/components/os/ui/Avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
+import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, friendlyDay, daysBetween, dayjs } from "@/lib/os/dates";
 import { STAGE_LABEL } from "@/lib/os/pipeline";
@@ -350,6 +351,15 @@ export function DealDetail({
               <FileText className="w-3.5 h-3.5" /> Create quotation
             </Button>
           )}
+          {(() => {
+            const owingDoc = deal.documents.find(d => d.balance > 0);
+            if (!owingDoc) return null;
+            return (
+              <div className="mt-4">
+                <RequestPaymentButton documentId={owingDoc.id} label={owingDoc.paidAmount > 0 ? "Request Balance" : "Request Payment"} />
+              </div>
+            );
+          })()}
         </div>
       </section>
 

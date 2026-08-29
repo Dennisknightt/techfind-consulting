@@ -6,6 +6,7 @@ import { Plus, FileText } from "lucide-react";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Badge } from "@/components/os/ui/Badge";
+import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDay } from "@/lib/os/dates";
 
@@ -49,18 +50,18 @@ export function DocumentsList({
         </div>
       ) : (
         <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "110px 1fr 130px 110px", borderColor: "var(--border)" }}>
-            {["Number", "Client", "Status", "Total"].map(h => (
+          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "110px 1fr 130px 110px 110px", borderColor: "var(--border)" }}>
+            {["Number", "Client", "Status", "Total", ""].map(h => (
               <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
             ))}
           </div>
           {documents.map((doc, i) => (
-            <Link
+            <div
               key={doc.id}
-              href={`/app/quotes/${doc.id}`}
-              className="os-row-hover grid grid-cols-2 sm:grid-cols-[110px_1fr_130px_110px] items-center gap-3 px-4 py-2.5"
+              className="os-row-hover relative grid grid-cols-2 sm:grid-cols-[110px_1fr_130px_110px_110px] items-center gap-3 px-4 py-2.5"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
+              <Link href={`/app/quotes/${doc.id}`} className="absolute inset-0" aria-label={`Open ${doc.number}`} />
               <div>
                 <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{doc.number}</p>
                 <p className="os-text-meta">{friendlyDay(doc.createdAt)}</p>
@@ -68,7 +69,12 @@ export function DocumentsList({
               <p className="hidden sm:block text-sm truncate" style={{ color: "var(--text)" }}>{doc.company.name}</p>
               <div className="hidden sm:block"><Badge tone={STATUS_TONE[doc.status] ?? "neutral"}>{doc.status.replace(/_/g, " ")}</Badge></div>
               <span className="os-text-number text-sm text-right sm:text-left" style={{ color: "var(--text)" }}>{formatKES(doc.total, { compact: true })}</span>
-            </Link>
+              <div className="relative z-10 hidden sm:flex justify-end">
+                {doc.balance > 0 && (
+                  <RequestPaymentButton documentId={doc.id} label={doc.paidAmount > 0 ? "Balance" : "Request"} size="sm" variant="secondary" />
+                )}
+              </div>
+            </div>
           ))}
         </div>
       )}

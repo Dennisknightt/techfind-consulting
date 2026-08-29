@@ -3,13 +3,14 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task } from "@prisma/client";
+import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task, SalesDocument } from "@prisma/client";
 import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban, CreditCard, ArrowRight } from "lucide-react";
 import { Button } from "@/components/os/ui/Button";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/os/ui/Tabs";
 import { ComingSoon } from "@/components/os/common/ComingSoon";
+import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, friendlyDay } from "@/lib/os/dates";
 import { CreateDealSheet } from "@/components/os/deals/CreateDealSheet";
@@ -45,13 +46,14 @@ function recommendNextProduct(footprint: CompanyFull["footprint"]) {
 }
 
 export function ClientDetail({
-  company, tasks, allProducts, users, currentUserId,
+  company, tasks, allProducts, users, currentUserId, documents,
 }: {
   company: CompanyFull;
   tasks: (Task & { assignee: User | null })[];
   allProducts: Product[];
   users: User[];
   currentUserId: string;
+  documents: SalesDocument[];
 }) {
   const router = useRouter();
   const [dealOpen, setDealOpen] = useState(false);
@@ -63,6 +65,8 @@ export function ClientDetail({
   const pipelineValue = openDeals.reduce((s, d) => s + d.value, 0);
   const recurring = company.footprint.filter(f => f.status === "ACTIVE" && f.mrr).reduce((s, f) => s + (f.mrr ?? 0), 0);
   const recommendation = recommendNextProduct(company.footprint);
+  const outstandingDocs = documents.filter(d => d.balance > 0).sort((a, b) => b.balance - a.balance);
+  const outstandingBalance = outstandingDocs.reduce((s, d) => s + d.balance, 0);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -91,14 +95,27 @@ export function ClientDetail({
           { label: "Lifetime Value", value: formatKES(lifetimeValue, { compact: true }) },
           { label: "Open Pipeline", value: `${formatKES(pipelineValue, { compact: true })} (${openDeals.length})` },
           { label: "Recurring Revenue", value: recurring > 0 ? `${formatKES(recurring, { compact: true })}/mo` : "—" },
-          { label: "Outstanding Balance", value: "—" },
+          { label: "Outstanding Balance", value: outstandingBalance > 0 ? formatKES(outstandingBalance, { compact: true }) : "KES 0", tone: outstandingBalance > 0 ? "warning" as const : undefined },
         ].map(s => (
           <div key={s.label}>
-            <p className="os-text-number text-base" style={{ color: "var(--text)" }}>{s.value}</p>
+            <p className="os-text-number text-base" style={{ color: s.tone === "warning" ? "var(--warning)" : "var(--text)" }}>{s.value}</p>
             <p className="os-text-meta mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
+
+      {outstandingDocs.length > 0 && (
+        <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-center justify-between gap-3 flex-wrap" style={{ background: "var(--warning-soft)" }}>
+          <p className="text-sm" style={{ color: "var(--warning)" }}>
+            <strong>{formatKES(outstandingBalance, { compact: true })}</strong> outstanding across {outstandingDocs.length} invoice{outstandingDocs.length === 1 ? "" : "s"}
+          </p>
+          <RequestPaymentButton
+            documentId={outstandingDocs[0].id}
+            label={outstandingDocs[0].paidAmount > 0 ? "Request Balance" : "Request Payment"}
+            size="sm"
+          />
+        </div>
+      )}
 
       {recommendation && (
         <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-start gap-3 border" style={{ borderColor: "var(--border)" }}>

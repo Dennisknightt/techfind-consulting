@@ -147,8 +147,8 @@ export async function getAttentionItems(): Promise<AttentionItem[]> {
       title: doc.company.name,
       description: `${formatKES(doc.balance)} expected but overdue.`,
       valueAtRisk: doc.balance,
-      actionLabel: "WhatsApp Reminder",
-      actionHref: `/app/payments`,
+      actionLabel: "Request Payment",
+      actionHref: `/app/quotes/${doc.id}`,
     });
   }
 
