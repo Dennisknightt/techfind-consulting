@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Zap, LogOut, ChevronsUpDown, Search } from "lucide-react";
+import { LogOut, ChevronsUpDown, Search } from "lucide-react";
 import { PRIMARY_NAV } from "./nav";
 import { MoreSheet } from "./MoreSheet";
 import { Avatar } from "@/components/os/ui/Avatar";
@@ -29,12 +29,7 @@ export function Sidebar({ user }: { user: SessionUser }) {
       style={{ background: "var(--sidebar-bg)", borderColor: "var(--border)" }}
     >
       <Link href="/app" className="flex items-center gap-2 px-4 h-14 shrink-0">
-        <div
-          className="w-6 h-6 rounded-[7px] flex items-center justify-center shrink-0"
-          style={{ background: "var(--accent)" }}
-        >
-          <Zap className="w-3.5 h-3.5 text-white" />
-        </div>
+        <img src="/os-icons/icon-256.png" alt="Techfind" className="w-6 h-6 rounded-[7px] shrink-0" />
         <span className="font-semibold text-[13px] text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
           Techfind
         </span>

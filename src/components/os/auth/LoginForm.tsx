@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Eye, EyeOff, Zap } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 import { loginAction, type LoginState } from "@/server/actions/auth";
@@ -18,12 +18,12 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-sm">
       <div className="flex flex-col items-center mb-9 text-center">
-        <div
-          className="w-12 h-12 rounded-[14px] flex items-center justify-center mb-4"
-          style={{ background: "var(--accent)", boxShadow: "var(--shadow-glow)" }}
-        >
-          <Zap className="w-6 h-6 text-white" />
-        </div>
+        <img
+          src="/os-icons/icon-256.png"
+          alt="Techfind"
+          className="w-12 h-12 rounded-[14px] mb-4"
+          style={{ boxShadow: "var(--shadow-glow)" }}
+        />
         <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
           TECHFIND
         </h1>

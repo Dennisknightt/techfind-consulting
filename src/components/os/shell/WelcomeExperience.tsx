@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Zap } from "lucide-react";
 import { playSonicLogo } from "@/lib/os/sonicLogo";
 
 const SESSION_KEY = "techfind_welcomed_v1";
@@ -59,17 +58,16 @@ export function WelcomeExperience({
       }}
     >
       <div className="flex flex-col items-center gap-5 text-center px-6">
-        <div
-          className="w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-500"
+        <img
+          src="/os-icons/icon-256.png"
+          alt="Techfind"
+          className="w-14 h-14 rounded-2xl transition-all duration-500"
           style={{
-            background: "var(--accent)",
             boxShadow: "var(--shadow-glow)",
             transform: phase === "logo" ? "scale(0.85)" : "scale(1)",
             opacity: 1,
           }}
-        >
-          <Zap className="w-7 h-7 text-white" />
-        </div>
+        />
 
         <p
           className="text-xl font-semibold text-[var(--text)] transition-all duration-500"
