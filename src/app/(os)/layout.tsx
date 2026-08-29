@@ -53,6 +53,10 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1,
   viewportFit: "cover",
+  // The mobile keyboard resizes the actual layout viewport instead of just
+  // overlaying it — fixed-position footers (Sheet/Dialog save buttons, the
+  // bottom nav) stay above the keyboard instead of hiding behind it.
+  interactiveWidget: "resizes-content",
 };
 
 export default function OsRootLayout({ children }: { children: React.ReactNode }) {
