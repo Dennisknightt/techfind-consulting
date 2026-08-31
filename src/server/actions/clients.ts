@@ -93,7 +93,7 @@ export async function searchCompaniesAction(query: string) {
     return db.company.findMany({ orderBy: { createdAt: "desc" }, take: 8 });
   }
   return db.company.findMany({
-    where: { OR: [{ name: { contains: q } }, { phone: { contains: q } }, { email: { contains: q } }] },
+    where: { OR: [{ name: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }, { email: { contains: q, mode: "insensitive" } }] },
     take: 8,
   });
 }

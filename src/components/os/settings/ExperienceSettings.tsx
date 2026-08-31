@@ -8,6 +8,24 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/os/ui/Car
 import { playSonicLogo } from "@/lib/os/sonicLogo";
 import { updateExperienceSettingsAction } from "@/server/actions/settings";
 import { toast } from "sonner";
+import { ThemeToggleSegmented } from "@/components/os/shell/ThemeToggle";
+
+function AppearanceCard() {
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Appearance</CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm font-semibold text-[var(--text)] mb-2.5">Theme</p>
+        <ThemeToggleSegmented />
+        <p className="text-xs text-[var(--text-faint)] mt-3">
+          &ldquo;System&rdquo; follows your device&rsquo;s light/dark setting automatically.
+        </p>
+      </CardContent>
+    </Card>
+  );
+}
 
 export function ExperienceSettings({
   initialEnabled,
@@ -40,7 +58,9 @@ export function ExperienceSettings({
   }
 
   return (
-    <Card>
+    <div className="space-y-5">
+      <AppearanceCard />
+      <Card>
       <CardHeader>
         <CardTitle>Experience</CardTitle>
       </CardHeader>
@@ -89,6 +109,7 @@ export function ExperienceSettings({
           </Button>
         </div>
       </CardContent>
-    </Card>
+      </Card>
+    </div>
   );
 }

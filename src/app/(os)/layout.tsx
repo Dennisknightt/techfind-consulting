@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Outfit, Geist, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "next-themes";
+import { MotionConfig } from "framer-motion";
 import { Toaster } from "sonner";
 
 const outfit = Outfit({
@@ -67,19 +68,21 @@ export default function OsRootLayout({ children }: { children: React.ReactNode }
       suppressHydrationWarning
     >
       <body className="antialiased overflow-x-hidden" style={{ background: "var(--bg)", color: "var(--text)" }}>
-        <ThemeProvider attribute="class" defaultTheme="light" enableSystem={false} storageKey="techfind-os-theme">
-          {children}
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              style: {
-                background: "var(--surface)",
-                border: "1px solid var(--border)",
-                color: "var(--text)",
-                borderRadius: "var(--radius-lg)",
-              },
-            }}
-          />
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem storageKey="techfind-os-theme">
+          <MotionConfig reducedMotion="user">
+            {children}
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                style: {
+                  background: "var(--surface)",
+                  border: "1px solid var(--border)",
+                  color: "var(--text)",
+                  borderRadius: "var(--radius-lg)",
+                },
+              }}
+            />
+          </MotionConfig>
         </ThemeProvider>
       </body>
     </html>

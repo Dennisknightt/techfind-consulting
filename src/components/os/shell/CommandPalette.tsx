@@ -130,7 +130,26 @@ export function CommandPalette() {
             </Command.Group>
           )}
         </Command.List>
+
+        <div
+          className="hidden sm:flex items-center gap-4 px-4 py-2 border-t text-[11px]"
+          style={{ borderColor: "var(--border)", color: "var(--text-faint)" }}
+        >
+          <span className="flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd> Navigate</span>
+          <span className="flex items-center gap-1"><Kbd>↵</Kbd> Select</span>
+          <span className="flex items-center gap-1"><Kbd>Esc</Kbd> Close</span>
+          <span className="flex-1" />
+          <span className="flex items-center gap-1"><Kbd>?</Kbd> All shortcuts</span>
+        </div>
       </Command>
     </div>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="px-1 py-0.5 rounded border text-[10px] font-semibold" style={{ borderColor: "var(--border)" }}>
+      {children}
+    </kbd>
   );
 }

@@ -265,3 +265,12 @@ body {
     transition: none !important;
   }
 }
+
+/* Visible keyboard focus everywhere — several Radix-based primitives
+   (Tabs, Switch, Select/DropdownMenu items) intentionally suppress the
+   native outline to avoid a mouse-click ring, but that must never come at
+   the cost of a keyboard user losing focus visibility entirely. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

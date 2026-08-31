@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Search, Bell } from "lucide-react";
 import { QuickCreateMenu } from "./QuickCreate";
 import { NotificationsPanel } from "./NotificationsPanel";
+import { ThemeToggleIcon } from "./ThemeToggle";
 
 export function Topbar({ unreadCount = 0 }: { unreadCount?: number }) {
   const [notifOpen, setNotifOpen] = useState(false);
@@ -24,6 +25,8 @@ export function Topbar({ unreadCount = 0 }: { unreadCount?: number }) {
       </button>
 
       <div className="flex-1" />
+
+      <ThemeToggleIcon />
 
       <div className="relative">
         <button
