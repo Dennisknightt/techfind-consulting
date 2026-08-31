@@ -10,6 +10,7 @@ import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
 import { CompanyAvatar } from "@/components/os/ui/Avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/os/ui/Sheet";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 import { formatKES } from "@/lib/os/money";
 import { createClientAction } from "@/server/actions/clients";
 
@@ -57,32 +58,39 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
         </div>
       ) : (
         <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
-          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "1fr 140px 120px", borderColor: "var(--border)" }}>
-            {["Company", "Opportunities", "Lifetime value"].map(h => (
+          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "1fr 110px 140px 120px", borderColor: "var(--border)" }}>
+            {["Company", "Status", "Opportunities", "Lifetime value"].map(h => (
               <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
             ))}
           </div>
           {filtered.map((c, i) => {
             const lifetimeValue = c.deals.reduce((s, d) => s + d.value, 0);
             return (
-              <button
+              <div
                 key={c.id}
-                onClick={() => router.push(`/app/clients/${c.id}`)}
-                className="os-row-hover w-full grid grid-cols-1 sm:grid-cols-[1fr_140px_120px] items-center gap-3 px-4 py-2.5 text-left"
+                className="os-row-hover relative grid grid-cols-1 sm:grid-cols-[1fr_110px_140px_120px] items-center gap-3 px-4 py-2.5"
                 style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
               >
-                <div className="flex items-center gap-2.5 min-w-0">
+                <button
+                  onClick={() => router.push(`/app/clients/${c.id}`)}
+                  className="absolute inset-0 text-left"
+                  aria-label={`Open ${c.name}`}
+                />
+                <div className="relative flex items-center gap-2.5 min-w-0 pointer-events-none">
                   <CompanyAvatar name={c.name} size={28} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{c.name}</p>
                     <p className="os-text-meta truncate">{c.industry ?? "—"}</p>
                   </div>
                 </div>
-                <span className="hidden sm:block os-text-meta">{c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}</span>
-                <span className="hidden sm:block os-text-number text-sm" style={{ color: "var(--text)" }}>
+                <div className="relative z-10 pointer-events-auto sm:block">
+                  <ClientStatusBadge companyId={c.id} status={c.status} />
+                </div>
+                <span className="relative hidden sm:block os-text-meta pointer-events-none">{c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}</span>
+                <span className="relative hidden sm:block os-text-number text-sm pointer-events-none" style={{ color: "var(--text)" }}>
                   {lifetimeValue > 0 ? formatKES(lifetimeValue, { compact: true }) : "—"}
                 </span>
-              </button>
+              </div>
             );
           })}
         </div>

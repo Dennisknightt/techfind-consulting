@@ -123,6 +123,25 @@ export async function updateClientAction(id: string, patch: Partial<FullClientIn
   return company;
 }
 
+const CLIENT_STATUSES = ["COLD", "WARM", "PITCHED", "WON", "LOST", "CLOSED"] as const;
+export type ClientStatus = (typeof CLIENT_STATUSES)[number];
+
+export async function updateClientStatusAction(id: string, status: ClientStatus) {
+  const user = await requirePermission("clients.write");
+  if (!CLIENT_STATUSES.includes(status)) throw new Error("Invalid status");
+
+  const before = await db.company.findUnique({ where: { id } });
+  if (!before) throw new Error("Client not found");
+
+  const company = await db.company.update({ where: { id }, data: { status } });
+
+  await writeAudit({ actorId: user.id, action: "UPDATE_CLIENT_STATUS", entityType: "Company", entityId: id, before, after: company });
+  revalidatePath("/app/clients");
+  revalidatePath(`/app/clients/${id}`);
+  revalidatePath("/app");
+  return company;
+}
+
 const FOOTPRINT_STATUSES = ["NOT_PITCHED", "OPPORTUNITY", "ACTIVE"] as const;
 export type FootprintStatus = (typeof FOOTPRINT_STATUSES)[number];
 

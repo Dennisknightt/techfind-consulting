@@ -12,6 +12,7 @@ import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/os/ui/Tabs";
 import { ComingSoon } from "@/components/os/common/ComingSoon";
 import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, friendlyDay } from "@/lib/os/dates";
 import { CreateDealSheet } from "@/components/os/deals/CreateDealSheet";
@@ -102,7 +103,10 @@ export function ClientDetail({
         <div className="flex items-center gap-3.5">
           <CompanyAvatar name={company.name} size={52} />
           <div>
-            <h1 className="text-xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{company.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{company.name}</h1>
+              <ClientStatusBadge companyId={company.id} status={company.status} />
+            </div>
             <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-faint)] flex-wrap">
               {company.industry && <span>{company.industry}</span>}
               {company.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{company.phone}</span>}

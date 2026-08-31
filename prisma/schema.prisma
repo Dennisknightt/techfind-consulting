@@ -72,6 +72,7 @@ model Session {
 // ─────────────────────────────────────────────────────────────────────────
 
 /// source: WHATSAPP | WEBSITE | META | TIKTOK | EMAIL | PHONE | REFERRAL | MANUAL
+/// status (relationship stage, independent of any individual Deal's pipeline stage): COLD | WARM | PITCHED | WON | LOST | CLOSED
 model Company {
   id          String   @id @default(cuid())
   name        String
@@ -81,6 +82,7 @@ model Company {
   website     String?
   address     String?
   source      String   @default("MANUAL")
+  status      String   @default("COLD")
   notes       String?
   ownerId     String?
   owner       User?    @relation("CompanyOwner", fields: [ownerId], references: [id])
