@@ -87,3 +87,14 @@ settling. Before relying on this in a real production environment with data wort
 switch to `prisma migrate` with a real, committed migration history (`prisma migrate dev` locally
 to generate migrations, `prisma migrate deploy` in the deploy pipeline) so schema changes are
 reviewable and reversible rather than a silent sync.
+
+**Confirmed failure mode:** `db push --accept-data-loss` makes the database match *exactly* the
+schema of whatever commit is currently building — including dropping columns that commit doesn't
+know about. Pushing several commits to the branch in quick succession queues multiple Vercel
+builds against the *same* shared database; if an older build's `db push` step finishes after a
+newer build's, it silently drops whatever the newer build added; the older build still reports
+success, so nothing in the deploy log flags it. This has actually happened (a newly-added
+`Company.status` column vanished this way, surfacing as a runtime `P2022` "column does not
+exist" error on a page that had deployed fine minutes earlier). Until this moves to `prisma
+migrate`, avoid pushing multiple commits with schema changes back to back — let one finish
+deploying before pushing the next.
