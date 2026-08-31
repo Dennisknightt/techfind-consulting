@@ -17,6 +17,7 @@ import { Avatar } from "@/components/os/ui/Avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
 import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
 import { NextActionEditor } from "@/components/os/common/NextActionEditor";
+import { QuickActionTile } from "@/components/os/common/QuickActionTile";
 import type { NextActionType } from "@/lib/os/nextAction";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, friendlyDay, daysBetween, dayjs } from "@/lib/os/dates";
@@ -429,24 +430,6 @@ function groupByDay(items: { id: string; at: Date | string; text: string; isNote
     else groups.push({ day, items: [item] });
   }
   return groups;
-}
-
-function QuickActionTile({
-  icon: Icon, label, onClick, tone,
-}: { icon: typeof Phone; label: string; onClick: () => void; tone?: "success" }) {
-  const color = tone === "success" ? "var(--success)" : "var(--accent)";
-  return (
-    <button
-      onClick={onClick}
-      className="os-card-hover os-press flex flex-col items-center justify-center gap-2 py-5 rounded-[var(--radius-lg)] text-center"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
-      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: tone === "success" ? "var(--success-soft)" : "var(--accent-soft)" }}>
-        <Icon className="w-[18px] h-[18px]" style={{ color }} />
-      </div>
-      <span className="text-xs font-medium" style={{ color: "var(--text)" }}>{label}</span>
-    </button>
-  );
 }
 
 function CommercialStat({ label, value, tone }: { label: string; value: number; tone?: "success" | "warning" }) {

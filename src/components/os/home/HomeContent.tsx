@@ -8,6 +8,8 @@ import {
 } from "lucide-react";
 import { formatKES } from "@/lib/os/money";
 import { Button } from "@/components/os/ui/Button";
+import { QuickActionTile } from "@/components/os/common/QuickActionTile";
+import { QUICK_CREATE_ITEMS } from "@/components/os/shell/QuickCreate";
 import { fadeInUp, staggerContainer, staggerItem } from "@/lib/os/motion";
 import type { AttentionItem, OpportunityItem } from "@/server/intelligence/rules";
 
@@ -85,6 +87,18 @@ export function HomeContent({
           <StatPill icon={Wallet} label={`${formatKES(received, { compact: true })} received`} href="/app/revenue" tone="success" show={received > 0} />
         </div>
       </motion.div>
+
+      {/* Quick access — every common "add something" one tap away, never buried behind a menu */}
+      <section className="mt-8">
+        <h2 className="os-heading-section mb-3" style={{ color: "var(--text)" }}>Quick Actions</h2>
+        <motion.div variants={staggerContainer} initial="initial" animate="animate" className="grid grid-cols-3 sm:grid-cols-6 gap-2.5">
+          {QUICK_CREATE_ITEMS.map(({ label, href, icon }) => (
+            <motion.div key={href} variants={staggerItem}>
+              <QuickActionTile icon={icon} label={label === "Proforma" ? "Quotation" : label} href={href} />
+            </motion.div>
+          ))}
+        </motion.div>
+      </section>
 
       {/* What needs your attention */}
       <section className="mt-10">

@@ -15,6 +15,7 @@ import { formatKES } from "@/lib/os/money";
 import { friendlyDate } from "@/lib/os/dates";
 import { fadeInUp } from "@/lib/os/motion";
 import { StageTiles, TemperatureTiles, NextActionPanel, AttentionBadge } from "./LeadTiles";
+import { QuickActionTile } from "@/components/os/common/QuickActionTile";
 import { WonSheet, LostSheet } from "./WonLostSheets";
 import { isLeadOpen, isLeadWon, isLeadLost, stageLabel, LOST_REASON_LABEL, legacyLostReason, type LostReason } from "@/lib/os/leadStage";
 import { reopenLeadAction, deleteLeadAction } from "@/server/actions/leads";
@@ -230,21 +231,3 @@ function InfoRow({ label, value }: { label: string; value: string | null | undef
   );
 }
 
-function QuickActionTile({
-  icon: Icon, label, onClick, tone,
-}: { icon: typeof Phone; label: string; onClick: () => void; tone?: "success" | "danger" }) {
-  const color = tone === "success" ? "var(--success)" : tone === "danger" ? "var(--danger)" : "var(--accent)";
-  const bg = tone === "success" ? "var(--success-soft)" : tone === "danger" ? "var(--danger-soft)" : "var(--accent-soft)";
-  return (
-    <button
-      onClick={onClick}
-      className="os-card-hover os-press flex flex-col items-center justify-center gap-2 py-5 rounded-[var(--radius-lg)] text-center"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
-      <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: bg }}>
-        <Icon className="w-[18px] h-[18px]" style={{ color }} />
-      </div>
-      <span className="text-xs font-medium" style={{ color: "var(--text)" }}>{label}</span>
-    </button>
-  );
-}
