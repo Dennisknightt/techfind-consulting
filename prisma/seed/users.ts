@@ -7,7 +7,7 @@ export async function seedUsers(db: PrismaClient) {
 
   // Techfind runs as a single-operator account — no fictional team roster.
   const team = [
-    { email: "dennis@techfind.co.ke", name: "Dennis Kimani", role: "SUPER_ADMIN", phone: "+254712345001", avatarColor: "#6D28D9" },
+    { email: "dennis@techfind.co.ke", name: "Dennis Knightt", role: "SUPER_ADMIN", phone: "+254712345001", avatarColor: "#6D28D9" },
   ];
 
   const users = [];
