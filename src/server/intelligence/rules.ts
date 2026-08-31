@@ -2,6 +2,7 @@ import "server-only";
 import { db } from "@/server/db";
 import dayjs from "dayjs";
 import { formatKES } from "@/lib/os/money";
+import { isLeadOpen } from "@/lib/os/leadStage";
 
 /**
  * Rule-based "what needs attention / where's the money" engine.
@@ -101,6 +102,25 @@ export async function getAttentionItems(): Promise<AttentionItem[]> {
     });
   }
 
+  // Overdue / due-today lead next actions (WAIT is deliberately not due — see getAttentionLevel)
+  const dueLeads = await db.lead.findMany({
+    where: { nextActionDue: { lt: now.endOf("day").toDate() }, nextActionType: { not: "WAIT" } },
+  });
+  for (const l of dueLeads.filter(l => isLeadOpen(l.status))) {
+    const overdue = dayjs(l.nextActionDue).isBefore(now, "day");
+    items.push({
+      id: `lead-next-action-${l.id}`,
+      severity: overdue ? "critical" : "warning",
+      title: l.companyNameRaw || l.name,
+      description: overdue
+        ? `"${l.nextAction || "Follow-up"}" was due ${now.diff(l.nextActionDue, "day")} day(s) ago.`
+        : `"${l.nextAction || "Follow-up"}" is due today.`,
+      valueAtRisk: l.value,
+      actionLabel: "Follow Up",
+      actionHref: `/app/leads/${l.id}`,
+    });
+  }
+
   // Cold / stale leads
   const coldLeads = await db.lead.findMany({
     where: {
@@ -122,7 +142,8 @@ export async function getAttentionItems(): Promise<AttentionItem[]> {
   }
 
   // Unassigned leads
-  const unassigned = await db.lead.count({ where: { ownerId: null, status: { notIn: ["CONVERTED", "DISQUALIFIED"] } } });
+  const unassignedLeads = await db.lead.findMany({ where: { ownerId: null }, select: { status: true } });
+  const unassigned = unassignedLeads.filter(l => isLeadOpen(l.status)).length;
   if (unassigned > 0) {
     items.push({
       id: "unassigned-leads",
