@@ -47,10 +47,22 @@ export function CompanyPicker({
         </button>
       </PopoverPrimitive.Trigger>
       <PopoverPrimitive.Portal>
+        {/*
+          pointer-events-auto is load-bearing, not decorative: when this
+          picker is opened from inside a modal Sheet/Dialog (MeetingsView,
+          CreateDealSheet), Radix sets `pointer-events: none` on <body> and
+          only re-enables it on the Dialog's own Content element. This
+          Popover's portal renders as a separate sibling of that Content
+          (not nested inside it), so without its own explicit override it
+          silently inherits pointer-events:none — the whole picker (search,
+          results, Quick Client) renders correctly but is completely
+          unclickable. Confirmed via computed-style inspection, not
+          guessed; z-index/paint order were never the problem.
+        */}
         <PopoverPrimitive.Content
           align="start"
           sideOffset={6}
-          className="z-[310] w-[var(--radix-popover-trigger-width)] rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] overflow-hidden os-animate-in"
+          className="z-[310] w-[var(--radix-popover-trigger-width)] rounded-[var(--radius-md)] bg-[var(--surface)] border border-[var(--border)] overflow-hidden os-animate-in pointer-events-auto"
           style={{ boxShadow: "var(--shadow-md)" }}
         >
           <Command shouldFilter={false}>
