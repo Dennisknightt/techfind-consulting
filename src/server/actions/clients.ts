@@ -122,3 +122,36 @@ export async function updateClientAction(id: string, patch: Partial<FullClientIn
   revalidatePath(`/app/clients/${id}`);
   return company;
 }
+
+const FOOTPRINT_STATUSES = ["NOT_PITCHED", "OPPORTUNITY", "ACTIVE"] as const;
+export type FootprintStatus = (typeof FOOTPRINT_STATUSES)[number];
+
+export async function updateFootprintStatusAction(companyId: string, productId: string, status: FootprintStatus) {
+  const user = await requirePermission("clients.write");
+  if (!FOOTPRINT_STATUSES.includes(status)) throw new Error("Invalid status");
+
+  const existing = await db.productFootprint.findUnique({ where: { companyId_productId: { companyId, productId } } });
+
+  const footprint = await db.productFootprint.upsert({
+    where: { companyId_productId: { companyId, productId } },
+    create: {
+      companyId,
+      productId,
+      status,
+      activatedAt: status === "ACTIVE" ? new Date() : null,
+    },
+    update: {
+      status,
+      // First transition into ACTIVE stamps activatedAt; later cycling away and back never overwrites it.
+      ...(status === "ACTIVE" && !existing?.activatedAt ? { activatedAt: new Date() } : {}),
+    },
+  });
+
+  await writeAudit({
+    actorId: user.id, action: "UPDATE_PRODUCT_FOOTPRINT", entityType: "ProductFootprint", entityId: footprint.id,
+    before: existing, after: footprint,
+  });
+  revalidatePath(`/app/clients/${companyId}`);
+  revalidatePath("/app/clients");
+  return footprint;
+}

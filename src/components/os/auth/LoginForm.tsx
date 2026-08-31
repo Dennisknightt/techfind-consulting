@@ -3,7 +3,6 @@
 import { useActionState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
 import { loginAction, type LoginState } from "@/server/actions/auth";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
@@ -70,14 +69,11 @@ export function LoginForm() {
           </p>
         )}
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="pt-1">
           <label className="flex items-center gap-2 text-xs text-[var(--text-muted)] cursor-pointer">
             <input type="checkbox" name="remember" defaultChecked className="rounded accent-[var(--accent)]" />
             Remember Me
           </label>
-          <Link href="#" className="text-xs font-medium" style={{ color: "var(--accent)" }}>
-            Forgot Password
-          </Link>
         </div>
 
         <Button type="submit" size="lg" loading={pending} className="w-full mt-2">

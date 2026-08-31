@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task, SalesDocument } from "@prisma/client";
 import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban, CreditCard, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/os/ui/Button";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
@@ -16,6 +17,7 @@ import { friendlyDate, friendlyDay } from "@/lib/os/dates";
 import { CreateDealSheet } from "@/components/os/deals/CreateDealSheet";
 import { ScheduleMeetingSheet } from "@/components/os/meetings/MeetingsView";
 import type { DealWithRelations } from "@/components/os/deals/PipelineView";
+import { updateFootprintStatusAction, type FootprintStatus } from "@/server/actions/clients";
 
 type CompanyFull = Company & {
   contacts: Contact[];
@@ -29,6 +31,12 @@ const FOOTPRINT_META: Record<string, { label: string; tone: "success" | "warning
   ACTIVE: { label: "Active", tone: "success", icon: "✅" },
   OPPORTUNITY: { label: "Opportunity", tone: "warning", icon: "🟡" },
   NOT_PITCHED: { label: "Not Pitched", tone: "neutral", icon: "⚪" },
+};
+
+const FOOTPRINT_NEXT: Record<string, FootprintStatus> = {
+  NOT_PITCHED: "OPPORTUNITY",
+  OPPORTUNITY: "ACTIVE",
+  ACTIVE: "NOT_PITCHED",
 };
 
 function recommendNextProduct(footprint: CompanyFull["footprint"]) {
@@ -58,6 +66,26 @@ export function ClientDetail({
   const router = useRouter();
   const [dealOpen, setDealOpen] = useState(false);
   const [meetingOpen, setMeetingOpen] = useState(false);
+  const [footprintOverrides, setFootprintOverrides] = useState<Record<string, FootprintStatus>>({});
+  const [footprintSaving, setFootprintSaving] = useState<string | null>(null);
+
+  function statusFor(productId: string): FootprintStatus {
+    return footprintOverrides[productId] ?? (company.footprint.find(f => f.productId === productId)?.status as FootprintStatus | undefined) ?? "NOT_PITCHED";
+  }
+
+  async function cycleFootprint(productId: string) {
+    const next = FOOTPRINT_NEXT[statusFor(productId)];
+    setFootprintOverrides(prev => ({ ...prev, [productId]: next }));
+    setFootprintSaving(productId);
+    try {
+      await updateFootprintStatusAction(company.id, productId, next);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update — try again");
+      setFootprintOverrides(prev => { const { [productId]: _drop, ...rest } = prev; return rest; });
+    } finally {
+      setFootprintSaving(null);
+    }
+  }
 
   const wonDeals = company.deals.filter(d => d.stage === "WON");
   const openDeals = company.deals.filter(d => !["WON", "LOST"].includes(d.stage));
@@ -143,12 +171,21 @@ export function ClientDetail({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {allProducts.filter(p => p.isQuickChip || company.footprint.some(f => f.productId === p.id)).map(p => {
                 const fp = company.footprint.find(f => f.productId === p.id);
-                const meta = FOOTPRINT_META[fp?.status ?? "NOT_PITCHED"];
+                const status = statusFor(p.id);
+                const meta = FOOTPRINT_META[status];
                 return (
-                  <div key={p.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)]" style={{ background: "var(--surface-hover)" }}>
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => cycleFootprint(p.id)}
+                    disabled={footprintSaving === p.id}
+                    title={`Tap to mark as ${FOOTPRINT_META[FOOTPRINT_NEXT[status]].label}`}
+                    className="os-press flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)] text-left transition-colors hover:bg-[var(--surface-sunken)] disabled:opacity-60"
+                    style={{ background: "var(--surface-hover)" }}
+                  >
                     <span className="text-sm text-[var(--text)]">{p.name}</span>
                     <Badge tone={meta.tone}>{meta.icon} {meta.label}{fp?.mrr ? ` · ${formatKES(fp.mrr, { compact: true })}/mo` : ""}</Badge>
-                  </div>
+                  </button>
                 );
               })}
             </div>
