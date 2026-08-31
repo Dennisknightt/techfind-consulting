@@ -89,7 +89,10 @@ export function InstallBanner() {
   if (!visible) return null;
 
   return (
-    <div className="fixed bottom-20 lg:bottom-5 left-1/2 -translate-x-1/2 z-[260] w-[calc(100vw-2rem)] max-w-sm os-animate-in">
+    <div
+      className="fixed left-1/2 -translate-x-1/2 z-[260] w-[calc(100vw-2rem)] max-w-sm os-animate-in"
+      style={{ top: "calc(env(safe-area-inset-top, 0px) + 4.25rem)" }}
+    >
       <div
         className="rounded-[var(--radius-xl)] p-4 border"
         style={{ background: "var(--surface)", borderColor: "var(--border)", boxShadow: "var(--shadow-lg)" }}
