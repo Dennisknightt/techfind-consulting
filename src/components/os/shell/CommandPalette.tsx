@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
-import { Search, ArrowRight, Plus } from "lucide-react";
+import { Search, ArrowRight } from "lucide-react";
 import { ALL_NAV } from "./nav";
 import { QUICK_CREATE_ITEMS } from "./QuickCreate";
 import { globalSearchAction, type SearchResult } from "@/server/actions/search";
@@ -79,13 +79,13 @@ export function CommandPalette() {
           {query.trim().length < 2 && (
             <>
               <Command.Group heading="Create" className={GROUP_HEADING_CLASS}>
-                {QUICK_CREATE_ITEMS.map(({ label, href, icon: Icon }) => (
+                {QUICK_CREATE_ITEMS.map(({ label, href, icon: Icon, color }) => (
                   <Command.Item
                     key={href}
                     onSelect={() => go(href)}
                     className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[var(--radius-md)] text-sm text-[var(--text)] cursor-pointer data-[selected=true]:bg-[var(--surface-hover)]"
                   >
-                    <Plus className="w-4 h-4" style={{ color: "var(--text-faint)" }} />
+                    <Icon className="w-4 h-4" style={{ color }} />
                     {label === "Proforma" ? "Create Quotation" : `Add ${label}`}
                   </Command.Item>
                 ))}
