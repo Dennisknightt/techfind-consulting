@@ -75,6 +75,25 @@ export async function updateProfileAction(input: { name: string; phone: string; 
   revalidatePath("/app");
 }
 
+export async function changeEmailAction(input: { newEmail: string; currentPassword: string }): Promise<void> {
+  const user = await requireUserOrThrow();
+  const newEmail = input.newEmail.trim().toLowerCase();
+  if (!newEmail || !newEmail.includes("@")) throw new Error("Enter a valid email address");
+
+  const row = await db.user.findUniqueOrThrow({ where: { id: user.id } });
+  const valid = await verifyPassword(input.currentPassword, row.passwordHash);
+  if (!valid) throw new Error("Current password is incorrect");
+
+  if (newEmail === row.email) return; // no-op
+
+  const existing = await db.user.findUnique({ where: { email: newEmail } });
+  if (existing) throw new Error("Another account already uses that email");
+
+  await db.user.update({ where: { id: user.id }, data: { email: newEmail } });
+  await writeAudit({ actorId: user.id, action: "CHANGE_EMAIL", entityType: "User", entityId: user.id, before: { email: row.email }, after: { email: newEmail } });
+  revalidatePath("/app/settings");
+}
+
 export async function changePasswordAction(input: { currentPassword: string; newPassword: string }): Promise<void> {
   const user = await requireUserOrThrow();
   if (input.newPassword.length < 8) throw new Error("New password must be at least 8 characters");

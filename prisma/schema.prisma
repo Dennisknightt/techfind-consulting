@@ -126,7 +126,7 @@ model Contact {
 // ─────────────────────────────────────────────────────────────────────────
 
 /// temperature: HOT | WARM | COLD
-/// status: NEW | CONTACTED | QUALIFIED | CONVERTED | DISQUALIFIED
+/// status: NEW | CONTACTED | QUALIFIED | CONVERTED | DISQUALIFIED | ALREADY_HAS_SYSTEM
 model Lead {
   id                String    @id @default(cuid())
   name              String

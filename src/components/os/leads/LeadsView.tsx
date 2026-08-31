@@ -3,7 +3,7 @@
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import type { Lead, User, Product } from "@prisma/client";
-import { Plus, Search, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
+import { Plus, Search, ArrowRight, Sparkles, ChevronLeft, Check, Zap, X, RotateCcw } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { fadeInUp } from "@/lib/os/motion";
@@ -20,10 +20,16 @@ import { createLeadAction, convertLeadToDealAction, updateLeadAction } from "@/s
 type LeadWithOwner = Lead & { owner: User | null };
 
 const SOURCES = ["WHATSAPP", "WEBSITE", "META", "TIKTOK", "EMAIL", "PHONE", "REFERRAL", "MANUAL"];
-const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "DISQUALIFIED"];
+const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "DISQUALIFIED", "ALREADY_HAS_SYSTEM"];
+const STATUS_LABEL: Record<string, string> = { DISQUALIFIED: "Not Interested", ALREADY_HAS_SYSTEM: "Already Has System" };
+const CLOSED_LOST_STATUSES = ["DISQUALIFIED", "ALREADY_HAS_SYSTEM"];
 
 function sourceLabel(s: string) {
   return s.charAt(0) + s.slice(1).toLowerCase();
+}
+
+function statusLabel(s: string) {
+  return STATUS_LABEL[s] ?? s.charAt(0) + s.slice(1).toLowerCase();
 }
 
 export function LeadsView({
@@ -81,6 +87,28 @@ export function LeadsView({
     startTransition(() => router.refresh());
   }
 
+  async function closeLead(lead: LeadWithOwner, status: "DISQUALIFIED" | "ALREADY_HAS_SYSTEM") {
+    setLeads(prev => prev.map(l => (l.id === lead.id ? { ...l, status } : l)));
+    try {
+      await updateLeadAction(lead.id, { status });
+      toast.success(`${lead.name} marked ${statusLabel(status).toLowerCase()}`);
+    } catch (e) {
+      setLeads(prev => prev.map(l => (l.id === lead.id ? { ...l, status: lead.status } : l)));
+      toast.error(e instanceof Error ? e.message : "Couldn't update");
+    }
+  }
+
+  async function reopenLead(lead: LeadWithOwner) {
+    setLeads(prev => prev.map(l => (l.id === lead.id ? { ...l, status: "NEW" } : l)));
+    try {
+      await updateLeadAction(lead.id, { status: "NEW" });
+      toast.success(`${lead.name} reopened`);
+    } catch (e) {
+      setLeads(prev => prev.map(l => (l.id === lead.id ? { ...l, status: lead.status } : l)));
+      toast.error(e instanceof Error ? e.message : "Couldn't update");
+    }
+  }
+
   const TEMP_CYCLE = ["HOT", "WARM", "COLD"] as const;
   async function cycleTemperature(lead: LeadWithOwner) {
     const i = TEMP_CYCLE.indexOf(lead.temperature as (typeof TEMP_CYCLE)[number]);
@@ -122,7 +150,7 @@ export function LeadsView({
                 color: statusFilter === s ? "var(--accent)" : "var(--text-muted)",
               }}
             >
-              {s === "ALL" ? "All" : s.charAt(0) + s.slice(1).toLowerCase()}
+              {s === "ALL" ? "All" : statusLabel(s)}
             </button>
           ))}
         </div>
@@ -159,6 +187,7 @@ export function LeadsView({
                   <div className="flex items-center gap-1.5">
                     <span className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{lead.name}</span>
                     {lead.status === "CONVERTED" && <Badge tone="success">Converted</Badge>}
+                    {CLOSED_LOST_STATUSES.includes(lead.status) && <Badge tone="neutral">{statusLabel(lead.status)}</Badge>}
                   </div>
                   <p className="os-text-meta truncate">
                     {lead.companyNameRaw || lead.phone || lead.email || timeAgo(lead.createdAt)}
@@ -180,16 +209,30 @@ export function LeadsView({
                 {lead.owner && <Avatar name={lead.owner.name} color={lead.owner.avatarColor} size={22} />}
               </span>
 
-              <div className="flex items-center justify-end gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
-                {lead.status !== "CONVERTED" ? (
-                  <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
-                    Convert <ArrowRight className="w-3.5 h-3.5" />
+              <div className="flex items-center justify-end gap-1.5 flex-wrap opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                {lead.status === "CONVERTED" ? (
+                  lead.convertedDealId && (
+                    <Button size="sm" variant="ghost" onClick={() => router.push(`/app/deals/${lead.convertedDealId}`)}>
+                      View Deal
+                    </Button>
+                  )
+                ) : CLOSED_LOST_STATUSES.includes(lead.status) ? (
+                  <Button size="sm" variant="ghost" onClick={() => reopenLead(lead)} className="gap-1">
+                    <RotateCcw className="w-3.5 h-3.5" /> Reopen
                   </Button>
-                ) : lead.convertedDealId ? (
-                  <Button size="sm" variant="ghost" onClick={() => router.push(`/app/deals/${lead.convertedDealId}`)}>
-                    View Deal
-                  </Button>
-                ) : null}
+                ) : (
+                  <>
+                    <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
+                      Convert <ArrowRight className="w-3.5 h-3.5" />
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => closeLead(lead, "ALREADY_HAS_SYSTEM")} className="gap-1" style={{ color: "var(--text-faint)" }}>
+                      Has System
+                    </Button>
+                    <Button size="sm" variant="ghost" onClick={() => closeLead(lead, "DISQUALIFIED")} className="gap-1" style={{ color: "var(--text-faint)" }}>
+                      <X className="w-3.5 h-3.5" /> Not Interested
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
           ))}
