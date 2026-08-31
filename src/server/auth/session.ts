@@ -12,6 +12,7 @@ export interface SessionUser {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   role: Role;
   avatarColor: string;
   welcomeSoundEnabled: boolean;
@@ -83,6 +84,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     id: u.id,
     name: u.name,
     email: u.email,
+    phone: u.phone,
     role: u.role as Role,
     avatarColor: u.avatarColor,
     welcomeSoundEnabled: u.welcomeSoundEnabled,

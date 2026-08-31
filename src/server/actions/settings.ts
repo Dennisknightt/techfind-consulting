@@ -4,6 +4,8 @@ import { revalidatePath } from "next/cache";
 import { db } from "@/server/db";
 import { requireUserOrThrow, requirePermission } from "@/server/auth/guard";
 import { writeAudit } from "@/server/audit";
+import { hashPassword, verifyPassword } from "@/server/auth/password";
+import { AVATAR_COLORS } from "@/lib/os/avatarColors";
 import type { TaxConfig } from "@/lib/os/documentMath";
 
 const DEFAULT_TAX: TaxConfig = { mode: "EXCLUSIVE", rate: 16, label: "VAT" };
@@ -54,4 +56,35 @@ export async function updateExperienceSettingsAction(input: {
   });
 
   revalidatePath("/app/settings");
+}
+
+export async function updateProfileAction(input: { name: string; phone: string; avatarColor: string }): Promise<void> {
+  const user = await requireUserOrThrow();
+  const name = input.name.trim();
+  if (!name) throw new Error("Name can't be empty");
+  if (!AVATAR_COLORS.includes(input.avatarColor)) throw new Error("Invalid colour");
+
+  const before = await db.user.findUnique({ where: { id: user.id } });
+  const updated = await db.user.update({
+    where: { id: user.id },
+    data: { name, phone: input.phone.trim() || null, avatarColor: input.avatarColor },
+  });
+
+  await writeAudit({ actorId: user.id, action: "UPDATE_PROFILE", entityType: "User", entityId: user.id, before, after: updated });
+  revalidatePath("/app/settings");
+  revalidatePath("/app");
+}
+
+export async function changePasswordAction(input: { currentPassword: string; newPassword: string }): Promise<void> {
+  const user = await requireUserOrThrow();
+  if (input.newPassword.length < 8) throw new Error("New password must be at least 8 characters");
+
+  const row = await db.user.findUniqueOrThrow({ where: { id: user.id } });
+  const valid = await verifyPassword(input.currentPassword, row.passwordHash);
+  if (!valid) throw new Error("Current password is incorrect");
+
+  const passwordHash = await hashPassword(input.newPassword);
+  await db.user.update({ where: { id: user.id }, data: { passwordHash } });
+
+  await writeAudit({ actorId: user.id, action: "CHANGE_PASSWORD", entityType: "User", entityId: user.id });
 }
