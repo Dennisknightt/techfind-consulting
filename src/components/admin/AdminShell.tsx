@@ -6,8 +6,10 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   LayoutDashboard, Search, Radar, Star, Bot, Calendar, FileText,
-  Kanban, MessageSquare, Settings, ChevronLeft, ChevronRight, Zap, Menu,
+  Kanban, MessageSquare, Settings, ChevronLeft, ChevronRight, Zap, Menu, LogOut,
 } from "lucide-react";
+import { logoutAction } from "@/server/actions/auth";
+import type { SessionUser } from "@/server/auth/session";
 
 const nav = [
   { label: "Dashboard",          href: "/admin/revenue-engine", tab: ""          , icon: LayoutDashboard },
@@ -51,7 +53,21 @@ function NavItems({ currentTab, collapsed, onClose }: { currentTab: string; coll
   );
 }
 
-export function AdminShell({ children }: { children: React.ReactNode }) {
+function SignOutButton({ collapsed }: { collapsed: boolean }) {
+  return (
+    <button
+      onClick={() => { void logoutAction(); }}
+      title={collapsed ? "Sign out" : undefined}
+      className={`flex items-center gap-2 px-3 py-2.5 rounded-xl w-full text-sm transition-all ${collapsed ? "justify-center" : ""}`}
+      style={{ color: "var(--muted)" }}
+    >
+      <LogOut className="w-4 h-4 shrink-0" />
+      {!collapsed && <span>Sign out</span>}
+    </button>
+  );
+}
+
+export function AdminShell({ children, user }: { children: React.ReactNode; user: SessionUser }) {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const currentTab = searchParams.get("tab") ?? "";
@@ -91,7 +107,13 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
         <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
           <NavItems currentTab={currentTab} collapsed={collapsed} />
         </nav>
-        <div className="px-3 pb-4">
+        <div className="px-3 pb-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+          {!collapsed && (
+            <p className="px-3 pb-2 text-xs truncate" style={{ color: "var(--muted)" }} title={user.email}>
+              {user.name}
+            </p>
+          )}
+          <SignOutButton collapsed={collapsed} />
           <button
             onClick={() => setCollapsed(c => !c)}
             className="flex items-center gap-2 px-3 py-2.5 rounded-xl w-full text-sm transition-all"
@@ -129,6 +151,12 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
               <nav className="flex-1 px-3 py-4 space-y-1 overflow-y-auto">
                 <NavItems currentTab={currentTab} collapsed={false} onClose={() => setMobileOpen(false)} />
               </nav>
+              <div className="px-3 pb-4 border-t pt-3" style={{ borderColor: "var(--border)" }}>
+                <p className="px-3 pb-2 text-xs truncate" style={{ color: "var(--muted)" }} title={user.email}>
+                  {user.name}
+                </p>
+                <SignOutButton collapsed={false} />
+              </div>
             </motion.aside>
           </>
         )}

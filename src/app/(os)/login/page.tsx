@@ -5,13 +5,27 @@ import { LoginForm } from "@/components/os/auth/LoginForm";
 
 export const metadata: Metadata = { title: "Sign in — Techfind" };
 
-export default async function LoginPage() {
+function safeNextPath(raw: string | undefined): string {
+  if (raw && raw.startsWith("/") && !raw.startsWith("//") && !raw.includes("://")) {
+    return raw;
+  }
+  return "/app";
+}
+
+export default async function LoginPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ next?: string }>;
+}) {
+  const { next: rawNext } = await searchParams;
+  const next = safeNextPath(rawNext);
+
   const user = await getSessionUser();
-  if (user) redirect("/app");
+  if (user) redirect(next);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-6" style={{ background: "var(--bg)" }}>
-      <LoginForm />
+      <LoginForm next={next} />
     </div>
   );
 }

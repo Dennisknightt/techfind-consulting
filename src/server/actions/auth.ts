@@ -13,9 +13,19 @@ export interface LoginState {
   error?: string;
 }
 
+/** Only ever redirect to a same-site path — never an absolute/external URL. */
+function safeNextPath(raw: FormDataEntryValue | null): string {
+  const value = typeof raw === "string" ? raw : "";
+  if (value.startsWith("/") && !value.startsWith("//") && !value.includes("://")) {
+    return value;
+  }
+  return "/app";
+}
+
 export async function loginAction(_prev: LoginState, formData: FormData): Promise<LoginState> {
   const email = String(formData.get("email") ?? "").trim().toLowerCase();
   const password = String(formData.get("password") ?? "");
+  const next = safeNextPath(formData.get("next"));
 
   if (!email || !password) {
     return { error: "Enter your email and password." };
@@ -49,7 +59,7 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
   await createSession(user.id);
   await writeAudit({ actorId: user.id, action: "LOGIN", entityType: "User", entityId: user.id });
 
-  redirect("/app");
+  redirect(next);
 }
 
 export async function logoutAction(): Promise<void> {

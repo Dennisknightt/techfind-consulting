@@ -11,7 +11,7 @@ import { primeSonicLogo } from "@/lib/os/sonicLogo";
 
 const initialState: LoginState = {};
 
-export function LoginForm() {
+export function LoginForm({ next = "/app" }: { next?: string }) {
   const [state, formAction, pending] = useActionState(loginAction, initialState);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -36,6 +36,7 @@ export function LoginForm() {
         can't reliably start audio on its own after landing there.
       */}
       <form action={formAction} onSubmit={() => primeSonicLogo()} className="space-y-4">
+        <input type="hidden" name="next" value={next} />
         <div>
           <Label htmlFor="email">Email</Label>
           <Input id="email" name="email" type="email" autoComplete="username" required placeholder="you@techfind.co.ke" />

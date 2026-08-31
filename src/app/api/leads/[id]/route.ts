@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { updateLead, deleteLead } from "@/lib/store";
-import { isAuthorizedAdmin } from "@/lib/adminAuth";
+import { requireAdminUser } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -10,7 +10,7 @@ export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
@@ -24,10 +24,10 @@ export async function PATCH(
 
 /* DELETE /api/leads/[id] (admin only) */
 export async function DELETE(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;

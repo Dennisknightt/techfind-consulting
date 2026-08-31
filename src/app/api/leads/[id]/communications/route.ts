@@ -14,7 +14,7 @@ import {
   type CommChannel,
   type CommDirection,
 } from "@/lib/store";
-import { isAuthorizedAdmin } from "@/lib/adminAuth";
+import { requireAdminUser } from "@/lib/adminAuth";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -23,10 +23,10 @@ const CHANNELS: CommChannel[] = ["email", "call", "linkedin", "sms", "note"];
 const DIRECTIONS: CommDirection[] = ["outbound", "inbound"];
 
 export async function GET(
-  req: NextRequest,
+  _req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;
@@ -41,7 +41,7 @@ export async function POST(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!isAuthorizedAdmin(req)) {
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   const { id } = await params;

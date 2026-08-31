@@ -3,6 +3,31 @@
 Entries correspond to the phase commits on `claude/techfind-crm-communications-yzv90r`. See
 `docs/ROADMAP.md` for what's ahead.
 
+## Phase 10 — Real login for the marketing site's admin panel
+
+- Closed the highest-priority known gap from Phase 9: `/admin` (the Revenue Engine panel) had no
+  login of its own and relied on an `ADMIN_SECRET` header token the admin UI never actually sent.
+- `src/app/(marketing)/admin/layout.tsx` now calls `getSessionUser()` — the same CRM session
+  check used everywhere else — and requires role `SUPER_ADMIN`. No session → redirect to
+  `/login?next=/admin`; wrong role → an in-page "you don't have access" screen (not a redirect
+  loop, since they're already authenticated).
+- `loginAction`/`LoginForm`/`LoginPage` gained a validated `next` redirect target (defaults to
+  `/app`, restricted to internal paths — no open redirect) so signing in from `/login?next=/admin`
+  lands back on `/admin` instead of always bouncing to the CRM.
+- `src/lib/adminAuth.ts#isAuthorizedAdmin` (header-token check) replaced with
+  `requireAdminUser()` (session + role check); every admin verb on `/api/leads`,
+  `/api/leads/[id]`, `/api/leads/[id]/communications`, and `/api/communications` now uses it.
+  Browser `fetch()` calls from `useLeads.ts`/`useCommunications.ts` needed no changes — same-origin
+  requests already carry the session cookie, unlike the old header token they never sent.
+- `ADMIN_SECRET` removed entirely: from `src/lib/config.ts`, `.env.example`, and the metrics
+  endpoint's config dump.
+- Added a sign-out control to `AdminShell`'s sidebar (desktop + mobile), showing the signed-in
+  admin's name, reusing the existing `logoutAction`.
+- Verified live in a real browser: an unauthenticated visit to `/admin` redirects to
+  `/login?next=%2Fadmin`; logging in as a non-`SUPER_ADMIN` user and visiting `/admin` shows the
+  Unauthorized screen (not a crash, not a redirect loop); logging in as a `SUPER_ADMIN` lands
+  back on `/admin` with the leads/communications data loading correctly.
+
 ## Phase 9 — Docs, security pass, final QA
 
 - Full documentation set added under `docs/` (this file and its siblings).
