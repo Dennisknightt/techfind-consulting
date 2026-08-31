@@ -98,6 +98,7 @@ export async function updateDealAction(id: string, patch: {
   title?: string;
   value?: number;
   temperature?: string;
+  nextActionType?: string | null;
   nextAction?: string | null;
   nextActionDue?: Date | null;
   lastContactAt?: Date;

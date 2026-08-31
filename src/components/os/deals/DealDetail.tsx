@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import type { Deal, Company, Contact, User, Meeting, Task, Project, SalesDocument, Communication } from "@prisma/client";
 import { motion } from "framer-motion";
 import {
-  Phone, MessageCircle, Trophy, FileText, Building2, Check,
+  Phone, MessageCircle, Trophy, FileText, Building2,
   FolderKanban, CalendarPlus, StickyNote, Send,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -16,6 +16,8 @@ import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { Avatar } from "@/components/os/ui/Avatar";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
 import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
+import { NextActionEditor } from "@/components/os/common/NextActionEditor";
+import type { NextActionType } from "@/lib/os/nextAction";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, friendlyDay, daysBetween, dayjs } from "@/lib/os/dates";
 import { STAGE_LABEL } from "@/lib/os/pipeline";
@@ -63,8 +65,6 @@ export function DealDetail({
   // which risks a render loop if the parent updates its own state in response.
   useEffect(() => { onDealChange?.(deal); }, [deal]); // eslint-disable-line react-hooks/exhaustive-deps
   const [meetingOpen, setMeetingOpen] = useState(false);
-  const [nextAction, setNextAction] = useState(deal.nextAction ?? "");
-  const [nextActionDue, setNextActionDue] = useState(deal.nextActionDue ? new Date(deal.nextActionDue).toISOString().slice(0, 10) : "");
   const [savingAction, setSavingAction] = useState(false);
   const [savingOwner, setSavingOwner] = useState(false);
   const [note, setNote] = useState("");
@@ -129,15 +129,17 @@ export function DealDetail({
     }
   }
 
-  async function saveNextAction() {
+  async function saveNextAction({ type, due, note }: { type: NextActionType; due: Date | null; note: string }) {
     setSavingAction(true);
     try {
       await updateDealAction(deal.id, {
-        nextAction: nextAction || null,
-        nextActionDue: nextActionDue ? new Date(nextActionDue) : null,
+        nextActionType: type,
+        nextAction: note.trim() || null,
+        nextActionDue: due,
         lastContactAt: new Date(),
       });
-      setDeal(d => ({ ...d, nextAction, nextActionDue: nextActionDue ? new Date(nextActionDue) : null, lastContactAt: new Date() }));
+      setDeal(d => ({ ...d, nextActionType: type, nextAction: note.trim() || null, nextActionDue: due, lastContactAt: new Date() }));
+      toast.success("Next action updated");
     } catch {
       toast.error("Couldn't save follow-up");
     } finally {
@@ -248,11 +250,13 @@ export function DealDetail({
         style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
       >
         <p className="os-text-meta font-semibold uppercase tracking-wider mb-3">Next Best Action</p>
-        <div className="flex flex-col sm:flex-row gap-3">
-          <Input value={nextAction} onChange={e => setNextAction(e.target.value)} placeholder="Send proforma, confirm decision maker…" className="flex-1" />
-          <Input type="date" value={nextActionDue} onChange={e => setNextActionDue(e.target.value)} className="sm:w-44" />
-          <Button size="sm" loading={savingAction} onClick={saveNextAction} className="gap-1.5"><Check className="w-3.5 h-3.5" /> Save</Button>
-        </div>
+        <NextActionEditor
+          type={deal.nextActionType}
+          due={deal.nextActionDue}
+          note={deal.nextAction}
+          onSave={saveNextAction}
+          saving={savingAction}
+        />
         <p className="os-text-meta mt-2.5">
           {daysBetween(deal.stageEnteredAt)} day{daysBetween(deal.stageEnteredAt) === 1 ? "" : "s"} in {STAGE_LABEL[deal.stage]}
           {deal.lastContactAt && ` · Last contact ${friendlyDate(deal.lastContactAt)}`}

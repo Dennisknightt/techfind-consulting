@@ -184,6 +184,8 @@ model Deal {
   ownerId        String?
   owner          User?     @relation("DealOwner", fields: [ownerId], references: [id])
   productKeys    String    @default("[]") // JSON string[] of Product.key
+  /// nextActionType: CALL | WHATSAPP | EMAIL | DEMO | PROPOSAL | FOLLOW_UP | WAIT
+  nextActionType String?
   nextAction     String?
   nextActionDue  DateTime?
   lastContactAt  DateTime?

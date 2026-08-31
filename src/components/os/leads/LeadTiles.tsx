@@ -14,13 +14,14 @@ import { Check } from "lucide-react";
 import {
   LEAD_STAGES, STAGE_META, type LeadStage,
   TEMPERATURES, TEMPERATURE_META, type Temperature,
-  NEXT_ACTION_TYPES, NEXT_ACTION_META, type NextActionType,
   LOST_REASONS, LOST_REASON_LABEL, type LostReason,
   ATTENTION_META, getAttentionLevel,
 } from "@/lib/os/leadStage";
+import type { NextActionType } from "@/lib/os/nextAction";
 import { Badge } from "@/components/os/ui/Badge";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label, Textarea } from "@/components/os/ui/Input";
+import { NextActionEditor } from "@/components/os/common/NextActionEditor";
 import { formatKES } from "@/lib/os/money";
 import {
   updateLeadStageAction, updateLeadTemperatureAction, updateLeadNextActionAction,
@@ -132,33 +133,20 @@ export function TemperatureTiles({ leadId, temperature, onUpdated, disabled }: {
   );
 }
 
-function toDateInputValue(d: Date) {
-  return d.toISOString().slice(0, 10);
-}
-
-export function NextActionPanel({ leadId, nextActionType, nextActionDue, nextAction, onUpdated, disabled }: {
+export function NextActionPanel({ leadId, nextActionType, nextActionDue, nextAction, onUpdated }: {
   leadId: string;
   nextActionType: string | null;
   nextActionDue: Date | string | null;
   nextAction: string | null;
   onUpdated: (patch: { nextActionType: string | null; nextActionDue: Date | null; nextAction: string | null }) => void;
-  disabled?: boolean;
 }) {
-  const [type, setType] = useState<NextActionType | null>((nextActionType as NextActionType) ?? null);
-  const [due, setDue] = useState<string>(nextActionDue ? toDateInputValue(new Date(nextActionDue)) : "");
-  const [note, setNote] = useState(nextAction ?? "");
   const [saving, setSaving] = useState(false);
 
-  const needsDate = type !== null && type !== "WAIT";
-  const dirty = type !== (nextActionType ?? null) || due !== (nextActionDue ? toDateInputValue(new Date(nextActionDue)) : "") || note !== (nextAction ?? "");
-
-  async function save() {
-    if (!type) { toast.error("Pick a next action type"); return; }
+  async function save({ type, due, note }: { type: NextActionType; due: Date | null; note: string }) {
     setSaving(true);
-    const dueDate = needsDate && due ? new Date(`${due}T00:00:00`) : null;
     try {
-      await updateLeadNextActionAction(leadId, { type, due: dueDate, note });
-      onUpdated({ nextActionType: type, nextActionDue: dueDate, nextAction: note.trim() || null });
+      await updateLeadNextActionAction(leadId, { type, due, note });
+      onUpdated({ nextActionType: type, nextActionDue: due, nextAction: note.trim() || null });
       toast.success("Next action updated");
     } catch (e) {
       toast.error(e instanceof Error ? e.message : "Couldn't update next action");
@@ -167,31 +155,8 @@ export function NextActionPanel({ leadId, nextActionType, nextActionDue, nextAct
     }
   }
 
-  function today() { setDue(toDateInputValue(new Date())); }
-  function tomorrow() { const d = new Date(); d.setDate(d.getDate() + 1); setDue(toDateInputValue(d)); }
-
   return (
-    <div className="space-y-3">
-      <TileGrid>
-        {NEXT_ACTION_TYPES.map(t => (
-          <Tile key={t} active={type === t} disabled={disabled} onClick={() => setType(t)}>
-            <span>{NEXT_ACTION_META[t].icon}</span> {NEXT_ACTION_META[t].label}
-          </Tile>
-        ))}
-      </TileGrid>
-
-      {needsDate && (
-        <div className="flex flex-wrap items-center gap-2">
-          <Button type="button" size="sm" variant={due === toDateInputValue(new Date()) ? "primary" : "secondary"} onClick={today}>Today</Button>
-          <Button type="button" size="sm" variant="secondary" onClick={tomorrow}>Tomorrow</Button>
-          <Input type="date" value={due} onChange={e => setDue(e.target.value)} className="w-auto" />
-        </div>
-      )}
-
-      <Input value={note} onChange={e => setNote(e.target.value)} placeholder="Optional note (e.g. confirm decision maker)" />
-
-      <Button type="button" size="sm" loading={saving} disabled={!type || !dirty} onClick={save}>Save next action</Button>
-    </div>
+    <NextActionEditor type={nextActionType} due={nextActionDue} note={nextAction} onSave={save} saving={saving} />
   );
 }
 
