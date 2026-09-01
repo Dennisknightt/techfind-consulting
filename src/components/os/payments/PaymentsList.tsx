@@ -13,10 +13,11 @@ import { formatKES } from "@/lib/os/money";
 import { friendlyDate } from "@/lib/os/dates";
 import { fadeInUp } from "@/lib/os/motion";
 import { RecordPaymentSheet } from "./RecordPaymentSheet";
+import { PaymentDetailSheet } from "./PaymentDetailSheet";
 
-type PaymentRow = Payment & { company: Company | null; document: SalesDocument | null; receipt: Receipt | null };
+export type PaymentRow = Payment & { company: Company | null; document: SalesDocument | null; receipt: Receipt | null };
 
-const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" | "danger"> = {
+export const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" | "danger"> = {
   PENDING: "neutral", PROCESSING: "accent", SUCCESSFUL: "success",
   FAILED: "danger", CANCELLED: "danger", REVERSED: "danger",
   REFUNDED: "warning", PARTIALLY_REFUNDED: "warning", NEEDS_MATCHING: "warning",
@@ -25,10 +26,16 @@ const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" |
 export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; canRecord: boolean }) {
   const router = useRouter();
   const [recordOpen, setRecordOpen] = useState(false);
+  const [selected, setSelected] = useState<PaymentRow | null>(null);
   const received = payments.filter(p => p.status === "SUCCESSFUL").reduce((s, p) => s + p.amount, 0);
 
   function onRecorded() {
     setRecordOpen(false);
+    router.refresh();
+  }
+
+  function onChanged() {
+    setSelected(null);
     router.refresh();
   }
 
@@ -63,10 +70,12 @@ export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; 
             ))}
           </div>
           {payments.map((p, i) => (
-            <motion.div
+            <motion.button
               key={p.id}
+              type="button"
               {...fadeInUp}
-              className="os-row-hover grid grid-cols-2 sm:grid-cols-[1fr_1fr_90px_100px_110px_90px_32px] items-center gap-3 px-4 py-2.5"
+              onClick={() => setSelected(p)}
+              className="os-row-hover w-full grid grid-cols-2 sm:grid-cols-[1fr_1fr_90px_100px_110px_90px_32px] items-center gap-3 px-4 py-2.5 text-left"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
               <div className="min-w-0">
@@ -75,7 +84,12 @@ export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; 
               </div>
               <div className="hidden sm:block min-w-0">
                 {p.document ? (
-                  <Link href={`/app/quotes/${p.document.id}`} className="text-sm hover:underline truncate block" style={{ color: "var(--accent)" }}>
+                  <Link
+                    href={`/app/quotes/${p.document.id}`}
+                    onClick={e => e.stopPropagation()}
+                    className="text-sm hover:underline truncate block"
+                    style={{ color: "var(--accent)" }}
+                  >
                     {p.document.number}
                   </Link>
                 ) : (
@@ -88,12 +102,19 @@ export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; 
               <span className="hidden sm:block os-text-meta">{friendlyDate(p.createdAt)}</span>
               <div className="flex justify-end">
                 {p.receipt && (
-                  <a href={`/api/os/receipts/${p.receipt.id}/pdf`} target="_blank" rel="noopener noreferrer" aria-label="Download receipt" style={{ color: "var(--text-faint)" }}>
+                  <a
+                    href={`/api/os/receipts/${p.receipt.id}/pdf`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onClick={e => e.stopPropagation()}
+                    aria-label="Download receipt"
+                    style={{ color: "var(--text-faint)" }}
+                  >
                     <Download className="w-3.5 h-3.5" />
                   </a>
                 )}
               </div>
-            </motion.div>
+            </motion.button>
           ))}
         </div>
       )}
@@ -101,6 +122,15 @@ export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; 
       {canRecord && (
         <RecordPaymentSheet open={recordOpen} onOpenChange={setRecordOpen} onRecorded={onRecorded} />
       )}
+
+      <PaymentDetailSheet
+        payment={selected}
+        open={selected !== null}
+        onOpenChange={v => { if (!v) setSelected(null); }}
+        canEdit={canRecord}
+        onChanged={onChanged}
+        onDeleted={onChanged}
+      />
     </div>
   );
 }

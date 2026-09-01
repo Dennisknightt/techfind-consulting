@@ -8,6 +8,7 @@ import { writeAudit } from "@/server/audit";
 import { round2 } from "@/lib/os/money";
 import { getActiveProvider } from "@/server/payments/registry";
 import { confirmPayment, applySuccessfulPayment } from "@/server/payments/reconcile";
+import { parseManualPaymentMeta } from "@/lib/os/paymentSmsParse";
 
 /**
  * Techfind has no walk-in customers — every invoice's outstanding balance
@@ -259,4 +260,121 @@ export async function recordManualPaymentAction(input: ManualPaymentInput) {
   }
 
   return payment;
+}
+
+function revalidatePaymentPaths(documentId: string | null, companyId: string | null) {
+  revalidatePath("/app/payments");
+  revalidatePath("/app");
+  if (documentId) revalidatePath(`/app/quotes/${documentId}`);
+  if (companyId) revalidatePath(`/app/clients/${companyId}`);
+}
+
+/** balance/status a document should have after its paidAmount changes by `delta` (positive = more paid, negative = less). */
+function reconcileDocumentTotals(doc: { total: number; paidAmount: number }, delta: number) {
+  const paidAmount = round2(Math.max(0, doc.paidAmount + delta));
+  const balance = round2(Math.max(0, doc.total - paidAmount));
+  const status = balance <= 0 ? "PAID" : paidAmount > 0 ? "PARTIALLY_PAID" : "SENT";
+  return { paidAmount, balance, status };
+}
+
+export interface PaymentEditInput {
+  amount?: number;
+  method?: string;
+  transactionCode?: string | null;
+  payerName?: string | null;
+  payerPhone?: string | null;
+  paidAt?: Date;
+  notes?: string | null;
+}
+
+/**
+ * Edits a payment's metadata (and, for manually-recorded payments only, its
+ * amount). Amount is never editable on a gateway-confirmed payment — that
+ * number came from the real M-Pesa/IntaSend transaction, so "fixing" it
+ * here would just misrepresent what actually happened; delete and re-record
+ * it instead if a gateway payment was genuinely wrong. When the amount does
+ * change on a successful, document-linked manual payment, the document's
+ * paidAmount/balance/status are adjusted by the same delta so the books
+ * never drift from what Payments shows.
+ */
+export async function updatePaymentAction(id: string, patch: PaymentEditInput) {
+  const user = await requirePermission("payments.write");
+  const payment = await db.payment.findUniqueOrThrow({ where: { id } });
+
+  if (patch.amount !== undefined && payment.gateway !== "MANUAL") {
+    throw new Error("Can't edit the amount of a gateway-confirmed payment");
+  }
+  if (patch.transactionCode) {
+    const duplicate = await db.payment.findFirst({ where: { gatewayReference: patch.transactionCode, id: { not: id } } });
+    if (duplicate) throw new Error(`A payment with code ${patch.transactionCode} has already been recorded`);
+  }
+
+  const data: Record<string, unknown> = {};
+  if (patch.method !== undefined) data.method = patch.method;
+  if (patch.transactionCode !== undefined) data.gatewayReference = patch.transactionCode || null;
+  if (patch.paidAt !== undefined) data.paidAt = patch.paidAt;
+  if (patch.notes !== undefined) data.notes = patch.notes || null;
+
+  if (patch.payerName !== undefined || patch.payerPhone !== undefined) {
+    const meta = parseManualPaymentMeta(payment.gatewayRaw);
+    data.gatewayRaw = JSON.stringify({
+      source: "MANUAL_ENTRY",
+      rawMessage: meta.rawMessage,
+      payerName: patch.payerName !== undefined ? patch.payerName || undefined : meta.payerName,
+      payerPhone: patch.payerPhone !== undefined ? patch.payerPhone || undefined : meta.payerPhone,
+    }).slice(0, 8000);
+  }
+
+  let amountDelta = 0;
+  if (patch.amount !== undefined) {
+    const newAmount = round2(patch.amount);
+    if (!newAmount || newAmount <= 0) throw new Error("Enter a valid amount");
+    amountDelta = round2(newAmount - payment.amount);
+    data.amount = newAmount;
+  }
+
+  const updated = await db.$transaction(async (tx) => {
+    const result = await tx.payment.update({ where: { id }, data });
+
+    if (amountDelta !== 0 && payment.status === "SUCCESSFUL" && payment.documentId) {
+      const doc = await tx.salesDocument.findUniqueOrThrow({ where: { id: payment.documentId } });
+      const totals = reconcileDocumentTotals(doc, amountDelta);
+      await tx.salesDocument.update({ where: { id: doc.id }, data: totals });
+    }
+
+    return result;
+  });
+
+  await writeAudit({ actorId: user.id, action: "UPDATE_PAYMENT", entityType: "Payment", entityId: id, before: payment, after: updated });
+  revalidatePaymentPaths(payment.documentId, payment.companyId);
+  return updated;
+}
+
+/**
+ * Deletes a payment. If it was a successful payment applied to an invoice,
+ * the invoice's paidAmount/balance/status are unwound by the same amount
+ * (and its receipt removed) inside the same transaction, so deleting a
+ * payment never leaves the books wrong. It deliberately does NOT reverse a
+ * deal that was marked Won or a project that was handed off as a result of
+ * this payment — those are real business events a person acted on, and
+ * silently undoing them would be a worse surprise than leaving them be.
+ */
+export async function deletePaymentAction(id: string): Promise<void> {
+  const user = await requirePermission("payments.write");
+  const payment = await db.payment.findUniqueOrThrow({ where: { id } });
+
+  await db.$transaction(async (tx) => {
+    await tx.receipt.deleteMany({ where: { paymentId: id } });
+
+    if (payment.status === "SUCCESSFUL" && payment.documentId) {
+      const doc = await tx.salesDocument.findUniqueOrThrow({ where: { id: payment.documentId } });
+      const totals = reconcileDocumentTotals(doc, -payment.amount);
+      await tx.salesDocument.update({ where: { id: doc.id }, data: totals });
+    }
+
+    await tx.payment.delete({ where: { id } });
+  });
+
+  await writeAudit({ actorId: user.id, action: "DELETE_PAYMENT", entityType: "Payment", entityId: id, before: payment });
+  revalidatePaymentPaths(payment.documentId, payment.companyId);
 }

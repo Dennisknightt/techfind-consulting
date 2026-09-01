@@ -137,3 +137,29 @@ export function parsePaymentMessage(text: string): ParsedPaymentMessage {
 export function looksLikePaymentMessage(text: string): boolean {
   return (/confirmed/i.test(text) && /ksh/i.test(text)) || (/equity/i.test(text) && /kes/i.test(text));
 }
+
+export interface ManualPaymentMeta {
+  rawMessage?: string;
+  payerName?: string;
+  payerPhone?: string;
+}
+
+/**
+ * Reads back the payer context a manually-recorded payment stored in its
+ * `gatewayRaw` column. Only meaningful for gateway === "MANUAL" rows —
+ * a gateway-confirmed payment's gatewayRaw is the provider's own raw
+ * response JSON, a different shape entirely, so this safely returns {}
+ * for those rather than misreading provider data as payer info.
+ */
+export function parseManualPaymentMeta(gatewayRaw: string | null): ManualPaymentMeta {
+  if (!gatewayRaw) return {};
+  try {
+    const obj = JSON.parse(gatewayRaw);
+    if (obj && obj.source === "MANUAL_ENTRY") {
+      return { rawMessage: obj.rawMessage, payerName: obj.payerName, payerPhone: obj.payerPhone };
+    }
+  } catch {
+    // Not our JSON shape — ignore.
+  }
+  return {};
+}
