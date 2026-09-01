@@ -6,10 +6,12 @@ import { ChevronRight, Download, Check } from "lucide-react";
 import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/os/ui/Sheet";
 import { useInstallPrompt, isStandalone } from "@/lib/os/useInstallPrompt";
+import { useHasUnseenChangelog } from "@/lib/os/useChangelogSeen";
 import { IosInstallSteps } from "./IosInstallSteps";
 import { SECONDARY_NAV, SECONDARY_NAV_GROUPS } from "./nav";
 
 export function MoreSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+  const unseenChangelog = useHasUnseenChangelog();
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom" className="max-h-[85vh]">
@@ -40,7 +42,12 @@ export function MoreSheet({ open, onOpenChange }: { open: boolean; onOpenChange:
                         <Icon className="w-4 h-4" style={{ color: "var(--accent)" }} />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>{label}</p>
+                        <p className="os-text-body font-medium flex items-center gap-1.5" style={{ color: "var(--text)" }}>
+                          {label}
+                          {href === "/app/whats-new" && unseenChangelog && (
+                            <span className="w-1.5 h-1.5 rounded-full shrink-0" style={{ background: "var(--danger)" }} />
+                          )}
+                        </p>
                         <p className="os-text-meta mt-0.5 truncate">{description}</p>
                       </div>
                       <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "var(--text-faint)" }} />

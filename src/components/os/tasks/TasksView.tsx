@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Task, User, Deal, Company } from "@prisma/client";
 import { Plus, Check, CheckCircle2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -14,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
 import { friendlyDay, isOverdue, dayjs } from "@/lib/os/dates";
 import { createTaskAction, completeTaskAction } from "@/server/actions/tasks";
+import { fadeInUp } from "@/lib/os/motion";
 
 type TaskWithRelations = Task & { assignee: User | null; deal: (Deal & { company: Company }) | null };
 
@@ -115,9 +117,10 @@ export function TasksView({
           <p className="text-xs text-[var(--text-faint)] mt-1">You&rsquo;re caught up on this view.</p>
         </div>
       ) : (
-        <div className="mt-5 rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+        <div className="mt-5 rounded-[var(--radius-lg)] border divide-y overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <AnimatePresence initial={false}>
           {filtered.map(task => (
-            <div key={task.id} className="os-row-hover flex items-center gap-3 px-4 py-3">
+            <motion.div key={task.id} {...fadeInUp} className="os-row-hover flex items-center gap-3 px-4 py-3">
               <button
                 onClick={() => complete(task)}
                 disabled={completing.has(task.id)}
@@ -143,8 +146,9 @@ export function TasksView({
                 </div>
               </div>
               {task.assignee && <Avatar name={task.assignee.name} color={task.assignee.avatarColor} size={28} />}
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
 

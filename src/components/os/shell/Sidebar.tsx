@@ -14,6 +14,7 @@ import {
 import { logoutAction } from "@/server/actions/auth";
 import { ROLE_LABEL, type Role } from "@/server/auth/roles";
 import type { SessionUser } from "@/server/auth/session";
+import { useHasUnseenChangelog } from "@/lib/os/useChangelogSeen";
 
 function openCommandPalette() {
   document.dispatchEvent(new KeyboardEvent("keydown", { key: "k", metaKey: true }));
@@ -22,6 +23,7 @@ function openCommandPalette() {
 export function Sidebar({ user }: { user: SessionUser }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
+  const unseenChangelog = useHasUnseenChangelog();
 
   return (
     <aside
@@ -57,7 +59,12 @@ export function Sidebar({ user }: { user: SessionUser }) {
                 className="w-full flex items-center gap-2.5 px-2.5 py-[7px] rounded-[var(--radius-sm)] text-[13px] transition-colors text-left hover:bg-[var(--surface-hover)]"
                 style={{ color: "var(--text-muted)", fontWeight: 500 }}
               >
-                <Icon className="w-4 h-4 shrink-0" />
+                <span className="relative shrink-0">
+                  <Icon className="w-4 h-4" />
+                  {unseenChangelog && (
+                    <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: "var(--danger)" }} />
+                  )}
+                </span>
                 {label}
               </button>
             );

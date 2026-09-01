@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Company } from "@prisma/client";
 import { Plus, Search, Building2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -13,6 +14,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } 
 import { ClientStatusBadge } from "./ClientStatusBadge";
 import { formatKES } from "@/lib/os/money";
 import { createClientAction } from "@/server/actions/clients";
+import { fadeInUp } from "@/lib/os/motion";
 
 type CompanyWithCounts = Company & { _count: { deals: number }; deals: { value: number }[] };
 
@@ -66,8 +68,9 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
           {filtered.map((c, i) => {
             const lifetimeValue = c.deals.reduce((s, d) => s + d.value, 0);
             return (
-              <div
+              <motion.div
                 key={c.id}
+                {...fadeInUp}
                 className="os-row-hover relative grid grid-cols-1 sm:grid-cols-[1fr_110px_140px_120px] items-center gap-3 px-4 py-2.5"
                 style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
               >
@@ -90,7 +93,7 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
                 <span className="relative hidden sm:block os-text-number text-sm pointer-events-none" style={{ color: "var(--text)" }}>
                   {lifetimeValue > 0 ? formatKES(lifetimeValue, { compact: true }) : "—"}
                 </span>
-              </div>
+              </motion.div>
             );
           })}
         </div>

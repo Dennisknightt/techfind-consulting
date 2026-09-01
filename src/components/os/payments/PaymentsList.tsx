@@ -3,10 +3,12 @@
 import Link from "next/link";
 import type { Payment, Company, SalesDocument, Receipt } from "@prisma/client";
 import { CreditCard, Download } from "lucide-react";
+import { motion } from "framer-motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Badge } from "@/components/os/ui/Badge";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate } from "@/lib/os/dates";
+import { fadeInUp } from "@/lib/os/motion";
 
 type PaymentRow = Payment & { company: Company | null; document: SalesDocument | null; receipt: Receipt | null };
 
@@ -40,8 +42,9 @@ export function PaymentsList({ payments }: { payments: PaymentRow[] }) {
             ))}
           </div>
           {payments.map((p, i) => (
-            <div
+            <motion.div
               key={p.id}
+              {...fadeInUp}
               className="os-row-hover grid grid-cols-2 sm:grid-cols-[1fr_1fr_90px_100px_110px_90px_32px] items-center gap-3 px-4 py-2.5"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
@@ -69,7 +72,7 @@ export function PaymentsList({ payments }: { payments: PaymentRow[] }) {
                   </a>
                 )}
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       )}

@@ -4,12 +4,14 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Project, Company, User } from "@prisma/client";
 import { Search, FolderKanban } from "lucide-react";
+import { motion } from "framer-motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Input } from "@/components/os/ui/Input";
 import { Badge } from "@/components/os/ui/Badge";
 import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
 import { PROJECT_STAGES, PROJECT_STAGE_LABEL, projectStageIndex } from "@/lib/os/projects";
 import { daysBetween } from "@/lib/os/dates";
+import { fadeInUp } from "@/lib/os/motion";
 
 type ProjectRow = Project & { company: Company; owner: User | null };
 
@@ -74,8 +76,9 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
             ))}
           </div>
           {filtered.map((p, i) => (
-            <button
+            <motion.button
               key={p.id}
+              {...fadeInUp}
               onClick={() => router.push(`/app/projects/${p.id}`)}
               className="os-row-hover w-full grid grid-cols-1 sm:grid-cols-[1fr_140px_130px_100px_32px] items-center gap-3 px-4 py-2.5 text-left"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
@@ -100,7 +103,7 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
               <span className="hidden sm:flex justify-center">
                 {p.owner && <Avatar name={p.owner.name} color={p.owner.avatarColor} size={22} />}
               </span>
-            </button>
+            </motion.button>
           ))}
         </div>
       )}

@@ -7,6 +7,7 @@ import { Plus } from "lucide-react";
 import { PRIMARY_NAV, type NavItem } from "./nav";
 import { MoreSheet } from "./MoreSheet";
 import { QuickCreateSheet } from "./QuickCreate";
+import { useHasUnseenChangelog } from "@/lib/os/useChangelogSeen";
 
 // PRIMARY_NAV is [Home, Leads, Pipeline, Money, Activity, More] — the FAB
 // is inserted between the first three and the last three so it lands
@@ -60,14 +61,20 @@ export function MobileNav() {
 
 function MobileNavItem({ item, active, onMore }: { item: NavItem; active: boolean; onMore: () => void }) {
   const Icon = item.icon;
+  const unseenChangelog = useHasUnseenChangelog();
   if (item.href === "#more") {
     return (
       <button
         onClick={onMore}
-        className="os-press flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-w-0"
+        className="os-press relative flex-1 flex flex-col items-center justify-center gap-0.5 py-2 min-w-0"
         style={{ color: "var(--text-faint)" }}
       >
-        <Icon className="w-5 h-5" />
+        <span className="relative">
+          <Icon className="w-5 h-5" />
+          {unseenChangelog && (
+            <span className="absolute -top-0.5 -right-0.5 w-1.5 h-1.5 rounded-full" style={{ background: "var(--danger)" }} />
+          )}
+        </span>
         <span className="text-[10px] font-medium">{item.label}</span>
       </button>
     );

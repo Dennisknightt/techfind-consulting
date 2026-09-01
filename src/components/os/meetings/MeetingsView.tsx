@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Meeting, Company, Contact, Deal, Product } from "@prisma/client";
 import { Plus, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { fadeInUp } from "@/lib/os/motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label, Textarea } from "@/components/os/ui/Input";
@@ -133,7 +135,7 @@ function EmptyRow({ text }: { text: string }) {
 function MeetingCard({ meeting, onComplete, completed }: { meeting: MeetingWithRelations; onComplete?: () => void; completed?: boolean }) {
   const overdue = meeting.status === "SCHEDULED" && isOverdue(meeting.scheduledAt);
   return (
-    <div className="os-row-hover px-4 py-3 flex items-center gap-3">
+    <motion.div {...fadeInUp} className="os-row-hover px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-[var(--text)]">{meeting.company.name}</span>
@@ -159,7 +161,7 @@ function MeetingCard({ meeting, onComplete, completed }: { meeting: MeetingWithR
         </Button>
       )}
       {!completed && !onComplete && <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "var(--text-faint)" }} />}
-    </div>
+    </motion.div>
   );
 }
 

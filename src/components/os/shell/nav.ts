@@ -2,7 +2,7 @@ import type { LucideIcon } from "lucide-react";
 import {
   LayoutGrid, MessageSquare, Users, Handshake, Building2, CalendarDays,
   CheckSquare2, FileText, Receipt, CreditCard, FolderKanban, TrendingUp,
-  Sparkles, Settings, MoreHorizontal,
+  Sparkles, Settings, MoreHorizontal, Megaphone,
 } from "lucide-react";
 
 export interface NavItem {
@@ -43,6 +43,7 @@ export const SECONDARY_NAV: SecondaryNavItem[] = [
   { label: "Invoices",           href: "/app/invoices",     icon: Receipt,        group: "Money",    description: "Billed amounts awaiting settlement" },
   { label: "Payments",           href: "/app/payments",     icon: CreditCard,     group: "Money",    description: "Payment links and reconciliation" },
   { label: "Intelligence",       href: "/app/intelligence", icon: Sparkles,       group: "System",   description: "Pipeline health and Claude briefings" },
+  { label: "What's New",         href: "/app/whats-new",    icon: Megaphone,      group: "System",   description: "Recent product updates" },
   { label: "Settings",           href: "/app/settings",     icon: Settings,       group: "System",   description: "Team, workspace and preferences" },
 ];
 
