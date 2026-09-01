@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Lead, User, Product } from "@prisma/client";
+import type { User, Product } from "@prisma/client";
+import type { LeadMoney } from "@/lib/os/moneyTypes";
 import { Plus, Search, Phone, Mail, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -15,7 +16,7 @@ import { formatKES } from "@/lib/os/money";
 import { timeAgo } from "@/lib/os/dates";
 import { createLeadAction, convertLeadToDealAction } from "@/server/actions/leads";
 
-type LeadWithOwner = Lead & { owner: User | null };
+type LeadWithOwner = LeadMoney & { owner: User | null };
 
 const SOURCES = ["WHATSAPP", "WEBSITE", "META", "TIKTOK", "EMAIL", "PHONE", "REFERRAL", "MANUAL"];
 const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "DISQUALIFIED"];

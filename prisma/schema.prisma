@@ -136,7 +136,7 @@ model Lead {
   industry          String?
   interestedProduct String?
   source            String    @default("MANUAL")
-  value             Float     @default(0)
+  value             Decimal   @default(0) @db.Decimal(12, 2)
   ownerId           String?
   owner             User?     @relation("LeadOwner", fields: [ownerId], references: [id])
   temperature       String    @default("WARM")
@@ -163,7 +163,7 @@ model Deal {
   company        Company   @relation(fields: [companyId], references: [id])
   contactId      String?
   contact        Contact?  @relation(fields: [contactId], references: [id])
-  value           Float
+  value           Decimal   @db.Decimal(12, 2)
   stage          String    @default("IDENTIFIED")
   stageEnteredAt DateTime  @default(now())
   temperature    String    @default("WARM")
@@ -306,7 +306,7 @@ model QuickItem {
   id         String   @id @default(cuid())
   label      String
   productKeys String  @default("[]") // JSON string[]
-  totalPrice Float
+  totalPrice Decimal  @db.Decimal(12, 2)
   recurring  Boolean  @default(false)
   ownerId    String?
   owner      User?    @relation(fields: [ownerId], references: [id])
@@ -319,7 +319,7 @@ model Package {
   name        String
   description String?
   productKeys String  @default("[]") // JSON string[]
-  price       Float
+  price       Decimal @db.Decimal(12, 2)
   sortOrder   Int     @default(0)
 }
 
@@ -331,7 +331,7 @@ model ProductFootprint {
   productId   String
   product     Product  @relation(fields: [productId], references: [id])
   status      String   @default("NOT_PITCHED")
-  mrr         Float?
+  mrr         Decimal? @db.Decimal(12, 2)
   activatedAt DateTime?
 
   @@unique([companyId, productId])
@@ -359,17 +359,17 @@ model SalesDocument {
   convertedTo      SalesDocument? @relation("DocChain")
 
   currency         String    @default("KES")
-  subtotal         Float     @default(0)
-  discount         Float     @default(0)
+  subtotal         Decimal   @default(0) @db.Decimal(12, 2)
+  discount         Decimal   @default(0) @db.Decimal(12, 2)
   taxMode          String    @default("EXCLUSIVE")
-  taxRate          Float     @default(0)
-  taxAmount        Float     @default(0)
-  total            Float     @default(0)
+  taxRate          Float     @default(0) // a percentage (e.g. 16), not a currency amount
+  taxAmount        Decimal   @default(0) @db.Decimal(12, 2)
+  total            Decimal   @default(0) @db.Decimal(12, 2)
 
   paymentTermsLabel String   @default("100%")
-  depositRequired   Float    @default(0)
-  balance           Float    @default(0)
-  paidAmount        Float    @default(0)
+  depositRequired   Decimal  @default(0) @db.Decimal(12, 2)
+  balance           Decimal  @default(0) @db.Decimal(12, 2)
+  paidAmount        Decimal  @default(0) @db.Decimal(12, 2)
 
   validUntil       DateTime?
   notes            String?
@@ -402,8 +402,8 @@ model SalesDocumentItem {
   label       String
   description String?
   quantity    Float         @default(1)
-  unitPrice   Float
-  amount      Float
+  unitPrice   Decimal       @db.Decimal(12, 2)
+  amount      Decimal       @db.Decimal(12, 2)
   sortOrder   Int           @default(0)
 }
 
@@ -422,7 +422,7 @@ model PaymentSession {
   token       String        @unique
   documentId  String
   document    SalesDocument @relation(fields: [documentId], references: [id])
-  amountDue   Float
+  amountDue   Decimal       @db.Decimal(12, 2)
   currency    String        @default("KES")
   status      String        @default("ACTIVE")
   expiresAt   DateTime
@@ -448,7 +448,8 @@ model Payment {
   dealId            String?
   deal              Deal?     @relation(fields: [dealId], references: [id])
 
-  amount            Float
+  amount            Decimal   @db.Decimal(12, 2)
+  refundedAmount    Decimal   @default(0) @db.Decimal(12, 2)
   currency          String    @default("KES")
   method            String
   gateway           String    @default("MOCK")
@@ -483,7 +484,7 @@ model Receipt {
   document    SalesDocument @relation(fields: [documentId], references: [id])
   companyId   String
   company     Company       @relation(fields: [companyId], references: [id])
-  amount      Float
+  amount      Decimal       @db.Decimal(12, 2)
   method      String
   issuedAt    DateTime      @default(now())
 }

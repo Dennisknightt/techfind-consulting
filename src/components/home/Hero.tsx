@@ -7,7 +7,7 @@ import { ArrowRight, Play, Globe2, Brain, TrendingUp, Sparkles } from "lucide-re
 import { AnimatedHeroBackground } from "./AnimatedHeroBackground";
 import { AiPlatformBadge } from "./AiPlatformLogo";
 
-const aiPlatforms = ["ChatGPT", "Gemini", "Claude", "Perplexity", "Google AI"];
+const aiPlatforms = ["ChatGPT", "Gemini", "Claude", "Perplexity", "Google AI"] as const;
 
 /* Static particle data — never re-computed, no hydration mismatch */
 const STREAM_PARTICLES = [
@@ -181,7 +181,7 @@ export function Hero() {
             animate={{ opacity: visible ? 1 : 0, y: visible ? 0 : -6 }}
             transition={{ duration: 0.22 }}
           >
-            <AiPlatformBadge platform={aiPlatforms[platformIndex] as any} />
+            <AiPlatformBadge platform={aiPlatforms[platformIndex]} />
           </motion.div>
         </motion.div>
 

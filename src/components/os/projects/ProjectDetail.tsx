@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import type { Project, Company, Deal, SalesDocument, User, Task, ProjectUpdate, Payment } from "@prisma/client";
+import type { Project, Company, User, Task, ProjectUpdate } from "@prisma/client";
+import type { DealMoney, SalesDocumentMoney, PaymentMoney } from "@/lib/os/moneyTypes";
 import { Building2, FileText, Check, Plus, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -19,14 +20,14 @@ import { createTaskAction, completeTaskAction } from "@/server/actions/tasks";
 
 type ProjectFull = Project & {
   company: Company;
-  deal: Deal;
-  document: SalesDocument | null;
+  deal: DealMoney;
+  document: SalesDocumentMoney | null;
   owner: User | null;
   tasks: (Task & { assignee: User | null })[];
   updates: (ProjectUpdate & { author: User | null })[];
 };
 
-export function ProjectDetail({ project: initialProject, users, payments }: { project: ProjectFull; users: User[]; payments: Payment[] }) {
+export function ProjectDetail({ project: initialProject, users, payments }: { project: ProjectFull; users: User[]; payments: PaymentMoney[] }) {
   const [project, setProject] = useState(initialProject);
   const [savingStage, setSavingStage] = useState(false);
   const [savingOwner, setSavingOwner] = useState(false);

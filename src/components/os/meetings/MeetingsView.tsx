@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import type { Meeting, Company, Contact, Deal, Product } from "@prisma/client";
+import type { Meeting, Company, Contact, Product } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Plus, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -17,7 +18,7 @@ import { friendlyDate, dayjs, isOverdue } from "@/lib/os/dates";
 import { scheduleMeetingAction, completeMeetingAction } from "@/server/actions/meetings";
 import { dealsForCompanyAction } from "@/server/actions/deals";
 
-type MeetingWithRelations = Meeting & { company: Company; contact: Contact | null; deal: Deal | null };
+type MeetingWithRelations = Meeting & { company: Company; contact: Contact | null; deal: DealMoney | null };
 
 const BUDGET_OPTIONS = ["< 50K", "50K–150K", "150K–300K", "300K+", "Unknown"];
 const DECISION_OPTIONS = ["Yes", "No", "Unsure"];
@@ -162,7 +163,7 @@ export function ScheduleMeetingSheet({
 }) {
   const [company, setCompany] = useState<Company | null>(lockedCompany ?? null);
   const [quickClientOpen, setQuickClientOpen] = useState(false);
-  const [deals, setDeals] = useState<Deal[]>([]);
+  const [deals, setDeals] = useState<DealMoney[]>([]);
   const [dealId, setDealId] = useState<string | null>(null);
   const [date, setDate] = useState("");
   const [time, setTime] = useState("10:00");

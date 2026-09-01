@@ -3,6 +3,62 @@
 Entries correspond to the phase commits on `claude/techfind-crm-communications-yzv90r`. See
 `docs/ROADMAP.md` for what's ahead.
 
+## Phase 12 — Real migrations, Decimal money, refunds, working lint
+
+Closes every remaining item from the Phase 9–11 "deliberately not built yet" list except real
+WhatsApp/email sending (needs credentials this environment doesn't have).
+
+- **`eslint.config.mjs` fixed.** `npx eslint .` previously errored outright — `eslint-config-next`
+  still ships `next/core-web-vitals` and `next/typescript` in the legacy `{ extends: [...] }`
+  shape, and importing those modules directly into a flat-config array throws ("is not
+  iterable"). Replaced with the officially documented bridge — `@eslint/eslintrc`'s
+  `FlatCompat` — added as an explicit `devDependency` since it's now imported directly. Also
+  fixed the 8 real errors this unlocked (unescaped JSX apostrophes, one `as any`) and removed 6
+  no-op `// eslint-disable-next-line no-var` comments left over from before this fix (the rule
+  never actually fires inside a `declare global` block). 17 pre-existing unused-var/alt-text
+  warnings remain — out of scope for "fix the config," tracked as ordinary lint debt.
+- **A real `prisma migrate` history**, replacing `prisma db push`. History starts at
+  `20260901051741_init`, generated with `prisma migrate dev` against an empty database and
+  diffed from the schema as it stood after Phase 11; every schema change from here on gets its
+  own migration. `vercel-build` now runs `prisma migrate deploy` instead of `db push
+  --accept-data-loss`; `db:reset` runs `prisma migrate reset`. See `docs/DATABASE.md`.
+- **Money moved from `Float` to `Decimal(12,2)`** on every currency field (`Lead.value`,
+  `Deal.value`, `QuickItem.totalPrice`, `Package.price`, `ProductFootprint.mrr`, every
+  `SalesDocument`/`SalesDocumentItem` money field, `PaymentSession.amountDue`, `Payment.amount`,
+  `Receipt.amount`) — `taxRate` (a percentage), `quantity`, `matchConfidence` and
+  `welcomeSoundVolume` deliberately excluded, since they aren't currency. Storage is now exact;
+  a Prisma Client Extension on the shared `db` export (`src/server/db.ts`) converts every
+  `Decimal` back to `number` on the way out of a query, so the rest of the app is unaffected —
+  writes already accepted plain numbers, reads keep returning plain numbers, only the column
+  type and the exactness of what's on disk changed. Two things this genuinely required, not
+  just plumbing: `.aggregate()`/`.groupBy()` calls bypass the extension (confirmed at runtime,
+  not just inferred — every existing aggregate call site now wraps its `_sum` in `Number(...)`
+  explicitly), and any local composite type built from a raw `@prisma/client` model import
+  (`type DealWithRelations = Deal & {...}`) still claimed `Decimal` for its money field even
+  though the runtime value is a `number` — new `src/lib/os/moneyTypes.ts` exports the corrected
+  aliases (`DealMoney`, `PaymentMoney`, etc.), used everywhere a money field is part of a prop
+  type or action signature. See `docs/DATABASE.md`.
+  Verified live: wrote a lead/deal/proforma/payment/receipt with real decimal amounts
+  (123456.78-style) directly through the extended client, confirmed every read came back as a
+  plain JS `number`, then confirmed the same records render correctly (no `NaN`, no
+  `[object Object]`) across Home, Leads, Deals (list + detail), Clients (list + detail),
+  Revenue, Quotes (list + detail), and Payments in a real browser against a production build.
+- **Refunds** — `PaymentProvider.refund()` existed in the interface and both providers
+  implemented it, but nothing in the UI ever called it. Added `refundPaymentAction`
+  (`src/server/actions/payments.ts`) and a "Refund" action on `/app/payments`
+  (`payments.write`-gated), supporting partial refunds via a new `Payment.refundedAmount`
+  column — capped at what hasn't already been refunded, flips `status` to
+  `PARTIALLY_REFUNDED`/`REFUNDED`, and recomputes the linked document's
+  `paidAmount`/`balance`/`status` the same way a successful payment does it, in reverse.
+  `registry.ts#resolveProviderForRefund` resolves the provider by the payment's own `gateway`
+  field (not whatever's configured now) and, outside production, refuses outright to refund a
+  live-gateway payment rather than silently routing it through the mock provider — a "refund"
+  that quietly no-ops against the mock store would tell staff a customer was refunded when
+  nothing happened at the gateway. See `docs/PAYMENTS.md`.
+  Verified live: a VIEWER doesn't see the Refund action at all; a Super Admin partially refunds
+  a payment (status → `PARTIALLY_REFUNDED`, correct remaining-refundable amount shown), then
+  refunds the remainder (status → `REFUNDED`, action disappears once nothing's left to refund).
+
 ## Phase 11 — Team management, catalogue management, VIEWER UI cleanup
 
 Closes the three remaining items from the Phase 9/10 known-gaps list.

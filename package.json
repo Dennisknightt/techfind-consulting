@@ -8,11 +8,12 @@
     "start": "next start",
     "lint": "eslint",
     "postinstall": "prisma generate",
-    "vercel-build": "prisma db push --accept-data-loss && prisma db seed && next build",
+    "vercel-build": "prisma migrate deploy && prisma db seed && next build",
     "db:generate": "prisma generate",
-    "db:push": "prisma db push",
+    "db:migrate": "prisma migrate dev",
+    "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "prisma db push --force-reset && npm run db:seed",
+    "db:reset": "prisma migrate reset",
     "db:studio": "prisma studio",
     "gen:icons": "node scripts/gen-os-icons.mjs"
   },
@@ -60,6 +61,7 @@
     "zod": "^4.4.3"
   },
   "devDependencies": {
+    "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4.1.8",
     "@types/bcryptjs": "^2.4.6",
     "@types/node": "^20",

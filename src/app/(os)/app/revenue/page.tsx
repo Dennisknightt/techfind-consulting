@@ -42,9 +42,9 @@ export default async function RevenuePage() {
       <PageHeader title="Revenue" subtitle="What's expected, what's received, what's outstanding — today" />
 
       <div className="grid grid-cols-3 gap-3 mt-6">
-        <Stat label="Received Today" value={formatKES(receivedToday._sum.amount ?? 0, { compact: true })} tone="success" />
+        <Stat label="Received Today" value={formatKES(Number(receivedToday._sum.amount ?? 0), { compact: true })} tone="success" />
         <Stat label="Expected" value={formatKES(expected, { compact: true })} tone="warning" />
-        <Stat label="Received (All Time)" value={formatKES(receivedTotal._sum.amount ?? 0, { compact: true })} />
+        <Stat label="Received (All Time)" value={formatKES(Number(receivedTotal._sum.amount ?? 0), { compact: true })} />
       </div>
 
       {overdue.length > 0 && (

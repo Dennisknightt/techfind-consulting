@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { Task, User, Deal, Company } from "@prisma/client";
+import type { Task, User, Company } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Plus, Check, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -15,7 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { friendlyDay, isOverdue, dayjs } from "@/lib/os/dates";
 import { createTaskAction, completeTaskAction } from "@/server/actions/tasks";
 
-type TaskWithRelations = Task & { assignee: User | null; deal: (Deal & { company: Company }) | null };
+type TaskWithRelations = Task & { assignee: User | null; deal: (DealMoney & { company: Company }) | null };
 
 type ViewKey = "today" | "upcoming" | "overdue" | "mine" | "team" | "high";
 

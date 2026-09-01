@@ -102,7 +102,7 @@ export function OutreachAgent() {
         style={{ background: "var(--accent-glow)", border: "1px solid var(--border-accent)" }}>
         <Clock className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
         <p className="text-xs" style={{ color: "var(--accent)" }}>
-          <strong>Best sending window:</strong> Tue–Thu · 8–11am and 1–3pm in prospect's local timezone.
+          <strong>Best sending window:</strong> Tue–Thu · 8–11am and 1–3pm in prospect&rsquo;s local timezone.
           Messages are generated from their real audit data — personalised and specific.
         </p>
       </div>
@@ -113,7 +113,7 @@ export function OutreachAgent() {
           <Users className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--muted)" }} />
           <p className="font-bold text-[var(--text)] mb-1">No A+ or A leads yet</p>
           <p className="text-sm text-[var(--muted)]">
-            As visitors complete the /audit page and score 80+, they'll appear here ready for outreach
+            As visitors complete the /audit page and score 80+, they&rsquo;ll appear here ready for outreach
           </p>
         </div>
       )}

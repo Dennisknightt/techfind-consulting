@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Company, Communication, User, Contact, Deal } from "@prisma/client";
+import type { Company, Communication, User, Contact } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Search, ArrowLeft, Info, Send, Phone, MessageCircle, CalendarDays, CheckSquare, FileText, Trophy, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CompanyAvatar } from "@/components/os/ui/Avatar";
@@ -22,7 +23,7 @@ import { ScheduleMeetingSheet } from "@/components/os/meetings/MeetingsView";
 
 type CompanyRow = Company & { communications: Communication[]; _count: { communications: number } };
 type ThreadItem = Communication & { author: User | null };
-type Context = { company: Company; primaryContact: Contact | null; deal: Deal | null };
+type Context = { company: Company; primaryContact: Contact | null; deal: DealMoney | null };
 
 function waLink(phone: string, text: string) {
   return `https://wa.me/${phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(text)}`;

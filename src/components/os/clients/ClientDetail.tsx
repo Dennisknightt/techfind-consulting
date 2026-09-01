@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task } from "@prisma/client";
+import type { Company, Contact, User, Meeting, Product, Task } from "@prisma/client";
+import type { DealMoney, ProductFootprintMoney } from "@/lib/os/moneyTypes";
 import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban } from "lucide-react";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -20,9 +21,9 @@ import type { DealWithRelations } from "@/components/os/deals/PipelineView";
 type CompanyFull = Company & {
   contacts: Contact[];
   owner: User | null;
-  deals: (Deal & { owner: User | null })[];
+  deals: (DealMoney & { owner: User | null })[];
   meetings: Meeting[];
-  footprint: (ProductFootprint & { product: Product })[];
+  footprint: (ProductFootprintMoney & { product: Product })[];
 };
 
 const FOOTPRINT_META: Record<string, { label: string; tone: "success" | "warning" | "neutral"; icon: string }> = {

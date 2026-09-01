@@ -6,7 +6,7 @@ import { writeAudit } from "@/server/audit";
 import { round2 } from "@/lib/os/money";
 import { nextReceiptNumber } from "@/server/documents/numbering";
 import { handoffToProject } from "@/server/projects/handoff";
-import type { Payment } from "@prisma/client";
+import type { PaymentMoney as Payment } from "@/lib/os/moneyTypes";
 
 /**
  * The single place a Payment is ever marked successful. Called from both

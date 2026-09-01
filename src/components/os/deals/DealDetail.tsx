@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Deal, Company, Contact, User, Meeting, Task, Project } from "@prisma/client";
+import type { Company, Contact, User, Meeting, Task, Project } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Phone, MessageCircle, Trophy, XCircle, FileText, Building2, Check, FolderKanban } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -19,7 +20,7 @@ import { updateDealStageAction, updateDealAction } from "@/server/actions/deals"
 import { LostDealDialog } from "./LostDealDialog";
 import { parseJsonArray } from "@/server/json";
 
-type DealFull = Deal & {
+type DealFull = DealMoney & {
   company: Company;
   contact: Contact | null;
   owner: User | null;

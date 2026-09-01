@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Deal, Company, User, Product } from "@prisma/client";
+import type { Company, User, Product } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Plus, Kanban, List, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -17,7 +18,7 @@ import { updateDealStageAction } from "@/server/actions/deals";
 import { CreateDealSheet } from "./CreateDealSheet";
 import { LostDealDialog } from "./LostDealDialog";
 
-export type DealWithRelations = Deal & { company: Company; owner: User | null };
+export type DealWithRelations = DealMoney & { company: Company; owner: User | null };
 
 const STALL_DAYS = 7;
 

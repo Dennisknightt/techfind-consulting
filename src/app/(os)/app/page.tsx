@@ -43,8 +43,8 @@ export default async function HomePage() {
     { label: "Meetings", value: upcomingMeetings, icon: CalendarDays, href: "/app/meetings" },
     { label: "Follow-ups", value: openTasks, icon: ListTodo, href: "/app/tasks" },
     { label: "Pipeline", value: formatKES(pipelineValue, { compact: true }), icon: TrendingUp, href: "/app/deals" },
-    { label: "Expected", value: formatKES(expected._sum.balance ?? 0, { compact: true }), icon: Clock, href: "/app/revenue" },
-    { label: "Received", value: formatKES(received._sum.amount ?? 0, { compact: true }), icon: Wallet, href: "/app/revenue" },
+    { label: "Expected", value: formatKES(Number(expected._sum.balance ?? 0), { compact: true }), icon: Clock, href: "/app/revenue" },
+    { label: "Received", value: formatKES(Number(received._sum.amount ?? 0), { compact: true }), icon: Wallet, href: "/app/revenue" },
   ];
 
   return (

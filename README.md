@@ -27,7 +27,7 @@ Start with **`docs/ARCHITECTURE.md`** for how the two fit together in one Next.j
 ```bash
 npm install
 cp .env.example .env         # fill in real values, including a Postgres DATABASE_URL — see below
-npx prisma db push           # sync the schema to your database
+npx prisma migrate deploy    # apply the real, committed migration history to your database
 npx prisma db seed           # users + product catalogue + settings (no demo business data)
 npm run dev
 ```

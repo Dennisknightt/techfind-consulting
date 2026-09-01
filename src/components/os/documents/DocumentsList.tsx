@@ -1,7 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import type { SalesDocument, Company, User } from "@prisma/client";
+import type { Company, User } from "@prisma/client";
+import type { SalesDocumentMoney } from "@/lib/os/moneyTypes";
 import { Plus, FileText } from "lucide-react";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -9,7 +10,7 @@ import { Badge } from "@/components/os/ui/Badge";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDay } from "@/lib/os/dates";
 
-type DocRow = SalesDocument & { company: Company; owner: User | null };
+type DocRow = SalesDocumentMoney & { company: Company; owner: User | null };
 
 const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" | "danger"> = {
   DRAFT: "neutral", SENT: "accent", VIEWED: "accent",
