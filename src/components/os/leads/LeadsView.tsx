@@ -30,12 +30,14 @@ export function LeadsView({
   products,
   currentUserId,
   openCreateOnLoad,
+  canCreate,
 }: {
   initialLeads: LeadWithOwner[];
   users: User[];
   products: Product[];
   currentUserId: string;
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
@@ -85,9 +87,11 @@ export function LeadsView({
         title="Leads"
         subtitle={`${leads.length} captured · minimal typing, fast follow-up`}
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> New Lead
-          </Button>
+          canCreate && (
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> New Lead
+            </Button>
+          )
         }
       />
 
@@ -148,9 +152,11 @@ export function LeadsView({
               {lead.value > 0 && <span className="text-sm font-bold text-[var(--text)]">{formatKES(lead.value, { compact: true })}</span>}
               {lead.owner && <Avatar name={lead.owner.name} color={lead.owner.avatarColor} size={26} />}
               {lead.status !== "CONVERTED" ? (
-                <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
-                  Convert <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                canCreate && (
+                  <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
+                    Convert <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                )
               ) : lead.convertedDealId ? (
                 <Button size="sm" variant="ghost" onClick={() => router.push(`/app/deals/${lead.convertedDealId}`)}>
                   View Deal

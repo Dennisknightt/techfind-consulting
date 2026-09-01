@@ -3,6 +3,57 @@
 Entries correspond to the phase commits on `claude/techfind-crm-communications-yzv90r`. See
 `docs/ROADMAP.md` for what's ahead.
 
+## Phase 11 — Team management, catalogue management, VIEWER UI cleanup
+
+Closes the three remaining items from the Phase 9/10 known-gaps list.
+
+- **Team management UI** (`src/server/actions/team.ts`, `src/components/os/settings/TeamSettings.tsx`,
+  Settings → Team). `users.write` (SUPER_ADMIN only) can now: invite a teammate (name, email,
+  phone, role — there's no email sending yet, see `docs/INTEGRATIONS.md`, so this generates a
+  one-time temporary password shown once in a dialog for the admin to share out of band, the
+  same way the seeded team's own passwords work), change anyone's role via an inline select,
+  deactivate/reactivate via a switch, and reset a member's password (which also invalidates
+  their existing sessions). Everyone else sees the same roster read-only.
+  Two lockout guards worth calling out: an admin can't deactivate their own account, and neither
+  a role change nor a deactivation can remove the last active SUPER_ADMIN — both return a plain
+  error instead of leaving the org with no one who can manage it.
+- **Product catalogue management UI** (`src/server/actions/catalogue.ts`,
+  `src/components/os/settings/CatalogueSettings.tsx`, Settings → Catalogue). `settings.write`
+  (SUPER_ADMIN only) can edit each product's quick prices and quick-chip/active flags inline, and
+  fully create/edit/delete Quick Items and Packages (each backed by a product-key picker). Base
+  products themselves (key/category/name) stay seeded, not created here — a genuinely new
+  product line touches the Quick Proforma Generator's category grouping and was out of scope.
+- **Hid (not just correctly rejected) the primary write buttons from the VIEWER role**:
+  - The single global "Quick Create" menu (topbar dropdown + mobile FAB) now filters its six
+    entries — Proforma, Lead, Deal, Task, Meeting, Client — by `can(role, permission)`; the
+    mobile FAB itself disappears entirely when a role can create nothing.
+  - Each list page's own "New X" button (Clients, Leads, Deals, Tasks, Meetings,
+    Quotes & Proformas) is now conditional on the matching permission, threaded down from a
+    `can(user.role, ...)` check made server-side in each page.
+  - `/app/quotes/new` (the full Proforma Generator, a page that's *entirely* a write flow) now
+    checks `documents.write` itself and renders a plain "you don't have access" screen instead of
+    the generator — closing the gap where a VIEWER without the button could still reach it by
+    typing the URL directly. New shared component: `src/components/os/common/NoAccess.tsx`.
+  - `LeadsView`'s "Convert to Deal" button and `ClientDetail`'s "New Deal" / "Create Opportunity"
+    / "Meeting" quick actions are gated the same way.
+  - The Communications composer (a persistent input, not a button) follows the app's existing
+    disabled-with-explanation convention instead (matching `TaxSettings`/`PaymentProviderSettings`):
+    a VIEWER still sees the thread but the composer is replaced with a one-line note instead of a
+    non-functional input.
+  - **Deliberately left as server-enforcement-only** (not hidden): Kanban drag-and-drop stage
+    moves, the per-task "complete" checkbox, and other inline detail-page editors (deal owner
+    reassignment, next-action fields). These are dense, per-row interactions rather than a single
+    discrete "New X" button, and hiding them cleanly would mean disabling drag or replacing
+    checkboxes across several already-complex views — a larger UI pass than this one. A VIEWER
+    who tries still gets a correct rejection (a toast, not a crash); it's just not pre-hidden.
+    Flagged here rather than left silently unaddressed.
+- Verified live in a real headless-browser run against a built (`next build && next start`)
+  instance with the seeded team: a SALES user sees every "New X" button and the topbar Create
+  menu; a VIEWER sees none of them, gets the NoAccess screen on a direct `/app/quotes/new` visit,
+  and sees the read-only Team/Catalogue banners; a SUPER_ADMIN can create a teammate through the
+  full dialog flow (temp password reveal included) and the new member appears in the roster
+  immediately, and the Catalogue's three sections render and are editable.
+
 ## Phase 10 — Real login for the marketing site's admin panel
 
 - Closed the highest-priority known gap from Phase 9: `/admin` (the Revenue Engine panel) had no

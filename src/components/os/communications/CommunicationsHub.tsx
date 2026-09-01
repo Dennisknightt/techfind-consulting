@@ -29,11 +29,12 @@ function waLink(phone: string, text: string) {
 }
 
 export function CommunicationsHub({
-  companies, currentUserId, initialCompanyId,
+  companies, currentUserId, initialCompanyId, canLog,
 }: {
   companies: CompanyRow[];
   currentUserId: string;
   initialCompanyId?: string;
+  canLog: boolean;
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | undefined>(initialCompanyId);
@@ -161,7 +162,7 @@ export function CommunicationsHub({
               })}
             </div>
 
-            <Composer company={selectedCompany} dealId={context?.deal?.id} onSent={(c) => setThread(prev => [...(prev ?? []), c])} />
+            <Composer company={selectedCompany} dealId={context?.deal?.id} canLog={canLog} onSent={(c) => setThread(prev => [...(prev ?? []), c])} />
           </>
         )}
       </div>
@@ -184,10 +185,18 @@ export function CommunicationsHub({
   );
 }
 
-function Composer({ company, dealId, onSent }: { company: Company; dealId?: string; onSent: (c: ThreadItem) => void }) {
+function Composer({ company, dealId, canLog, onSent }: { company: Company; dealId?: string; canLog: boolean; onSent: (c: ThreadItem) => void }) {
   const [channel, setChannel] = useState<Channel>("WHATSAPP");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+
+  if (!canLog) {
+    return (
+      <div className="border-t p-3 shrink-0 safe-bottom text-center" style={{ borderColor: "var(--border)" }}>
+        <p className="text-xs text-[var(--text-faint)]">Your role can view this thread but can&rsquo;t log new messages.</p>
+      </div>
+    );
+  }
 
   async function send() {
     if (!text.trim()) return;

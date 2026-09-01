@@ -4,8 +4,9 @@ import { useState } from "react";
 import { Search, Bell } from "lucide-react";
 import { QuickCreateMenu } from "./QuickCreate";
 import { NotificationsPanel } from "./NotificationsPanel";
+import type { Role } from "@/server/auth/roles";
 
-export function Topbar({ unreadCount = 0 }: { unreadCount?: number }) {
+export function Topbar({ role, unreadCount = 0 }: { role: Role; unreadCount?: number }) {
   const [notifOpen, setNotifOpen] = useState(false);
 
   return (
@@ -45,7 +46,7 @@ export function Topbar({ unreadCount = 0 }: { unreadCount?: number }) {
       </div>
 
       <div className="hidden lg:block">
-        <QuickCreateMenu />
+        <QuickCreateMenu role={role} />
       </div>
     </header>
   );

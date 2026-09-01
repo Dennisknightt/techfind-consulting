@@ -6,12 +6,14 @@ import { usePathname } from "next/navigation";
 import { Plus } from "lucide-react";
 import { MOBILE_PRIMARY_NAV } from "./nav";
 import { MoreSheet } from "./MoreSheet";
-import { QuickCreateSheet } from "./QuickCreate";
+import { QuickCreateSheet, QUICK_CREATE_ITEMS } from "./QuickCreate";
+import { can, type Role } from "@/server/auth/roles";
 
-export function MobileNav() {
+export function MobileNav({ role }: { role: Role }) {
   const pathname = usePathname();
   const [moreOpen, setMoreOpen] = useState(false);
   const [createOpen, setCreateOpen] = useState(false);
+  const canCreateAnything = QUICK_CREATE_ITEMS.some(item => can(role, item.permission));
 
   return (
     <>
@@ -26,18 +28,20 @@ export function MobileNav() {
 
           {/* Centre FAB */}
           <div className="flex-1 flex items-center justify-center">
-            <button
-              onClick={() => setCreateOpen(true)}
-              aria-label="Quick create"
-              className="w-13 h-13 -mt-6 rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
-              style={{
-                width: 52, height: 52,
-                background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
-                boxShadow: "var(--shadow-glow)",
-              }}
-            >
-              <Plus className="w-6 h-6" />
-            </button>
+            {canCreateAnything && (
+              <button
+                onClick={() => setCreateOpen(true)}
+                aria-label="Quick create"
+                className="w-13 h-13 -mt-6 rounded-full flex items-center justify-center text-white active:scale-95 transition-transform"
+                style={{
+                  width: 52, height: 52,
+                  background: "linear-gradient(135deg, var(--accent), var(--accent-2))",
+                  boxShadow: "var(--shadow-glow)",
+                }}
+              >
+                <Plus className="w-6 h-6" />
+              </button>
+            )}
           </div>
 
           {MOBILE_PRIMARY_NAV.slice(2, 4).map(item => (
@@ -55,7 +59,7 @@ export function MobileNav() {
       </nav>
 
       <MoreSheet open={moreOpen} onOpenChange={setMoreOpen} />
-      <QuickCreateSheet open={createOpen} onOpenChange={setCreateOpen} />
+      <QuickCreateSheet role={role} open={createOpen} onOpenChange={setCreateOpen} />
     </>
   );
 }

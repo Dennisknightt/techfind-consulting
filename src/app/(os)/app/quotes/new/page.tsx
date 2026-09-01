@@ -1,8 +1,10 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { getTaxConfigAction } from "@/server/actions/settings";
 import { ProformaGenerator } from "@/components/os/documents/ProformaGenerator";
+import { NoAccess } from "@/components/os/common/NoAccess";
 
 export const metadata: Metadata = { title: "New Proforma — Techfind" };
 
@@ -11,7 +13,10 @@ export default async function NewDocumentPage({
 }: {
   searchParams: Promise<{ deal?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
+  if (!can(user.role, "documents.write")) {
+    return <NoAccess note="Creating quotes and proformas is restricted to Sales, Management and Super Admin." />;
+  }
   const { deal: dealId } = await searchParams;
 
   const [products, quickItems, packages, tax, deal] = await Promise.all([

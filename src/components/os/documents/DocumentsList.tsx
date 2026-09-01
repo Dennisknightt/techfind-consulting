@@ -16,16 +16,18 @@ const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" |
   PARTIALLY_PAID: "warning", PAID: "success", EXPIRED: "danger", CANCELLED: "danger",
 };
 
-export function DocumentsList({ documents, title, subtitle, newHref }: { documents: DocRow[]; title: string; subtitle: string; newHref: string }) {
+export function DocumentsList({ documents, title, subtitle, newHref, canCreate }: { documents: DocRow[]; title: string; subtitle: string; newHref: string; canCreate: boolean }) {
   return (
     <div className="p-6 lg:p-8">
       <PageHeader
         title={title}
         subtitle={`${documents.length} document${documents.length === 1 ? "" : "s"} · ${subtitle}`}
         actions={
-          <Button size="sm" asChild className="gap-1.5">
-            <Link href={newHref}><Plus className="w-4 h-4" /> New Proforma</Link>
-          </Button>
+          canCreate && (
+            <Button size="sm" asChild className="gap-1.5">
+              <Link href={newHref}><Plus className="w-4 h-4" /> New Proforma</Link>
+            </Button>
+          )
         }
       />
 

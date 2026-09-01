@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { ClientDetail } from "@/components/os/clients/ClientDetail";
 
@@ -33,5 +34,15 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     db.user.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
   ]);
 
-  return <ClientDetail company={company} tasks={tasks} allProducts={allProducts} users={users} currentUserId={user.id} />;
+  return (
+    <ClientDetail
+      company={company}
+      tasks={tasks}
+      allProducts={allProducts}
+      users={users}
+      currentUserId={user.id}
+      canCreateDeal={can(user.role, "pipeline.write")}
+      canCreateMeeting={can(user.role, "meetings.write")}
+    />
+  );
 }

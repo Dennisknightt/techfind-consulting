@@ -23,11 +23,12 @@ const BUDGET_OPTIONS = ["< 50K", "50K–150K", "150K–300K", "300K+", "Unknown"
 const DECISION_OPTIONS = ["Yes", "No", "Unsure"];
 
 export function MeetingsView({
-  initialMeetings, products, openCreateOnLoad,
+  initialMeetings, products, openCreateOnLoad, canCreate,
 }: {
   initialMeetings: MeetingWithRelations[];
   products: Product[];
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const [meetings, setMeetings] = useState(initialMeetings);
   const [scheduleOpen, setScheduleOpen] = useState(openCreateOnLoad);
@@ -54,9 +55,11 @@ export function MeetingsView({
         title="Meetings"
         subtitle={`${upcoming.length} upcoming${needsCompletion.length ? ` · ${needsCompletion.length} need a recap` : ""}`}
         actions={
-          <Button size="sm" onClick={() => setScheduleOpen(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> Schedule Meeting
-          </Button>
+          canCreate && (
+            <Button size="sm" onClick={() => setScheduleOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> Schedule Meeting
+            </Button>
+          )
         }
       />
 

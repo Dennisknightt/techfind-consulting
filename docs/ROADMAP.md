@@ -1,6 +1,6 @@
 # Roadmap
 
-## Shipped (Phases 1–10)
+## Shipped (Phases 1–11)
 
 1. Architecture, database schema, design system, session auth + RBAC, PWA shell, app navigation.
 2. Home (Dennis Control Centre), Clients, Leads, Deals/Pipeline (Kanban), Tasks, Meetings.
@@ -18,29 +18,28 @@
     token (which the admin UI itself never sent) is gone; `/admin` and the endpoints it calls
     (`/api/leads*`, `/api/communications`) now require a session-authenticated `SUPER_ADMIN`
     user, the same session mechanism the CRM app itself uses. See `docs/SECURITY.md`.
+11. Team management UI (Settings → Team: invite, change role, deactivate/reactivate, reset
+    password), Product catalogue management UI (Settings → Catalogue: quick prices, quick
+    items, packages), and hiding (not just correctly rejecting) the primary write buttons in
+    the CRM UI from the VIEWER role. See `docs/CHANGELOG.md`.
 
 ## Deliberately not built yet
 
 See `docs/SECURITY.md` "Known gaps" and `docs/INTEGRATIONS.md` for the specifics. In priority
 order for a next pass:
 
-1. **Hide (not just correctly reject) write actions from the VIEWER role in the CRM UI** — a
-   UX polish pass using the already-safe client-side `can(role, permission)` check.
-2. **Team management UI** — `users.write` exists in the permission matrix and is enforced
-   nowhere yet because there's no UI to invite/edit teammates or change roles. Settings → Team
-   is currently a "Coming Soon" placeholder.
-3. **Product catalogue management UI** — same story for `settings.write`; quick items, quick
-   prices, and packages are seeded/edited by hand today, not through Settings → Catalogue.
-4. **Real WhatsApp Cloud API / email sending** — see `docs/INTEGRATIONS.md`.
-5. **A real `prisma migrate` history on Postgres**, replacing the `prisma db push` schema-sync
+1. **Real WhatsApp Cloud API / email sending** — see `docs/INTEGRATIONS.md`. Also blocks a real
+   invite-by-email flow for Team management, which currently hands back a one-time temporary
+   password instead.
+2. **A real `prisma migrate` history on Postgres**, replacing the `prisma db push` schema-sync
    still in use — the provider itself moved to Postgres already (required for the first Vercel
    deploy, since SQLite cannot run there), but migrations, not just the provider, should be
    real and reviewable before this holds data worth protecting (see `docs/DATABASE.md`).
-6. **Money as integer minor-units or `Decimal`** instead of `Float`, before transaction volume
+3. **Money as integer minor-units or `Decimal`** instead of `Float`, before transaction volume
    makes floating-point drift a real (rather than theoretical) concern.
-7. **Refunds** — `PaymentProvider.refund()` exists in the interface and both providers
+4. **Refunds** — `PaymentProvider.refund()` exists in the interface and both providers
    implement it, but there's no UI action that calls it yet.
-8. **`eslint.config.mjs` predates a version mismatch** — the installed `eslint-config-next`
+5. **`eslint.config.mjs` predates a version mismatch** — the installed `eslint-config-next`
    (15.5.18) ships its `core-web-vitals`/`typescript` entrypoints in the legacy `extends: [...]`
    shape, not a flat-config array, so `npx eslint .` errors either way (module-path mismatch as
    currently committed, or a `not iterable` crash if the import path is "corrected" to

@@ -32,12 +32,14 @@ export function PipelineView({
   products,
   currentUserId,
   openCreateOnLoad,
+  canCreate,
 }: {
   initialDeals: DealWithRelations[];
   users: User[];
   products: Product[];
   currentUserId: string;
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const router = useRouter();
   const [deals, setDeals] = useState(initialDeals);
@@ -100,9 +102,11 @@ export function PipelineView({
                 );
               })}
             </div>
-            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-              <Plus className="w-4 h-4" /> New Deal
-            </Button>
+            {canCreate && (
+              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+                <Plus className="w-4 h-4" /> New Deal
+              </Button>
+            )}
           </>
         }
       />

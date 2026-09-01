@@ -31,12 +31,13 @@ const VIEWS: { key: ViewKey; label: string }[] = [
 const PRIORITY_TONE: Record<string, "danger" | "warning" | "neutral"> = { HIGH: "danger", MEDIUM: "warning", LOW: "neutral" };
 
 export function TasksView({
-  initialTasks, users, currentUserId, openCreateOnLoad,
+  initialTasks, users, currentUserId, openCreateOnLoad, canCreate,
 }: {
   initialTasks: TaskWithRelations[];
   users: User[];
   currentUserId: string;
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [view, setView] = useState<ViewKey>("today");
@@ -89,9 +90,11 @@ export function TasksView({
         title="Tasks"
         subtitle={`${tasks.length} open`}
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> New Task
-          </Button>
+          canCreate && (
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> New Task
+            </Button>
+          )
         }
       />
 

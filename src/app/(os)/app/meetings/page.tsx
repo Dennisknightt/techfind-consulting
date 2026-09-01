@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { MeetingsView } from "@/components/os/meetings/MeetingsView";
 
@@ -10,8 +11,9 @@ export default async function MeetingsPage({
 }: {
   searchParams: Promise<{ new?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { new: openCreate } = await searchParams;
+  const canCreate = can(user.role, "meetings.write");
 
   const [meetings, products] = await Promise.all([
     db.meeting.findMany({
@@ -23,5 +25,12 @@ export default async function MeetingsPage({
     db.product.findMany({ where: { isQuickChip: true, active: true }, orderBy: { sortOrder: "asc" } }),
   ]);
 
-  return <MeetingsView initialMeetings={meetings} products={products} openCreateOnLoad={openCreate === "1"} />;
+  return (
+    <MeetingsView
+      initialMeetings={meetings}
+      products={products}
+      openCreateOnLoad={openCreate === "1" && canCreate}
+      canCreate={canCreate}
+    />
+  );
 }
