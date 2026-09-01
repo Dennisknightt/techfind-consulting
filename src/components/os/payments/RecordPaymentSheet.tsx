@@ -9,7 +9,7 @@ import { Button } from "@/components/os/ui/Button";
 import { Input, Label, Textarea } from "@/components/os/ui/Input";
 import { CompanyPicker } from "@/components/os/common/CompanyPicker";
 import { formatKES } from "@/lib/os/money";
-import { parseMpesaMessage, looksLikeMpesaMessage } from "@/lib/os/mpesaParse";
+import { parsePaymentMessage, looksLikePaymentMessage } from "@/lib/os/paymentSmsParse";
 import { recordManualPaymentAction, getOutstandingDocumentsAction, type ManualPaymentInput } from "@/server/actions/payments";
 import type { Payment } from "@prisma/client";
 
@@ -55,15 +55,16 @@ export function RecordPaymentSheet({ open, onOpenChange, onRecorded }: {
 
   function parseMessage() {
     if (!rawMessage.trim()) return;
-    const result = parseMpesaMessage(rawMessage);
+    const result = parsePaymentMessage(rawMessage);
     if (result.amount) setAmount(String(result.amount));
     if (result.transactionCode) setTransactionCode(result.transactionCode);
     if (result.payerName) setPayerName(result.payerName);
     if (result.payerPhone) setPayerPhone(result.payerPhone);
     if (result.paidAt) setPaidAt(toDateInputValue(result.paidAt));
-    setMethod("MPESA");
+    if (result.source === "MPESA") setMethod("MPESA");
+    else if (result.source === "EQUITY") setMethod("BANK");
     setParsed(true);
-    if (!looksLikeMpesaMessage(rawMessage)) {
+    if (!looksLikePaymentMessage(rawMessage)) {
       toast.info("Didn't fully recognize that message — check the fields below");
     } else if (!result.amount) {
       toast.info("Couldn't find an amount — fill it in below");
@@ -116,12 +117,12 @@ export function RecordPaymentSheet({ open, onOpenChange, onRecorded }: {
         <SheetHeader><SheetTitle>Record Payment</SheetTitle></SheetHeader>
         <SheetBody className="space-y-5">
           <div>
-            <Label>Paste the M-Pesa message (optional)</Label>
+            <Label>Paste the payment SMS (optional)</Label>
             <Textarea
               value={rawMessage}
               onChange={e => { setRawMessage(e.target.value); setParsed(false); }}
               rows={3}
-              placeholder="RJ61ABC2D3 Confirmed. You have received Ksh1,500.00 from JOHN KAMAU 254712345678 on 1/9/26 at 2:45 PM…"
+              placeholder="M-Pesa: RJ61ABC2D3 Confirmed. You have received Ksh1,500.00 from JOHN KAMAU 254712345678 on 1/9/26 at 2:45 PM…&#10;Equity: You have received 27000.00 KES from BEST BUDGET ICT SOLUTIONS… Ref. AD01C46BF3866 on 01 Sep 2026 at 09:01 EAT"
               className="mt-1.5"
             />
             <Button

@@ -202,7 +202,7 @@ export interface ManualPaymentInput {
 
 /**
  * Records a payment Techfind received outside the automated gateway flow —
- * most often an M-Pesa SMS pasted and parsed (see mpesaParse.ts), but also
+ * most often an M-Pesa or Equity SMS pasted and parsed (see paymentSmsParse.ts), but also
  * a bank transfer or cash handed over in person. When linked to an invoice
  * it goes through the exact same applySuccessfulPayment logic a
  * provider-confirmed payment does (balance, deal WON, project handoff,
