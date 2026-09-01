@@ -1,14 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import type { Payment, Company, SalesDocument, Receipt } from "@prisma/client";
-import { CreditCard, Download } from "lucide-react";
+import { CreditCard, Download, Plus } from "lucide-react";
 import { motion } from "framer-motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
+import { Button } from "@/components/os/ui/Button";
 import { Badge } from "@/components/os/ui/Badge";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate } from "@/lib/os/dates";
 import { fadeInUp } from "@/lib/os/motion";
+import { RecordPaymentSheet } from "./RecordPaymentSheet";
 
 type PaymentRow = Payment & { company: Company | null; document: SalesDocument | null; receipt: Receipt | null };
 
@@ -18,12 +22,29 @@ const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" |
   REFUNDED: "warning", PARTIALLY_REFUNDED: "warning", NEEDS_MATCHING: "warning",
 };
 
-export function PaymentsList({ payments }: { payments: PaymentRow[] }) {
+export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; canRecord: boolean }) {
+  const router = useRouter();
+  const [recordOpen, setRecordOpen] = useState(false);
   const received = payments.filter(p => p.status === "SUCCESSFUL").reduce((s, p) => s + p.amount, 0);
+
+  function onRecorded() {
+    setRecordOpen(false);
+    router.refresh();
+  }
 
   return (
     <div className="p-6 lg:p-8">
-      <PageHeader title="Payments" subtitle={`${payments.length} transactions · ${formatKES(received, { compact: true })} received`} />
+      <PageHeader
+        title="Payments"
+        subtitle={`${payments.length} transactions · ${formatKES(received, { compact: true })} received`}
+        actions={
+          canRecord ? (
+            <Button size="sm" onClick={() => setRecordOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> Record Payment
+            </Button>
+          ) : undefined
+        }
+      />
 
       {payments.length === 0 ? (
         <div className="mt-10 text-center py-14 rounded-[var(--radius-lg)] border border-dashed" style={{ borderColor: "var(--border-strong)" }}>
@@ -75,6 +96,10 @@ export function PaymentsList({ payments }: { payments: PaymentRow[] }) {
             </motion.div>
           ))}
         </div>
+      )}
+
+      {canRecord && (
+        <RecordPaymentSheet open={recordOpen} onOpenChange={setRecordOpen} onRecorded={onRecorded} />
       )}
     </div>
   );
