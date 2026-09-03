@@ -75,6 +75,17 @@ rewrite every reference, `globals.css` defines these as aliases onto the canonic
 marketing palette — no new component should introduce fresh usage of the alias names; use the
 canonical ones above instead.
 
+## Sign-in screen
+
+`/login` is a split screen: a dark brand panel (`src/components/os/auth/AuthBrandPanel.tsx` —
+always `#0D0B15`, drifting fuchsia/indigo aurora, a faux "this month" pipeline card) beside the
+form (`src/components/os/auth/LoginForm.tsx`). The panel is pure server markup + the `auth-*`
+keyframes in `globals.css` — no Framer on this route, so it ships the smallest JS of any page.
+Below `lg` the panel is hidden and a compact wordmark sits above the form. Form field ids/names
+(`email`, `password`, `remember`, `next`) and the `primeSonicLogo()` submit hook are unchanged
+from the previous design. Direction came from the theme-factory skill's "Midnight Galaxy"
+preset (deep purple base, lavender/silver highlights), remapped onto the OS's own accent tokens.
+
 ## What's deliberately *not* here
 
 No Storybook, no component playground, no visual regression tooling — components are verified

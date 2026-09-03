@@ -181,6 +181,49 @@ body {
   animation: os-shimmer 1.4s ease infinite;
 }
 
+/* ── Auth screens (login) ──────────────────────────────────────────
+   Brand-panel effects for the split-screen sign-in. Kept as plain CSS
+   (no Framer) so the login route ships the smallest possible JS. */
+@keyframes auth-aurora-drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  33%      { transform: translate3d(6%, -8%, 0) scale(1.08); }
+  66%      { transform: translate3d(-5%, 6%, 0) scale(0.94); }
+}
+@keyframes auth-rise {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes auth-pulse-dot {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(232, 121, 249, 0.55); }
+  70%      { box-shadow: 0 0 0 10px rgba(232, 121, 249, 0); }
+}
+.auth-aurora {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  pointer-events: none;
+  will-change: transform;
+  animation: auth-aurora-drift 18s ease-in-out infinite;
+}
+.auth-aurora-2 { animation-duration: 24s; animation-direction: reverse; }
+.auth-grid {
+  background-image:
+    linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  -webkit-mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+}
+.auth-rise { animation: auth-rise 0.6s cubic-bezier(0.22, 1, 0.36, 1) both; }
+.auth-rise-1 { animation-delay: 0.05s; }
+.auth-rise-2 { animation-delay: 0.15s; }
+.auth-rise-3 { animation-delay: 0.25s; }
+.auth-rise-4 { animation-delay: 0.35s; }
+.auth-live-dot { animation: auth-pulse-dot 2.2s ease-out infinite; }
+@media (prefers-reduced-motion: reduce) {
+  .auth-aurora, .auth-rise, .auth-live-dot { animation: none; }
+}
+
 /* Slide-over sheet transitions (Radix data-state driven) */
 .os-sheet-slide { transition: transform 0.28s cubic-bezier(0.32, 0.72, 0, 1); }
 .os-sheet-slide[data-side="right"] { transform: translateX(0); }
