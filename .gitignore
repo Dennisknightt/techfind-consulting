@@ -56,3 +56,5 @@ next-env.d.ts
 # agent scratch (playwright smoke-test scripts, screenshots)
 .tmp-shot/
 
+# Playwright CLI output (may contain credentials)
+.playwright-cli/
