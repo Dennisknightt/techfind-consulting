@@ -77,14 +77,24 @@ canonical ones above instead.
 
 ## Sign-in screen
 
-`/login` is a split screen: a dark brand panel (`src/components/os/auth/AuthBrandPanel.tsx` —
-always `#0D0B15`, drifting fuchsia/indigo aurora, a faux "this month" pipeline card) beside the
-form (`src/components/os/auth/LoginForm.tsx`). The panel is pure server markup + the `auth-*`
-keyframes in `globals.css` — no Framer on this route, so it ships the smallest JS of any page.
-Below `lg` the panel is hidden and a compact wordmark sits above the form. Form field ids/names
-(`email`, `password`, `remember`, `next`) and the `primeSonicLogo()` submit hook are unchanged
-from the previous design. Direction came from the theme-factory skill's "Midnight Galaxy"
-preset (deep purple base, lavender/silver highlights), remapped onto the OS's own accent tokens.
+`/login` is one centered card on an ambient canvas, one decision at a time — modelled on
+Airbnb's sign-in rather than the split-screen-with-marketing-panel pattern (a first pass used
+that and was rejected as "every other login page"). `src/components/os/auth/LoginForm.tsx`:
+
+- **Stepped**: email → *Continue* → password. The email step is client-only (format check,
+  shake on invalid, Enter advances); the password step shows the email as an editable chip
+  with an avatar initial, a show/hide toggle, a live Caps-Lock hint, and the inline error. A
+  server-side error (wrong password) lands back on the password step. Both inputs live in one
+  `<form>` so `loginAction` still receives the full payload — *Continue* is `type="button"` on
+  purpose, so `button[type="submit"]` only ever matches *Sign in*.
+- **Canvas** (`login/page.tsx`): `.auth-canvas` mesh + two drifting `.auth-blob`s, all reading
+  `--accent`/`--accent-2` so it's on-brand without hardcoded color; `.auth-halo` is a slow
+  conic arc hugging the card edge (the gradient *angle* is animated via `@property`, never the
+  element — rotating the element swings its corners outside the rounded card).
+- **Fields** are `.auth-field` floating-label groups (label sits inside, lifts on focus/fill).
+  All of it is CSS keyframes in `(os)/globals.css`; the route ships no animation JS.
+- Field ids/names (`email`, `password`, `remember`, `next`) and the `primeSonicLogo()` submit
+  hook are unchanged from the original form.
 
 ## What's deliberately *not* here
 
