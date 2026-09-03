@@ -4,13 +4,18 @@ import type { LucideIcon } from "lucide-react";
 export const CHANNELS = ["WHATSAPP", "EMAIL", "WEBSITE", "CALL", "META", "TIKTOK", "REFERRAL", "NOTE"] as const;
 export type Channel = (typeof CHANNELS)[number];
 
+// Colors are theme tokens, not raw hex — several of these are near-black or
+// near-white in one theme's palette (TikTok's brand mark especially), so a
+// fixed hex reads fine in light mode and disappears entirely against a dark
+// surface. Tying each to the matching CSS var keeps the same look today and
+// stays legible once dark mode is toggled on.
 export const CHANNEL_META: Record<Channel, { label: string; icon: LucideIcon; color: string }> = {
-  WHATSAPP: { label: "WhatsApp", icon: MessageCircle, color: "#0F9D63" },
-  EMAIL: { label: "Email", icon: Mail, color: "#2563EB" },
-  WEBSITE: { label: "Website", icon: Globe, color: "#0891B2" },
-  CALL: { label: "Call", icon: Phone, color: "#7C3AED" },
-  META: { label: "Meta", icon: Facebook, color: "#1D4ED8" },
-  TIKTOK: { label: "TikTok", icon: Music2, color: "#111827" },
-  REFERRAL: { label: "Referral", icon: Share2, color: "#D97706" },
-  NOTE: { label: "Note", icon: StickyNote, color: "#64748B" },
+  WHATSAPP: { label: "WhatsApp", icon: MessageCircle, color: "var(--success)" },
+  EMAIL: { label: "Email", icon: Mail, color: "var(--accent-2)" },
+  WEBSITE: { label: "Website", icon: Globe, color: "var(--info)" },
+  CALL: { label: "Call", icon: Phone, color: "var(--accent)" },
+  META: { label: "Meta", icon: Facebook, color: "var(--accent-2)" },
+  TIKTOK: { label: "TikTok", icon: Music2, color: "var(--text)" },
+  REFERRAL: { label: "Referral", icon: Share2, color: "var(--warning)" },
+  NOTE: { label: "Note", icon: StickyNote, color: "var(--cold)" },
 };

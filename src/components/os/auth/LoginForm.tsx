@@ -1,9 +1,8 @@
 "use client";
 
 import { useActionState } from "react";
-import { Eye, EyeOff, Zap } from "lucide-react";
+import { Eye, EyeOff } from "lucide-react";
 import { useState } from "react";
-import Link from "next/link";
 import { loginAction, type LoginState } from "@/server/actions/auth";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
@@ -18,12 +17,12 @@ export function LoginForm() {
   return (
     <div className="w-full max-w-sm">
       <div className="flex flex-col items-center mb-9 text-center">
-        <div
-          className="w-12 h-12 rounded-[14px] flex items-center justify-center mb-4"
-          style={{ background: "linear-gradient(135deg, var(--accent), var(--accent-2))", boxShadow: "var(--shadow-glow)" }}
-        >
-          <Zap className="w-6 h-6 text-white" />
-        </div>
+        <img
+          src="/os-icons/icon-256.png"
+          alt="Techfind"
+          className="w-12 h-12 rounded-[14px] mb-4"
+          style={{ boxShadow: "var(--shadow-glow)" }}
+        />
         <h1 className="text-2xl font-bold tracking-tight text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>
           TECHFIND
         </h1>
@@ -70,14 +69,11 @@ export function LoginForm() {
           </p>
         )}
 
-        <div className="flex items-center justify-between pt-1">
+        <div className="pt-1">
           <label className="flex items-center gap-2 text-xs text-[var(--text-muted)] cursor-pointer">
             <input type="checkbox" name="remember" defaultChecked className="rounded accent-[var(--accent)]" />
             Remember Me
           </label>
-          <Link href="#" className="text-xs font-medium" style={{ color: "var(--accent)" }}>
-            Forgot Password
-          </Link>
         </div>
 
         <Button type="submit" size="lg" loading={pending} className="w-full mt-2">

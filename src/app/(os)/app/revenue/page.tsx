@@ -4,6 +4,8 @@ import { requireUser } from "@/server/auth/guard";
 import { db } from "@/server/db";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Badge } from "@/components/os/ui/Badge";
+import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
+import { OutstandingClientsCallout } from "@/components/os/payments/OutstandingClientsCallout";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, dayjs } from "@/lib/os/dates";
 
@@ -14,9 +16,11 @@ export default async function RevenuePage() {
   const now = dayjs();
   const startOfDay = now.startOf("day").toDate();
   const endOfDay = now.endOf("day").toDate();
+  const startOfMonth = now.startOf("month").toDate();
 
-  const [receivedToday, receivedTotal, awaiting, overdue, recentPayments, footprint] = await Promise.all([
+  const [receivedToday, receivedThisMonth, receivedTotal, awaiting, overdue, recentPayments, footprint] = await Promise.all([
     db.payment.aggregate({ _sum: { amount: true }, where: { status: "SUCCESSFUL", paidAt: { gte: startOfDay, lte: endOfDay } } }),
+    db.payment.aggregate({ _sum: { amount: true }, where: { status: "SUCCESSFUL", paidAt: { gte: startOfMonth } } }),
     db.payment.aggregate({ _sum: { amount: true }, where: { status: "SUCCESSFUL" } }),
     db.salesDocument.findMany({
       where: { type: "PROFORMA", status: { in: ["SENT", "VIEWED", "PARTIALLY_PAID"] }, balance: { gt: 0 }, OR: [{ validUntil: null }, { validUntil: { gte: now.toDate() } }] },
@@ -34,23 +38,29 @@ export default async function RevenuePage() {
     db.productFootprint.findMany({ where: { status: "ACTIVE", mrr: { gt: 0 } }, include: { company: true, product: true } }),
   ]);
 
-  const expected = [...awaiting, ...overdue].reduce((s, d) => s + d.balance, 0);
+  const outstandingDocs = [...overdue, ...awaiting];
+  const expected = outstandingDocs.reduce((s, d) => s + d.balance, 0);
   const recurringTotal = footprint.reduce((s, f) => s + (f.mrr ?? 0), 0);
 
   return (
     <div className="p-6 lg:p-8 max-w-4xl">
-      <PageHeader title="Revenue" subtitle="What's expected, what's received, what's outstanding — today" />
+      <PageHeader title="Money" subtitle="Who owes us, how much, and whether I can ask them right now" />
 
-      <div className="grid grid-cols-3 gap-3 mt-6">
-        <Stat label="Received Today" value={formatKES(receivedToday._sum.amount ?? 0, { compact: true })} tone="success" />
-        <Stat label="Expected" value={formatKES(expected, { compact: true })} tone="warning" />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+        <Stat label="Today" value={formatKES(receivedToday._sum.amount ?? 0, { compact: true })} tone="success" />
+        <Stat label="This Month" value={formatKES(receivedThisMonth._sum.amount ?? 0, { compact: true })} tone="success" />
+        <Stat label="Awaiting Payment" value={formatKES(expected, { compact: true })} tone="warning" />
         <Stat label="Received (All Time)" value={formatKES(receivedTotal._sum.amount ?? 0, { compact: true })} />
       </div>
+
+      <OutstandingClientsCallout
+        docs={outstandingDocs.map(d => ({ id: d.id, number: d.number, balance: d.balance, paidAmount: d.paidAmount, companyName: d.company.name }))}
+      />
 
       {overdue.length > 0 && (
         <Section title="Overdue" tone="danger">
           {overdue.map(d => (
-            <DocRow key={d.id} doc={d} action="WhatsApp Reminder" />
+            <DocRow key={d.id} doc={d} overdue />
           ))}
         </Section>
       )}
@@ -117,17 +127,19 @@ function Empty({ text }: { text: string }) {
   return <p className="text-xs text-[var(--text-faint)] px-1">{text}</p>;
 }
 
-function DocRow({ doc, action }: { doc: { id: string; number: string; balance: number; validUntil: Date | null; company: { id: string; name: string } }; action?: string }) {
+function DocRow({ doc, overdue }: { doc: { id: string; number: string; balance: number; paidAmount: number; validUntil: Date | null; company: { id: string; name: string } }; overdue?: boolean }) {
   return (
-    <Link href={`/app/quotes/${doc.id}`} className="flex items-center justify-between gap-3 px-4 py-3 rounded-[var(--radius-lg)] hover:bg-[var(--surface-hover)] transition-colors flex-wrap" style={{ border: "1px solid var(--border)" }}>
-      <div>
+    <div className="relative flex items-center justify-between gap-3 px-4 py-3 rounded-[var(--radius-lg)] flex-wrap" style={{ border: "1px solid var(--border)" }}>
+      <Link href={`/app/quotes/${doc.id}`} className="absolute inset-0 rounded-[var(--radius-lg)] hover:bg-[var(--surface-hover)] transition-colors" aria-label={`Open ${doc.number}`} />
+      <div className="relative">
         <p className="text-sm font-medium text-[var(--text)]">{doc.company.name}</p>
         <p className="text-xs text-[var(--text-faint)]">{doc.number}{doc.validUntil ? ` · Due ${friendlyDate(doc.validUntil)}` : ""}</p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="relative z-10 flex items-center gap-2">
         <span className="text-sm font-bold" style={{ color: "var(--text)" }}>{formatKES(doc.balance, { compact: true })}</span>
-        {action && <Badge tone="danger">{action}</Badge>}
+        {overdue && <Badge tone="danger">Overdue</Badge>}
+        <RequestPaymentButton documentId={doc.id} label={doc.paidAmount > 0 ? "Balance" : "Request"} size="sm" variant="secondary" />
       </div>
-    </Link>
+    </div>
   );
 }

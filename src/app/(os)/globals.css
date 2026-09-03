@@ -2,99 +2,112 @@
 
 /* ─────────────────────────────────────────────
    TECHFIND REVENUE OS — design tokens
-   Shares the public site's brand palette (violet/blue,
-   Geist + DM Sans + Outfit) for a recognizable identity,
-   extended with the semantic + product tokens an operating
+   "Ledger" — warm editorial. Serif headlines (Source
+   Serif 4) over a grotesk body (Manrope), paper/cream
+   surfaces, forest-green primary + terracotta secondary
+   accents. Premium, boutique-agency feel over the usual
+   SaaS violet/blue.
+   Extended with the semantic + product tokens an operating
    system needs: status colors, temperature, safe-areas.
    See /docs/DESIGN_SYSTEM.md
 ───────────────────────────────────────────── */
 @custom-variant dark (&:where(.dark, .dark *));
 
 :root {
-  --bg:            #F7F8FA;
-  --surface:       #FFFFFF;
-  --surface-hover: #F1F3F7;
-  --surface-sunken: #EEF0F4;
-  --border:        rgba(15, 23, 42, 0.09);
-  --border-strong: rgba(15, 23, 42, 0.16);
-  --text:          #0B0F19;
-  --text-muted:    #5B6472;
-  --text-faint:    #94A0B2;
+  /* A warm, paper-toned scale — hierarchy comes from a hairline border and
+     a faint cream/paper step, not a cold gray ramp. */
+  --bg:            #F7F3EC;
+  --surface:       #FFFDF9;
+  --surface-hover: #F1EADD;
+  --surface-sunken: #EFE7D8;
+  --border:        #E4DCCB;
+  --border-strong: #D3C7AE;
+  --text:          #241F1A;
+  --text-muted:    #8A7F6B;
+  --text-faint:    #B0A489;
 
-  --accent:        #6D28D9;
-  --accent-hover:  #5B21B6;
-  --accent-soft:   rgba(109, 40, 217, 0.10);
-  --accent-2:      #2563EB;
-  --accent-2-soft: rgba(37, 99, 235, 0.10);
+  --accent:        #2F4A3E;
+  --accent-hover:  #1F332A;
+  --accent-soft:   rgba(47, 74, 62, 0.10);
+  --accent-2:      #B4592E;
+  --accent-2-soft: rgba(180, 89, 46, 0.10);
 
-  --success:       #0F9D63;
-  --success-soft:  rgba(15, 157, 99, 0.10);
-  --warning:       #D97706;
-  --warning-soft:  rgba(217, 119, 6, 0.10);
-  --danger:        #DC2626;
-  --danger-soft:   rgba(220, 38, 38, 0.10);
-  --info:          #0891B2;
-  --info-soft:     rgba(8, 145, 178, 0.10);
+  --success:       #2F7D5A;
+  --success-soft:  rgba(47, 125, 90, 0.10);
+  --warning:       #B4802E;
+  --warning-soft:  rgba(180, 128, 46, 0.10);
+  --danger:        #B23A2E;
+  --danger-soft:   rgba(178, 58, 46, 0.10);
+  --info:          #2E6E8A;
+  --info-soft:     rgba(46, 110, 138, 0.10);
 
-  --hot:           #DC2626;
-  --warm:          #D97706;
-  --cold:          #64748B;
+  --hot:           #B4592E;
+  --warm:          #B4802E;
+  --cold:          #8A7F6B;
 
-  --sidebar-bg:    #FFFFFF;
-  --topbar-bg:     rgba(247, 248, 250, 0.85);
+  --sidebar-bg:    #FFFDF9;
+  --topbar-bg:     rgba(255, 253, 249, 0.9);
 
-  --shadow-xs:     0 1px 2px rgba(15, 23, 42, 0.05);
-  --shadow-sm:     0 1px 3px rgba(15, 23, 42, 0.07), 0 1px 2px rgba(15, 23, 42, 0.04);
-  --shadow-md:     0 8px 24px rgba(15, 23, 42, 0.08);
-  --shadow-lg:     0 16px 48px rgba(15, 23, 42, 0.14);
-  --shadow-glow:   0 8px 32px rgba(109, 40, 217, 0.20);
+  --shadow-xs:     0 1px 2px rgba(36, 31, 26, 0.05);
+  --shadow-sm:     0 1px 3px rgba(36, 31, 26, 0.08), 0 1px 2px rgba(36, 31, 26, 0.05);
+  --shadow-md:     0 8px 24px rgba(36, 31, 26, 0.08);
+  --shadow-lg:     0 16px 48px rgba(36, 31, 26, 0.14);
+  --shadow-glow:   0 8px 32px rgba(47, 74, 62, 0.20);
 
-  --radius-sm:  0.5rem;
-  --radius-md:  0.75rem;
-  --radius-lg:  1rem;
-  --radius-xl:  1.25rem;
+  /* Tight, quiet radii — a workspace's chrome shouldn't announce itself. */
+  --radius-sm:  0.375rem;
+  --radius-md:  0.5rem;
+  --radius-lg:  0.625rem;
+  --radius-xl:  0.75rem;
+
+  /* Motion: consistent, fast, tasteful — never longer than 350ms. */
+  --duration-fast: 150ms;
+  --duration-base: 220ms;
+  --duration-slow: 320ms;
+  --ease-out:    cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
 
   color-scheme: light;
 }
 
 .dark {
-  --bg:            #0A0D14;
-  --surface:       #12161F;
-  --surface-hover: #191E29;
-  --surface-sunken: #0D111A;
-  --border:        rgba(255, 255, 255, 0.08);
-  --border-strong: rgba(255, 255, 255, 0.14);
-  --text:          #F5F6F8;
-  --text-muted:    #98A2B3;
-  --text-faint:    #667085;
+  --bg:            #17140F;
+  --surface:       #211D17;
+  --surface-hover: #2A251D;
+  --surface-sunken: #131110;
+  --border:        rgba(228, 220, 203, 0.10);
+  --border-strong: rgba(228, 220, 203, 0.18);
+  --text:          #F5EFE3;
+  --text-muted:    #B7AB92;
+  --text-faint:    #7D7360;
 
-  --accent:        #8B5CF6;
-  --accent-hover:  #7C3AED;
-  --accent-soft:   rgba(139, 92, 246, 0.16);
-  --accent-2:      #3B82F6;
-  --accent-2-soft: rgba(59, 130, 246, 0.14);
+  --accent:        #6FA383;
+  --accent-hover:  #83B394;
+  --accent-soft:   rgba(111, 163, 131, 0.16);
+  --accent-2:      #E08A5B;
+  --accent-2-soft: rgba(224, 138, 91, 0.16);
 
-  --success:       #22C55E;
-  --success-soft:  rgba(34, 197, 94, 0.14);
-  --warning:       #F59E0B;
-  --warning-soft:  rgba(245, 158, 11, 0.14);
-  --danger:        #F87171;
-  --danger-soft:   rgba(248, 113, 113, 0.14);
-  --info:          #22D3EE;
-  --info-soft:     rgba(34, 211, 238, 0.14);
+  --success:       #4FAF7C;
+  --success-soft:  rgba(79, 175, 124, 0.14);
+  --warning:       #E0A94A;
+  --warning-soft:  rgba(224, 169, 74, 0.14);
+  --danger:        #E07A63;
+  --danger-soft:   rgba(224, 122, 99, 0.14);
+  --info:          #5AA8C4;
+  --info-soft:     rgba(90, 168, 196, 0.14);
 
-  --hot:           #F87171;
-  --warm:          #F59E0B;
-  --cold:          #94A3B8;
+  --hot:           #E08A5B;
+  --warm:          #E0A94A;
+  --cold:          #9C917A;
 
-  --sidebar-bg:    #0D111A;
-  --topbar-bg:     rgba(10, 13, 20, 0.85);
+  --sidebar-bg:    #17140F;
+  --topbar-bg:     rgba(23, 20, 15, 0.9);
 
   --shadow-xs:     0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.35);
-  --shadow-md:     0 8px 24px rgba(0, 0, 0, 0.4);
-  --shadow-lg:     0 16px 48px rgba(0, 0, 0, 0.5);
-  --shadow-glow:   0 8px 32px rgba(139, 92, 246, 0.28);
+  --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.38);
+  --shadow-md:     0 8px 24px rgba(0, 0, 0, 0.42);
+  --shadow-lg:     0 16px 48px rgba(0, 0, 0, 0.55);
+  --shadow-glow:   0 8px 32px rgba(111, 163, 131, 0.24);
 
   color-scheme: dark;
 }
@@ -111,9 +124,9 @@
   --color-warning:        var(--warning);
   --color-danger:         var(--danger);
 
-  --font-sans:    var(--font-dm-sans);
-  --font-space:   var(--font-geist);
-  --font-display: var(--font-outfit);
+  --font-sans:    var(--font-manrope);
+  --font-space:   var(--font-source-serif);
+  --font-display: var(--font-source-serif);
 }
 
 * { border-color: var(--border); }
@@ -163,3 +176,100 @@ body {
 .os-sheet-slide[data-side="right"][data-state="closed"] { transform: translateX(100%); }
 .os-sheet-slide[data-side="bottom"] { transform: translateY(0); }
 .os-sheet-slide[data-side="bottom"][data-state="closed"] { transform: translateY(100%); }
+
+/* ─────────────────────────────────────────────
+   Typography scale — CEO-legible, confident at a
+   glance. Headlines and money/counts use font-space
+   (the serif) with tabular-nums so digits don't jitter
+   as they change. clamp() keeps hero numbers from
+   overwhelming small screens while staying big on desktop.
+───────────────────────────────────────────── */
+.os-text-hero {
+  font-family: var(--font-space);
+  font-weight: 700;
+  font-size: clamp(2.5rem, 2rem + 2vw, 4rem); /* 40–64px */
+  line-height: 1.05;
+  letter-spacing: -0.01em;
+  font-variant-numeric: tabular-nums;
+}
+.os-heading-page {
+  font-family: var(--font-space);
+  font-weight: 700;
+  font-size: clamp(1.75rem, 1.5rem + 1vw, 2.25rem); /* 28–36px */
+  line-height: 1.15;
+  letter-spacing: -0.005em;
+}
+/* List/workspace page titles ("Leads", "Pipeline") — quiet and editorial,
+   never competing with the data below them. */
+.os-heading-list {
+  font-family: var(--font-space);
+  font-weight: 600;
+  font-size: 1.25rem; /* 20px */
+  line-height: 1.3;
+}
+.os-heading-section {
+  font-family: var(--font-space);
+  font-weight: 600;
+  font-size: clamp(1.125rem, 1.05rem + 0.3vw, 1.375rem); /* 18–22px */
+  line-height: 1.3;
+}
+.os-text-body {
+  font-size: 0.875rem; /* 14px */
+  line-height: 1.5;
+}
+.os-text-meta {
+  font-size: 0.8125rem; /* 13px */
+  line-height: 1.4;
+  color: var(--text-muted);
+}
+.os-text-number {
+  font-family: var(--font-space);
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+/* ─────────────────────────────────────────────
+   Interaction feel — the small physical touches
+   (lift, press, settle) that make the UI feel alive
+   without calling attention to themselves.
+───────────────────────────────────────────── */
+/* Restrained — a border darken and the faintest lift, never a jump. This
+   is the one hover treatment for anything card-shaped (Home's attention
+   list, quick-action tiles, pipeline cards). */
+.os-card-hover {
+  transition: border-color var(--duration-base) var(--ease-out),
+              box-shadow var(--duration-base) var(--ease-out);
+}
+.os-card-hover:hover {
+  box-shadow: var(--shadow-xs);
+  border-color: var(--border-strong);
+}
+/* For dense list/table rows — background tint only, no border or shadow
+   change, so a long list of rows stays visually flat and fast to scan. */
+.os-row-hover {
+  transition: background-color var(--duration-fast) var(--ease-out);
+}
+.os-row-hover:hover {
+  background: var(--surface-hover);
+}
+.os-press {
+  transition: transform var(--duration-fast) var(--ease-out);
+}
+.os-press:active {
+  transform: scale(0.97);
+}
+@media (prefers-reduced-motion: reduce) {
+  .os-card-hover, .os-row-hover, .os-press, .os-animate-in, .os-sheet-slide {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Visible keyboard focus everywhere — several Radix-based primitives
+   (Tabs, Switch, Select/DropdownMenu items) intentionally suppress the
+   native outline to avoid a mouse-click ring, but that must never come at
+   the cost of a keyboard user losing focus visibility entirely. */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}

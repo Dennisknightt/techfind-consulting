@@ -4,14 +4,17 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Company } from "@prisma/client";
 import { Plus, Search, Building2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label } from "@/components/os/ui/Input";
 import { CompanyAvatar } from "@/components/os/ui/Avatar";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } from "@/components/os/ui/Sheet";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 import { formatKES } from "@/lib/os/money";
 import { createClientAction } from "@/server/actions/clients";
+import { fadeInUp } from "@/lib/os/motion";
 
 type CompanyWithCounts = Company & { _count: { deals: number }; deals: { value: number }[] };
 
@@ -56,28 +59,47 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
           <p className="text-sm font-semibold text-[var(--text)]">No clients yet</p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mt-5">
-          {filtered.map(c => {
+        <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "1fr 110px 140px 120px", borderColor: "var(--border)" }}>
+            {["Company", "Status", "Opportunities", "Lifetime value"].map(h => (
+              <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
+            ))}
+          </div>
+          {filtered.map((c, i) => {
             const lifetimeValue = c.deals.reduce((s, d) => s + d.value, 0);
             return (
-              <button
+              <motion.div
                 key={c.id}
-                onClick={() => router.push(`/app/clients/${c.id}`)}
-                className="text-left rounded-[var(--radius-lg)] p-4 transition-shadow hover:shadow-[var(--shadow-sm)]"
-                style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+                {...fadeInUp}
+                className="os-row-hover relative grid grid-cols-1 sm:grid-cols-[1fr_110px_140px_120px] items-center gap-3 px-4 py-2.5"
+                style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
               >
-                <div className="flex items-center gap-3 mb-3">
-                  <CompanyAvatar name={c.name} size={38} />
+                <button
+                  onClick={() => router.push(`/app/clients/${c.id}`)}
+                  className="absolute inset-0 text-left"
+                  aria-label={`Open ${c.name}`}
+                />
+                <div className="relative flex items-center gap-2.5 min-w-0 pointer-events-none">
+                  <CompanyAvatar name={c.name} size={28} />
                   <div className="min-w-0">
-                    <p className="text-sm font-semibold text-[var(--text)] truncate">{c.name}</p>
-                    <p className="text-xs text-[var(--text-faint)] truncate">{c.industry ?? "—"}</p>
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{c.name}</p>
+                    <p className="os-text-meta truncate">
+                      {c.industry ?? "—"}
+                      <span className="sm:hidden">
+                        {" "}· {c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}
+                        {lifetimeValue > 0 && <> · {formatKES(lifetimeValue, { compact: true })}</>}
+                      </span>
+                    </p>
                   </div>
                 </div>
-                <div className="flex items-center justify-between text-xs">
-                  <span className="text-[var(--text-faint)]">{c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}</span>
-                  {lifetimeValue > 0 && <span className="font-bold" style={{ color: "var(--accent)" }}>{formatKES(lifetimeValue, { compact: true })}</span>}
+                <div className="relative z-10 pointer-events-auto sm:block">
+                  <ClientStatusBadge companyId={c.id} status={c.status} />
                 </div>
-              </button>
+                <span className="relative hidden sm:block os-text-meta pointer-events-none">{c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}</span>
+                <span className="relative hidden sm:block os-text-number text-sm pointer-events-none" style={{ color: "var(--text)" }}>
+                  {lifetimeValue > 0 ? formatKES(lifetimeValue, { compact: true }) : "—"}
+                </span>
+              </motion.div>
             );
           })}
         </div>

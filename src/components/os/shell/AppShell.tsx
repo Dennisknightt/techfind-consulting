@@ -4,6 +4,7 @@ import { Sidebar } from "./Sidebar";
 import { Topbar } from "./Topbar";
 import { MobileNav } from "./MobileNav";
 import { CommandPalette } from "./CommandPalette";
+import { GlobalShortcuts } from "./GlobalShortcuts";
 import type { SessionUser } from "@/server/auth/session";
 
 export function AppShell({ user, unreadCount, children }: { user: SessionUser; unreadCount: number; children: React.ReactNode }) {
@@ -16,6 +17,7 @@ export function AppShell({ user, unreadCount, children }: { user: SessionUser; u
       </div>
       <MobileNav />
       <CommandPalette />
+      <GlobalShortcuts />
     </div>
   );
 }

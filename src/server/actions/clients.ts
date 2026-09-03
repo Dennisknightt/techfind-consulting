@@ -93,7 +93,7 @@ export async function searchCompaniesAction(query: string) {
     return db.company.findMany({ orderBy: { createdAt: "desc" }, take: 8 });
   }
   return db.company.findMany({
-    where: { OR: [{ name: { contains: q } }, { phone: { contains: q } }, { email: { contains: q } }] },
+    where: { OR: [{ name: { contains: q, mode: "insensitive" } }, { phone: { contains: q } }, { email: { contains: q, mode: "insensitive" } }] },
     take: 8,
   });
 }
@@ -121,4 +121,56 @@ export async function updateClientAction(id: string, patch: Partial<FullClientIn
   revalidatePath("/app/clients");
   revalidatePath(`/app/clients/${id}`);
   return company;
+}
+
+const CLIENT_STATUSES = ["COLD", "WARM", "PITCHED", "WON", "LOST", "CLOSED"] as const;
+export type ClientStatus = (typeof CLIENT_STATUSES)[number];
+
+export async function updateClientStatusAction(id: string, status: ClientStatus) {
+  const user = await requirePermission("clients.write");
+  if (!CLIENT_STATUSES.includes(status)) throw new Error("Invalid status");
+
+  const before = await db.company.findUnique({ where: { id } });
+  if (!before) throw new Error("Client not found");
+
+  const company = await db.company.update({ where: { id }, data: { status } });
+
+  await writeAudit({ actorId: user.id, action: "UPDATE_CLIENT_STATUS", entityType: "Company", entityId: id, before, after: company });
+  revalidatePath("/app/clients");
+  revalidatePath(`/app/clients/${id}`);
+  revalidatePath("/app");
+  return company;
+}
+
+const FOOTPRINT_STATUSES = ["NOT_PITCHED", "OPPORTUNITY", "ACTIVE"] as const;
+export type FootprintStatus = (typeof FOOTPRINT_STATUSES)[number];
+
+export async function updateFootprintStatusAction(companyId: string, productId: string, status: FootprintStatus) {
+  const user = await requirePermission("clients.write");
+  if (!FOOTPRINT_STATUSES.includes(status)) throw new Error("Invalid status");
+
+  const existing = await db.productFootprint.findUnique({ where: { companyId_productId: { companyId, productId } } });
+
+  const footprint = await db.productFootprint.upsert({
+    where: { companyId_productId: { companyId, productId } },
+    create: {
+      companyId,
+      productId,
+      status,
+      activatedAt: status === "ACTIVE" ? new Date() : null,
+    },
+    update: {
+      status,
+      // First transition into ACTIVE stamps activatedAt; later cycling away and back never overwrites it.
+      ...(status === "ACTIVE" && !existing?.activatedAt ? { activatedAt: new Date() } : {}),
+    },
+  });
+
+  await writeAudit({
+    actorId: user.id, action: "UPDATE_PRODUCT_FOOTPRINT", entityType: "ProductFootprint", entityId: footprint.id,
+    before: existing, after: footprint,
+  });
+  revalidatePath(`/app/clients/${companyId}`);
+  revalidatePath("/app/clients");
+  return footprint;
 }

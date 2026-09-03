@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Send, Download, Copy, ExternalLink, Building2 } from "lucide-react";
+import { Send, Download, Copy, ExternalLink, Building2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/os/ui/Button";
 import { Badge } from "@/components/os/ui/Badge";
@@ -10,6 +10,9 @@ import { formatKES } from "@/lib/os/money";
 import { friendlyDate } from "@/lib/os/dates";
 import { markDocumentSentAction } from "@/server/actions/documents";
 import type { getDocumentAction } from "@/server/actions/documents";
+import { waLink } from "@/lib/os/whatsapp";
+import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
+import { SendStkPushButton } from "@/components/os/payments/SendStkPushButton";
 
 type Doc = Awaited<ReturnType<typeof getDocumentAction>>;
 
@@ -18,10 +21,6 @@ const STATUS_TONE: Record<string, "neutral" | "accent" | "success" | "warning" |
   PARTIALLY_PAID: "warning", PAID: "success", EXPIRED: "danger", CANCELLED: "danger",
 };
 
-function waLink(phone: string, text: string) {
-  return `https://wa.me/${phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(text)}`;
-}
-
 export function DocumentDetail({ doc: initialDoc }: { doc: Doc }) {
   const [doc, setDoc] = useState(initialDoc);
   const [sending, setSending] = useState(false);
@@ -29,7 +28,7 @@ export function DocumentDetail({ doc: initialDoc }: { doc: Doc }) {
   const session = doc.paymentSessions[0];
   const paymentUrl = session ? `${baseUrl}/pay/${session.token}` : null;
   const pdfUrl = `/api/os/documents/${doc.id}/pdf`;
-  const docLabel = doc.type === "PROFORMA" ? "proforma" : "quote";
+  const docLabel = doc.type === "PROFORMA" ? "proforma" : doc.type === "INVOICE" ? "invoice" : "quote";
 
   async function sendWhatsApp() {
     if (!doc.company.phone) { toast.error("This client has no phone number on file"); return; }
@@ -127,14 +126,31 @@ export function DocumentDetail({ doc: initialDoc }: { doc: Doc }) {
 
       {/* Deposit + payment */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-6">
-        <div className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface-hover)" }}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2">Payment</p>
-          <p className="text-sm text-[var(--text)]">Deposit: <strong>{formatKES(doc.depositRequired)}</strong></p>
-          <p className="text-sm text-[var(--text)]">Balance: <strong>{formatKES(doc.balance)}</strong></p>
-          <p className="text-xs text-[var(--text-faint)] mt-2">Paid so far: {formatKES(doc.paidAmount)} — full reconciliation arrives with Payments (Phase 5).</p>
+        <div className="rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+          <p className="os-text-meta font-semibold uppercase tracking-wider mb-2">Payment</p>
+          {doc.balance <= 0 ? (
+            <div className="flex items-center gap-1.5 mb-1" style={{ color: "var(--success)" }}>
+              <CheckCircle2 className="w-4 h-4" /> <span className="text-sm font-bold">Fully paid</span>
+            </div>
+          ) : (
+            <>
+              <p className="text-sm text-[var(--text)]">Deposit: <strong>{formatKES(doc.depositRequired)}</strong></p>
+              <p className="text-sm text-[var(--text)]">Outstanding: <strong style={{ color: "var(--warning)" }}>{formatKES(doc.balance)}</strong></p>
+            </>
+          )}
+          <p className="os-text-meta mt-2">Paid so far: {formatKES(doc.paidAmount)}{doc.payments.length > 0 ? " — " : ""}
+            {doc.payments.length > 0 && <Link href="/app/payments" className="hover:underline" style={{ color: "var(--accent)" }}>view payments</Link>}
+          </p>
+
+          {doc.balance > 0 && (
+            <div className="flex flex-col items-start gap-2 mt-3">
+              <RequestPaymentButton documentId={doc.id} label={doc.paidAmount > 0 ? "Request Balance" : "Request Payment"} />
+              <SendStkPushButton documentId={doc.id} phone={doc.company.phone} amountDue={doc.balance} />
+            </div>
+          )}
         </div>
-        <div className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface-hover)" }}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2">Payment Link</p>
+        <div className="rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+          <p className="os-text-meta font-semibold uppercase tracking-wider mb-2">Payment Link</p>
           {paymentUrl ? (
             <>
               <p className="text-xs text-[var(--text-muted)] break-all">{paymentUrl}</p>

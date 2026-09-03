@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Product, QuickItem, Package as PackageModel, Company, Contact, Deal } from "@prisma/client";
 import { Plus, Minus, X, FileText, Eye, Pencil } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -15,6 +16,7 @@ import { PAYMENT_TERMS, depositPercentFor, computeDocumentTotals, type PaymentTe
 import { parseJsonArray } from "@/server/json";
 import { createDocumentAction } from "@/server/actions/documents";
 import { DocumentCreatedView } from "./DocumentCreatedView";
+import { staggerContainer, staggerItem } from "@/lib/os/motion";
 
 interface DraftItem extends PreviewItem {
   id: string;
@@ -138,7 +140,10 @@ export function ProformaGenerator({
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-4">
         {/* LEFT — form */}
-        <div className={`space-y-5 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}>
+        <motion.div
+          variants={staggerContainer} initial="initial" animate="animate"
+          className={`space-y-5 ${mobileTab === "preview" ? "hidden lg:block" : ""}`}
+        >
           <div className="flex gap-1.5">
             {(["PROFORMA", "QUOTE"] as const).map(t => (
               <button key={t} onClick={() => setDocType(t)} className="px-3.5 py-1.5 rounded-full text-xs font-semibold"
@@ -264,7 +269,7 @@ export function ProformaGenerator({
           <Button size="lg" loading={creating} onClick={submit} className="w-full gap-2">
             <FileText className="w-4 h-4" /> Generate {docType === "PROFORMA" ? "Proforma" : "Quote"}
           </Button>
-        </div>
+        </motion.div>
 
         {/* RIGHT — live preview */}
         <div className={mobileTab === "edit" ? "hidden lg:block" : ""}>
@@ -300,10 +305,14 @@ export function ProformaGenerator({
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
-    <div className="space-y-2.5">
+    <motion.div
+      variants={staggerItem}
+      className="rounded-[var(--radius-lg)] border p-4 sm:p-5 space-y-3"
+      style={{ background: "var(--surface)", borderColor: "var(--border)" }}
+    >
       <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)]">{title}</p>
       {children}
-    </div>
+    </motion.div>
   );
 }
 

@@ -19,6 +19,19 @@ Within `(os)`, `src/app/(os)/app/*` is the authenticated app; `src/app/(os)/logi
 because you don't have one yet, the latter because it's the customer-facing checkout link sent
 in a proforma/invoice, not a staff surface.
 
+## Domain separation
+
+Both route groups still deploy as one Next.js app (one build, one thing to deploy), but they're
+meant to be visited as two genuinely separate sites on two separate domains — the marketing
+site's visitors should never land on a CRM page and vice versa. `src/middleware.ts` enforces
+this by hostname once a real custom domain is configured: the exact host `NEXT_PUBLIC_APP_URL`
+points at serves only `/login`, `/app/*`, `/pay/*` (its root `/` rewrites straight to `/app`,
+which `requireUser()` sends on to `/login` itself if there's no session); every other host
+redirects those same paths over to that CRM host instead of rendering them. Until
+`NEXT_PUBLIC_APP_URL` names a real custom domain — and always on a raw `*.vercel.app` deployment
+URL, previews included — this is a no-op and both route groups stay reachable by path on
+whatever single host is in use, exactly as described above.
+
 ## Layers
 
 - **`src/app/**/page.tsx`** — Server Components. Fetch data with Prisma directly, enforce auth

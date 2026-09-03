@@ -41,7 +41,7 @@ const MATRIX: Record<Role, Permission[]> = {
   ],
   MANAGEMENT: [
     "pipeline.write", "clients.write", "communications.write", "documents.write",
-    "projects.write", "tasks.write", "meetings.write", "revenue.view",
+    "projects.write", "tasks.write", "meetings.write", "revenue.view", "settings.write",
   ],
   SALES: [
     "pipeline.write", "clients.write", "communications.write", "documents.write",
