@@ -57,7 +57,6 @@ export interface Lead {
 
 /* ─── In-memory store (survives hot-reloads + warm invocations) ─── */
 declare global {
-  // eslint-disable-next-line no-var
   var __leadStore: Map<string, Lead> | undefined;
 }
 
@@ -129,7 +128,6 @@ export interface Communication {
 }
 
 declare global {
-  // eslint-disable-next-line no-var
   var __commStore: Map<string, Communication> | undefined;
 }
 

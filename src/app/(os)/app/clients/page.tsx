@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { ClientsView } from "@/components/os/clients/ClientsView";
 
@@ -10,7 +11,7 @@ export default async function ClientsPage({
 }: {
   searchParams: Promise<{ new?: string }>;
 }) {
-  await requireUser();
+  const user = await requireUser();
   const { new: openCreate } = await searchParams;
 
   const companies = await db.company.findMany({
@@ -22,5 +23,6 @@ export default async function ClientsPage({
     take: 300,
   });
 
-  return <ClientsView initialCompanies={companies} openCreateOnLoad={openCreate === "1"} />;
+  const canCreate = can(user.role, "clients.write");
+  return <ClientsView initialCompanies={companies} openCreateOnLoad={openCreate === "1" && canCreate} canCreate={canCreate} />;
 }

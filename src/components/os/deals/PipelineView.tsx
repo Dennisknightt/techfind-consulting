@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Deal, Company, User, Product } from "@prisma/client";
+import type { Company, User, Product } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Plus, Kanban, List, Flame } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -17,7 +18,7 @@ import { updateDealStageAction } from "@/server/actions/deals";
 import { CreateDealSheet } from "./CreateDealSheet";
 import { LostDealDialog } from "./LostDealDialog";
 
-export type DealWithRelations = Deal & { company: Company; owner: User | null };
+export type DealWithRelations = DealMoney & { company: Company; owner: User | null };
 
 const STALL_DAYS = 7;
 
@@ -32,12 +33,14 @@ export function PipelineView({
   products,
   currentUserId,
   openCreateOnLoad,
+  canCreate,
 }: {
   initialDeals: DealWithRelations[];
   users: User[];
   products: Product[];
   currentUserId: string;
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const router = useRouter();
   const [deals, setDeals] = useState(initialDeals);
@@ -100,9 +103,11 @@ export function PipelineView({
                 );
               })}
             </div>
-            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-              <Plus className="w-4 h-4" /> New Deal
-            </Button>
+            {canCreate && (
+              <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+                <Plus className="w-4 h-4" /> New Deal
+              </Button>
+            )}
           </>
         }
       />

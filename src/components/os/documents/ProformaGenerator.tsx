@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Product, QuickItem, Package as PackageModel, Company, Contact, Deal } from "@prisma/client";
+import type { Product, Company, Contact } from "@prisma/client";
+import type { QuickItemMoney, PackageMoney, DealMoney } from "@/lib/os/moneyTypes";
 import { Plus, Minus, X, FileText, Eye, Pencil } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -27,10 +28,10 @@ export function ProformaGenerator({
   products, quickItems, packages, tax, initialDeal,
 }: {
   products: Product[];
-  quickItems: QuickItem[];
-  packages: PackageModel[];
+  quickItems: QuickItemMoney[];
+  packages: PackageMoney[];
   tax: import("@/lib/os/documentMath").TaxConfig;
-  initialDeal: (Deal & { company: Company; contact: Contact | null }) | null;
+  initialDeal: (DealMoney & { company: Company; contact: Contact | null }) | null;
 }) {
   const router = useRouter();
   const [docType, setDocType] = useState<"PROFORMA" | "QUOTE">("PROFORMA");
@@ -67,13 +68,13 @@ export function ProformaGenerator({
     addItem({ label: product.name, quantity: 1, unitPrice: price, productKey: product.key });
   }
 
-  function addQuickItem(qi: QuickItem) {
+  function addQuickItem(qi: QuickItemMoney) {
     const keys = parseJsonArray<string>(qi.productKeys);
     const names = products.filter(p => keys.includes(p.key)).map(p => p.name).join(" + ");
     addItem({ label: qi.label.replace(/\s*—.*$/, ""), description: names || undefined, quantity: 1, unitPrice: qi.totalPrice });
   }
 
-  function addPackage(pkg: PackageModel) {
+  function addPackage(pkg: PackageMoney) {
     addItem({ label: pkg.name, description: pkg.description ?? undefined, quantity: 1, unitPrice: pkg.price });
   }
 

@@ -2,7 +2,8 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import type { Task, User, Deal, Company } from "@prisma/client";
+import type { Task, User, Company } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Plus, Check, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -15,7 +16,7 @@ import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@
 import { friendlyDay, isOverdue, dayjs } from "@/lib/os/dates";
 import { createTaskAction, completeTaskAction } from "@/server/actions/tasks";
 
-type TaskWithRelations = Task & { assignee: User | null; deal: (Deal & { company: Company }) | null };
+type TaskWithRelations = Task & { assignee: User | null; deal: (DealMoney & { company: Company }) | null };
 
 type ViewKey = "today" | "upcoming" | "overdue" | "mine" | "team" | "high";
 
@@ -31,12 +32,13 @@ const VIEWS: { key: ViewKey; label: string }[] = [
 const PRIORITY_TONE: Record<string, "danger" | "warning" | "neutral"> = { HIGH: "danger", MEDIUM: "warning", LOW: "neutral" };
 
 export function TasksView({
-  initialTasks, users, currentUserId, openCreateOnLoad,
+  initialTasks, users, currentUserId, openCreateOnLoad, canCreate,
 }: {
   initialTasks: TaskWithRelations[];
   users: User[];
   currentUserId: string;
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const [tasks, setTasks] = useState(initialTasks);
   const [view, setView] = useState<ViewKey>("today");
@@ -89,9 +91,11 @@ export function TasksView({
         title="Tasks"
         subtitle={`${tasks.length} open`}
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> New Task
-          </Button>
+          canCreate && (
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> New Task
+            </Button>
+          )
         }
       />
 

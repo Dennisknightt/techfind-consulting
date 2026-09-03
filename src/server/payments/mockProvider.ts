@@ -11,7 +11,6 @@ import type { PaymentProvider, ChargeInput, ChargeResult, StatusResult, RefundIn
  */
 
 declare global {
-  // eslint-disable-next-line no-var
   var __mockGatewayStore: Map<string, { status: string; amount: number; createdAt: number }> | undefined;
 }
 

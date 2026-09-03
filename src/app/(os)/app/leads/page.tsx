@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { LeadsView } from "@/components/os/leads/LeadsView";
 
@@ -12,6 +13,7 @@ export default async function LeadsPage({
 }) {
   const user = await requireUser();
   const { new: openCreate } = await searchParams;
+  const canCreate = can(user.role, "pipeline.write");
 
   const [leads, users, products] = await Promise.all([
     db.lead.findMany({ orderBy: { createdAt: "desc" }, include: { owner: true }, take: 200 }),
@@ -25,7 +27,8 @@ export default async function LeadsPage({
       users={users}
       products={products}
       currentUserId={user.id}
-      openCreateOnLoad={openCreate === "1"}
+      openCreateOnLoad={openCreate === "1" && canCreate}
+      canCreate={canCreate}
     />
   );
 }

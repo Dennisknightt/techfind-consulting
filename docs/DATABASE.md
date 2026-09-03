@@ -7,6 +7,24 @@ same hosted database used elsewhere; the schema itself was written from the star
 SQLite-only features, so the switch from the SQLite-based earlier local dev setup was a
 one-line provider change with no field-level migration needed.
 
+## Migrations
+
+Schema changes are real, reviewable Prisma migrations under `prisma/migrations/` — not
+`prisma db push`. The history starts at `20260901051741_init`, a baseline generated with
+`prisma migrate dev --name init` against an empty database and diffed against the schema as it
+stood after Phase 10; every schema change from here on is its own migration, committed alongside
+the code that needs it.
+
+- **Local dev**: `npm run db:migrate` (`prisma migrate dev`) after changing `schema.prisma` —
+  generates and applies a new migration, prompting for a name.
+- **Deploying** (also what `vercel-build` runs): `npm run db:deploy` (`prisma migrate deploy`)
+  — applies any migrations not yet recorded in `_prisma_migrations`, no prompts, safe to run on
+  every deploy.
+- **Full reset** (dev only — drops the database): `npm run db:reset` (`prisma migrate reset`),
+  which reapplies every migration from scratch and then runs the seed script automatically.
+- `npm run db:seed` runs the seed script standalone against whatever migrations are already
+  applied.
+
 ## The string-union "enum" convention
 
 The schema still avoids native Postgres enums by choice, not necessity (this convention
@@ -60,10 +78,34 @@ Counter (atomic document/receipt numbering — see below)
 
 ## Money
 
-Every currency amount is a `Float`. This is a known simplification (binary floating point is
-not exact for currency) accepted for this stage of the build; `src/lib/os/money.ts#round2`
-rounds to 2dp at every computation boundary to keep drift from compounding. A production
-hardening pass would move to integer minor-units (cents) or `Decimal`.
+Every currency amount is a Prisma `Decimal` stored as Postgres `numeric(12,2)` — exact, no
+binary floating-point drift. That exactness lives only in the database column, though: the rest
+of the app is written against plain `number` (`formatKES`, `round2`, arithmetic, and Client
+Component props, which can't receive a `Prisma.Decimal` instance anyway since it isn't a plain
+serializable value). `src/server/db.ts` bridges the two with a Prisma Client Extension — a
+`result` transform on every money field, on the single shared `db` export — that calls
+`.toNumber()` on the way out of every query, so nowhere else in the codebase ever sees a
+`Decimal` object. Writes are unaffected: Prisma already accepts a plain `number` for a `Decimal`
+column on `create`/`update`.
+
+Two things to know if you touch a money field:
+
+- **Aggregates bypass the extension.** `db.payment.aggregate({ _sum: { amount: true } })` still
+  returns a real `Prisma.Decimal` for `_sum.amount` (confirmed at runtime, not just inferred) —
+  Prisma's `result` extensions only transform normal query results, not `aggregate`/`groupBy`
+  output. Every aggregate call site in the codebase wraps the sum in `Number(...)` explicitly
+  (`src/app/(os)/app/page.tsx`, `src/app/(os)/app/revenue/page.tsx`,
+  `src/server/intelligence/snapshot.ts`) — do the same for any new one.
+- **Raw `@prisma/client` model types still say `Decimal`.** They're generated from the schema,
+  not from the extended client, so a composite prop type built directly from e.g. `import type
+  { Deal } from "@prisma/client"` would claim `value: Decimal` even though it's really a
+  `number` at runtime. `src/lib/os/moneyTypes.ts` exports the corrected aliases
+  (`DealMoney`, `PaymentMoney`, `SalesDocumentMoney`, etc.) — use those instead of the raw model
+  type anywhere a money field is part of a prop type, action signature, or local composite type.
+
+`src/lib/os/money.ts#round2` still rounds to 2dp at every JS-side computation boundary
+(`documentMath.ts`, payment reconciliation) — that safety net didn't go away, it's just now
+backed by exact storage on write instead of `float8`.
 
 ## Atomic numbering
 
@@ -78,12 +120,3 @@ A few fields store a JSON-encoded array in a `String` column rather than a join 
 list is small, denormalized, and never queried by its contents from SQL (e.g.
 `Deal.productKeys`, `Meeting.productsDiscussed`, `Product.quickPrices`). Always go through
 `src/server/json.ts#parseJsonArray` to read them defensively rather than a raw `JSON.parse`.
-
-## Migrations
-
-This stage of the build uses `prisma db push` (schema-sync, no migration history) rather than
-`prisma migrate` — appropriate for a fast-moving pre-production build where the schema is still
-settling. Before relying on this in a real production environment with data worth protecting,
-switch to `prisma migrate` with a real, committed migration history (`prisma migrate dev` locally
-to generate migrations, `prisma migrate deploy` in the deploy pipeline) so schema changes are
-reviewable and reversible rather than a silent sync.

@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import type { Lead, User, Product } from "@prisma/client";
+import type { User, Product } from "@prisma/client";
+import type { LeadMoney } from "@/lib/os/moneyTypes";
 import { Plus, Search, Phone, Mail, ArrowRight, Sparkles, ChevronLeft, Check, Zap } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
@@ -15,7 +16,7 @@ import { formatKES } from "@/lib/os/money";
 import { timeAgo } from "@/lib/os/dates";
 import { createLeadAction, convertLeadToDealAction } from "@/server/actions/leads";
 
-type LeadWithOwner = Lead & { owner: User | null };
+type LeadWithOwner = LeadMoney & { owner: User | null };
 
 const SOURCES = ["WHATSAPP", "WEBSITE", "META", "TIKTOK", "EMAIL", "PHONE", "REFERRAL", "MANUAL"];
 const STATUSES = ["NEW", "CONTACTED", "QUALIFIED", "CONVERTED", "DISQUALIFIED"];
@@ -30,12 +31,14 @@ export function LeadsView({
   products,
   currentUserId,
   openCreateOnLoad,
+  canCreate,
 }: {
   initialLeads: LeadWithOwner[];
   users: User[];
   products: Product[];
   currentUserId: string;
   openCreateOnLoad: boolean;
+  canCreate: boolean;
 }) {
   const router = useRouter();
   const [leads, setLeads] = useState(initialLeads);
@@ -85,9 +88,11 @@ export function LeadsView({
         title="Leads"
         subtitle={`${leads.length} captured · minimal typing, fast follow-up`}
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> New Lead
-          </Button>
+          canCreate && (
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> New Lead
+            </Button>
+          )
         }
       />
 
@@ -148,9 +153,11 @@ export function LeadsView({
               {lead.value > 0 && <span className="text-sm font-bold text-[var(--text)]">{formatKES(lead.value, { compact: true })}</span>}
               {lead.owner && <Avatar name={lead.owner.name} color={lead.owner.avatarColor} size={26} />}
               {lead.status !== "CONVERTED" ? (
-                <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
-                  Convert <ArrowRight className="w-3.5 h-3.5" />
-                </Button>
+                canCreate && (
+                  <Button size="sm" variant="secondary" loading={convertingId === lead.id} onClick={() => convert(lead)} className="gap-1">
+                    Convert <ArrowRight className="w-3.5 h-3.5" />
+                  </Button>
+                )
               ) : lead.convertedDealId ? (
                 <Button size="sm" variant="ghost" onClick={() => router.push(`/app/deals/${lead.convertedDealId}`)}>
                   View Deal

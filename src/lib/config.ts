@@ -62,9 +62,8 @@ export const cfg = {
     secret:  process.env.TURNSTILE_SECRET_KEY ?? "",
   },
 
-  /** Admin endpoints */
+  /** Admin endpoints — auth is the real session/role check in src/lib/adminAuth.ts */
   admin: {
-    secret:  process.env.ADMIN_SECRET ?? "",
     metricsSecret: process.env.METRICS_SECRET ?? "",
   },
 } as const;

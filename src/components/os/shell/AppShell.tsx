@@ -11,10 +11,10 @@ export function AppShell({ user, unreadCount, children }: { user: SessionUser; u
     <div className="flex min-h-screen" style={{ background: "var(--bg)" }}>
       <Sidebar user={user} />
       <div className="flex-1 min-w-0 flex flex-col">
-        <Topbar unreadCount={unreadCount} />
+        <Topbar role={user.role} unreadCount={unreadCount} />
         <main className="flex-1 pb-24 lg:pb-8">{children}</main>
       </div>
-      <MobileNav />
+      <MobileNav role={user.role} />
       <CommandPalette />
     </div>
   );

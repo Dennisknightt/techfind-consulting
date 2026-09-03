@@ -39,3 +39,24 @@ export async function getActiveProvider(): Promise<{ provider: PaymentProvider; 
 export function listProviderNames(): string[] {
   return Object.keys(PROVIDERS);
 }
+
+/**
+ * Resolves the provider a specific payment was actually charged through
+ * (`Payment.gateway`), for refunds — not "whatever's active now" (the
+ * configured provider may have changed since the original charge).
+ *
+ * Same dev-safety intent as `getActiveProvider`, but refuses outright
+ * rather than silently substituting the mock provider: a refund against a
+ * live gateway reference silently "succeeding" against the mock store
+ * would tell staff a customer was refunded when nothing happened.
+ */
+export function resolveProviderForRefund(gateway: string): PaymentProvider {
+  const isProd = process.env.NODE_ENV === "production";
+  const allowLiveInDev = process.env.ALLOW_LIVE_PAYMENTS_IN_DEV === "true";
+  if (gateway !== "MOCK" && !isProd && !allowLiveInDev) {
+    throw new Error("Refunding a live-gateway payment is blocked outside production (set ALLOW_LIVE_PAYMENTS_IN_DEV=true to override).");
+  }
+  const provider = PROVIDERS[gateway];
+  if (!provider) throw new Error(`Unknown payment gateway "${gateway}".`);
+  return provider;
+}

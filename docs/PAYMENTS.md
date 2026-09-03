@@ -76,6 +76,30 @@ endpoints in the app besides the webhook. Both are rate-limited (`src/lib/rateli
 `hashIp`) and scoped strictly to the `PaymentSession` identified by the URL token — a token
 never exposes another session's payments.
 
+## Refunds
+
+`src/server/actions/payments.ts#refundPaymentAction`, exposed as a "Refund" action on
+`/app/payments` (gated by `payments.write`) for any payment that's `SUCCESSFUL` or already
+`PARTIALLY_REFUNDED` with something left to refund.
+
+The trust direction is the opposite of a charge: a charge is *claimed* by the customer and must
+always be re-verified against the provider before crediting anything, but a refund is
+*initiated* by staff, so the provider call itself is the authoritative action — if
+`provider.refund()` doesn't throw, the refund happened. Partial refunds are tracked on
+`Payment.refundedAmount` (`Decimal`, defaults to `0`); the action rejects a refund larger than
+`amount - refundedAmount`, and flips `status` to `PARTIALLY_REFUNDED` or `REFUNDED` depending on
+whether anything is left. When the payment is linked to a `SalesDocument`, the document's
+`paidAmount`/`balance`/`status` are recomputed the same way `applySuccessfulPayment` does it,
+just in reverse.
+
+**Refunds get the same dev-safety treatment as charges, but refuse instead of silently
+downgrading**: `registry.ts#resolveProviderForRefund` looks up the provider by the payment's own
+`gateway` field (not "whatever's configured now" — the active provider may have changed since
+the original charge) and, outside production without `ALLOW_LIVE_PAYMENTS_IN_DEV=true`, refuses
+outright to refund a live-gateway payment rather than quietly routing it through the mock
+provider — silently "succeeding" against the mock store would tell staff a customer was
+refunded when nothing actually happened at the gateway.
+
 ## Receipts and the Revenue Control Centre
 
 Every successful payment gets exactly one `Receipt` (PDF via

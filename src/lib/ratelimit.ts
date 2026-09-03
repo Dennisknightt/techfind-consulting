@@ -23,7 +23,6 @@ export interface RateLimitResult {
 /* ─── In-memory fallback ──────────────────────────────────────────── */
 
 declare global {
-  // eslint-disable-next-line no-var
   var __rl: Map<string, { count: number; exp: number }> | undefined;
 }
 

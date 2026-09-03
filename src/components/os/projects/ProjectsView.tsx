@@ -64,7 +64,7 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
         <div className="mt-10 text-center py-14 rounded-[var(--radius-lg)] border border-dashed" style={{ borderColor: "var(--border-strong)" }}>
           <FolderKanban className="w-6 h-6 mx-auto mb-3" style={{ color: "var(--text-faint)" }} />
           <p className="text-sm font-semibold text-[var(--text)]">No projects yet</p>
-          <p className="text-xs text-[var(--text-faint)] mt-1">A project starts itself the moment a client's deposit clears.</p>
+          <p className="text-xs text-[var(--text-faint)] mt-1">A project starts itself the moment a client&rsquo;s deposit clears.</p>
         </div>
       ) : (
         <div className="space-y-2 mt-5">

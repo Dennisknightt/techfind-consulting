@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { CommunicationsHub } from "@/components/os/communications/CommunicationsHub";
 
@@ -30,5 +31,12 @@ export default async function CommunicationsPage({
     return bt - at;
   });
 
-  return <CommunicationsHub companies={sorted} currentUserId={user.id} initialCompanyId={initialCompanyId} />;
+  return (
+    <CommunicationsHub
+      companies={sorted}
+      currentUserId={user.id}
+      initialCompanyId={initialCompanyId}
+      canLog={can(user.role, "communications.write")}
+    />
+  );
 }

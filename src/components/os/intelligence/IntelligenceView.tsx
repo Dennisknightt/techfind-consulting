@@ -176,7 +176,7 @@ export function IntelligenceView({
         <SheetContent className="sm:max-w-xl">
           <SheetHeader>
             <SheetTitle className="flex items-center gap-1.5"><Sparkles className="w-4 h-4" style={{ color: "var(--accent)" }} /> Prepare with Claude</SheetTitle>
-            <SheetDescription>A snapshot of Techfind's pipeline, revenue and delivery — ready to paste into a Claude conversation.</SheetDescription>
+            <SheetDescription>A snapshot of Techfind&rsquo;s pipeline, revenue and delivery — ready to paste into a Claude conversation.</SheetDescription>
           </SheetHeader>
           <SheetBody>
             {loading ? (

@@ -1,9 +1,10 @@
 # Design System
 
-The OS shares the public site's brand identity (violet/blue, the same type stack) but is its
-own visual system underneath — a dense, premium SaaS interior (closer to Linear/Stripe/Attio)
-rather than the marketing site's motion-heavy landing-page feel. Tokens live in
-`src/app/(os)/globals.css`, scoped to the `(os)` route group only.
+This app is the Techfind Revenue OS only — the public marketing site (formerly the `(marketing)`
+route group: the GSAP/Lenis motion landing pages, the AI-service pages, the audit funnel) has
+been removed. `src/app/(os)` is now the entire app, so `/` redirects straight to `/login`
+(`src/app/(os)/page.tsx`). Tokens live in `src/app/(os)/globals.css`, a dense, premium SaaS
+interior (closer to Linear/Stripe/Attio), fuchsia/indigo accent.
 
 ## Tokens
 
@@ -14,13 +15,15 @@ token change propagates everywhere and dark mode is "free."
 - **Surfaces**: `--bg`, `--surface`, `--surface-hover`, `--surface-sunken` — a 4-step elevation
   scale used instead of ad-hoc opacity/shadow combinations.
 - **Text**: `--text`, `--text-muted`, `--text-faint` — three weights of emphasis, no fourth.
-- **Brand**: `--accent` (violet) / `--accent-2` (blue), each with a `-soft` background tint
-  variant for badges/highlights rather than a full-saturation fill.
+- **Brand**: `--accent` (fuchsia) / `--accent-2` (indigo), each with a `-soft` background tint
+  variant for badges/highlights rather than a full-saturation fill — chosen to be visually
+  distinct from every semantic color (success/warning/danger/info) and from the hot/warm/cold
+  lead-temperature scale, so no token collides with another in meaning.
 - **Semantic**: `--success`, `--warning`, `--danger`, `--info`, each with a `-soft` variant —
   used for document status, payment status, and the Home "Needs Attention" severity coloring.
 - **Domain-specific**: `--hot` / `--warm` / `--cold` for lead/deal temperature — a dedicated
   scale rather than overloading the semantic colors, since "hot" isn't "danger."
-- **Radius**: `--radius-sm` (0.5rem) through `--radius-xl` (1.25rem) — never an arbitrary
+- **Radius**: `--radius-sm` (0.375rem) through `--radius-xl` (1.125rem) — never an arbitrary
   Tailwind radius class in an OS component.
 - **Shadow**: `--shadow-xs` through `--shadow-lg`, plus `--shadow-glow` for the accent-colored
   glow used sparingly (primary CTAs, the command palette).
@@ -51,9 +54,50 @@ reserved for hover/elevation feedback, not resting state.
 ## Dark mode
 
 Every token is redefined under `.dark` with adjusted contrast (not just inverted lightness) —
-in particular `--accent` shifts to a slightly desaturated, brighter violet (`#8B5CF6` vs
-`#6D28D9`) because the light-mode accent reads as muddy on a dark surface at the same
-saturation. `-soft` variants get higher opacity in dark mode for the same reason.
+in particular `--accent` shifts to a brighter fuchsia (`#E879F9` vs light mode's `#C026D3`)
+because the light-mode accent reads as muddy on a dark surface at the same saturation. `-soft`
+variants get higher opacity in dark mode for the same reason. In practice this is currently
+unreachable in the running app — `(os)/layout.tsx` sets `defaultTheme="light"` with
+`enableSystem={false}` and there's no in-app toggle — kept ready for one, not wasted work.
+
+## The Revenue Engine admin portal, and its compatibility token aliases
+
+`/admin` (the SUPER_ADMIN-only "Revenue Engine" panel — prospect discovery/audit, lead scoring,
+outreach, proposals, CRM pipeline, communications, calendar booking, settings) used to live in
+the marketing route group and read the *marketing* site's tokens, which was a real mismatch for
+what's functionally a dense internal data tool. Now that the marketing site is gone, it's been
+ported into `src/app/(os)/admin/*` unchanged, restyled onto the OS's own tokens rather than
+rewritten. Its ~2,600 lines of JSX use a handful of token names the marketing site had that the
+OS didn't (`--card`, `--card-hover`, `--muted`, `--border-accent`, `--accent-glow`) — rather than
+rewrite every reference, `globals.css` defines these as aliases onto the canonical OS tokens
+(`--surface`, `--surface-hover`, `--text-muted`, `--accent-soft` twice) in both `:root` and
+`.dark`. The admin portal now genuinely reads the OS's fuchsia/indigo accent instead of the old
+marketing palette — no new component should introduce fresh usage of the alias names; use the
+canonical ones above instead.
+
+## Sign-in screen
+
+`/login` pairs a focused, stepped card (modelled on Airbnb's sign-in — one decision at a time)
+with a full-height photograph panel: Nairobi at golden hour from the KICC rooftop, tinted in the
+OS's fuchsia/indigo, naming the product and the city (`src/components/os/auth/AuthPhotoPanel.tsx`).
+The photo is self-hosted (`public/auth/nairobi.jpg`, Wikimedia Commons, CC BY-SA 4.0, Lebu Ayiga)
+and credited on the panel — that credit is a license requirement, not decoration. Below `lg` the
+panel becomes a 240px banner above the card. `src/components/os/auth/LoginForm.tsx`:
+
+- **Stepped**: email → *Continue* → password. The email step is client-only (format check,
+  shake on invalid, Enter advances); the password step shows the email as an editable chip
+  with an avatar initial, a show/hide toggle, a live Caps-Lock hint, and the inline error. A
+  server-side error (wrong password) lands back on the password step. Both inputs live in one
+  `<form>` so `loginAction` still receives the full payload — *Continue* is `type="button"` on
+  purpose, so `button[type="submit"]` only ever matches *Sign in*.
+- **Canvas** (`login/page.tsx`): `.auth-canvas` mesh + two drifting `.auth-blob`s, all reading
+  `--accent`/`--accent-2` so it's on-brand without hardcoded color; `.auth-halo` is a slow
+  conic arc hugging the card edge (the gradient *angle* is animated via `@property`, never the
+  element — rotating the element swings its corners outside the rounded card).
+- **Fields** are `.auth-field` floating-label groups (label sits inside, lifts on focus/fill).
+  All of it is CSS keyframes in `(os)/globals.css`; the route ships no animation JS.
+- Field ids/names (`email`, `password`, `remember`, `next`) and the `primeSonicLogo()` submit
+  hook are unchanged from the original form.
 
 ## What's deliberately *not* here
 

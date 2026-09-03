@@ -8,17 +8,21 @@ import {
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody } from "@/components/os/ui/Sheet";
 import { Button } from "@/components/os/ui/Button";
 import { Plus } from "lucide-react";
+import { can, type Role } from "@/server/auth/roles";
 
 export const QUICK_CREATE_ITEMS = [
-  { label: "Proforma", sub: "Ready to send in ~30 seconds", href: "/app/quotes/new", icon: FileText },
-  { label: "Lead",     sub: "Capture a new prospect",        href: "/app/leads?new=1", icon: Users },
-  { label: "Deal",     sub: "Start an opportunity",          href: "/app/deals?new=1", icon: Handshake },
-  { label: "Task",     sub: "Something to follow up on",     href: "/app/tasks?new=1", icon: CheckSquare2 },
-  { label: "Meeting",  sub: "Schedule time with a client",   href: "/app/meetings?new=1", icon: CalendarDays },
-  { label: "Client",   sub: "Onboard a company",             href: "/app/clients?new=1", icon: Building2 },
+  { label: "Proforma", sub: "Ready to send in ~30 seconds", href: "/app/quotes/new", icon: FileText, permission: "documents.write" as const },
+  { label: "Lead",     sub: "Capture a new prospect",        href: "/app/leads?new=1", icon: Users, permission: "pipeline.write" as const },
+  { label: "Deal",     sub: "Start an opportunity",          href: "/app/deals?new=1", icon: Handshake, permission: "pipeline.write" as const },
+  { label: "Task",     sub: "Something to follow up on",     href: "/app/tasks?new=1", icon: CheckSquare2, permission: "tasks.write" as const },
+  { label: "Meeting",  sub: "Schedule time with a client",   href: "/app/meetings?new=1", icon: CalendarDays, permission: "meetings.write" as const },
+  { label: "Client",   sub: "Onboard a company",             href: "/app/clients?new=1", icon: Building2, permission: "clients.write" as const },
 ];
 
-export function QuickCreateMenu() {
+export function QuickCreateMenu({ role }: { role: Role }) {
+  const items = QUICK_CREATE_ITEMS.filter(item => can(role, item.permission));
+  if (items.length === 0) return null;
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
@@ -29,7 +33,7 @@ export function QuickCreateMenu() {
       <DropdownMenuContent align="end" className="w-64">
         <DropdownMenuLabel>Quick create</DropdownMenuLabel>
         <DropdownMenuSeparator />
-        {QUICK_CREATE_ITEMS.map(({ label, sub, href, icon: Icon }) => (
+        {items.map(({ label, sub, href, icon: Icon }) => (
           <DropdownMenuItem key={href} asChild>
             <Link href={href} className="flex items-start gap-2.5 py-2">
               <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--accent)" }} />
@@ -45,7 +49,9 @@ export function QuickCreateMenu() {
   );
 }
 
-export function QuickCreateSheet({ open, onOpenChange }: { open: boolean; onOpenChange: (v: boolean) => void }) {
+export function QuickCreateSheet({ role, open, onOpenChange }: { role: Role; open: boolean; onOpenChange: (v: boolean) => void }) {
+  const items = QUICK_CREATE_ITEMS.filter(item => can(role, item.permission));
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent side="bottom">
@@ -53,7 +59,10 @@ export function QuickCreateSheet({ open, onOpenChange }: { open: boolean; onOpen
           <SheetTitle>Quick create</SheetTitle>
         </SheetHeader>
         <SheetBody className="space-y-1.5 pb-6">
-          {QUICK_CREATE_ITEMS.map(({ label, sub, href, icon: Icon }) => (
+          {items.length === 0 && (
+            <p className="text-sm text-[var(--text-faint)] text-center py-6">Your role doesn&rsquo;t have anything to create here.</p>
+          )}
+          {items.map(({ label, sub, href, icon: Icon }) => (
             <Link
               key={href}
               href={href}

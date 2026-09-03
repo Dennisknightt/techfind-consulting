@@ -15,7 +15,7 @@ import { createClientAction } from "@/server/actions/clients";
 
 type CompanyWithCounts = Company & { _count: { deals: number }; deals: { value: number }[] };
 
-export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCompanies: CompanyWithCounts[]; openCreateOnLoad: boolean }) {
+export function ClientsView({ initialCompanies, openCreateOnLoad, canCreate }: { initialCompanies: CompanyWithCounts[]; openCreateOnLoad: boolean; canCreate: boolean }) {
   const router = useRouter();
   const [companies, setCompanies] = useState(initialCompanies);
   const [createOpen, setCreateOpen] = useState(openCreateOnLoad);
@@ -39,9 +39,11 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
         title="Clients"
         subtitle={`${companies.length} companies`}
         actions={
-          <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
-            <Plus className="w-4 h-4" /> New Client
-          </Button>
+          canCreate && (
+            <Button size="sm" onClick={() => setCreateOpen(true)} className="gap-1.5">
+              <Plus className="w-4 h-4" /> New Client
+            </Button>
+          )
         }
       />
 

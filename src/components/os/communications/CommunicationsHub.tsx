@@ -3,7 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import type { Company, Communication, User, Contact, Deal } from "@prisma/client";
+import type { Company, Communication, User, Contact } from "@prisma/client";
+import type { DealMoney } from "@/lib/os/moneyTypes";
 import { Search, ArrowLeft, Info, Send, Phone, MessageCircle, CalendarDays, CheckSquare, FileText, Trophy, ArrowUpRight, ArrowDownLeft } from "lucide-react";
 import { toast } from "sonner";
 import { CompanyAvatar } from "@/components/os/ui/Avatar";
@@ -22,18 +23,19 @@ import { ScheduleMeetingSheet } from "@/components/os/meetings/MeetingsView";
 
 type CompanyRow = Company & { communications: Communication[]; _count: { communications: number } };
 type ThreadItem = Communication & { author: User | null };
-type Context = { company: Company; primaryContact: Contact | null; deal: Deal | null };
+type Context = { company: Company; primaryContact: Contact | null; deal: DealMoney | null };
 
 function waLink(phone: string, text: string) {
   return `https://wa.me/${phone.replace(/[^\d]/g, "")}?text=${encodeURIComponent(text)}`;
 }
 
 export function CommunicationsHub({
-  companies, currentUserId, initialCompanyId,
+  companies, currentUserId, initialCompanyId, canLog,
 }: {
   companies: CompanyRow[];
   currentUserId: string;
   initialCompanyId?: string;
+  canLog: boolean;
 }) {
   const router = useRouter();
   const [selectedId, setSelectedId] = useState<string | undefined>(initialCompanyId);
@@ -161,7 +163,7 @@ export function CommunicationsHub({
               })}
             </div>
 
-            <Composer company={selectedCompany} dealId={context?.deal?.id} onSent={(c) => setThread(prev => [...(prev ?? []), c])} />
+            <Composer company={selectedCompany} dealId={context?.deal?.id} canLog={canLog} onSent={(c) => setThread(prev => [...(prev ?? []), c])} />
           </>
         )}
       </div>
@@ -184,10 +186,18 @@ export function CommunicationsHub({
   );
 }
 
-function Composer({ company, dealId, onSent }: { company: Company; dealId?: string; onSent: (c: ThreadItem) => void }) {
+function Composer({ company, dealId, canLog, onSent }: { company: Company; dealId?: string; canLog: boolean; onSent: (c: ThreadItem) => void }) {
   const [channel, setChannel] = useState<Channel>("WHATSAPP");
   const [text, setText] = useState("");
   const [sending, setSending] = useState(false);
+
+  if (!canLog) {
+    return (
+      <div className="border-t p-3 shrink-0 safe-bottom text-center" style={{ borderColor: "var(--border)" }}>
+        <p className="text-xs text-[var(--text-faint)]">Your role can view this thread but can&rsquo;t log new messages.</p>
+      </div>
+    );
+  }
 
   async function send() {
     if (!text.trim()) return;

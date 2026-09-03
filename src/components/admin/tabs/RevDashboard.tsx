@@ -60,7 +60,7 @@ export function RevDashboard() {
             AI Revenue Engine
           </h1>
           <p className="text-sm text-[var(--muted)] mt-1">
-            Live data — real audit submissions from your website
+            Live data — real leads submitted to your intake API
           </p>
         </div>
         <button onClick={refresh} className="flex items-center gap-2 px-3 py-2 rounded-xl text-sm transition-all"
@@ -80,13 +80,10 @@ export function RevDashboard() {
         <div className="surface rounded-2xl p-10 text-center">
           <div className="text-4xl mb-3">🚀</div>
           <h3 className="font-bold text-[var(--text)] mb-2">No leads yet</h3>
-          <p className="text-sm text-[var(--muted)] mb-4">
-            Share your <strong>/audit</strong> page link and leads will appear here in real time as visitors complete the audit.
+          <p className="text-sm text-[var(--muted)]">
+            Leads submitted to <strong>/api/leads</strong> will appear here in real time. Use{" "}
+            <strong>Discover Prospects</strong> to source new ones directly from this dashboard.
           </p>
-          <Link href="/audit" target="_blank"
-            className="btn-primary text-sm inline-flex gap-2">
-            Open Audit Page <ArrowUpRight className="w-4 h-4" />
-          </Link>
         </div>
       )}
 

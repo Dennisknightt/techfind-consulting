@@ -122,7 +122,7 @@ export function Communications() {
         <div className="surface rounded-2xl p-10 text-center">
           <MessageSquare className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--muted)" }} />
           <p className="font-bold text-[var(--text)] mb-1">No leads to message yet</p>
-          <p className="text-sm text-[var(--muted)]">Leads from your /audit page will appear here automatically</p>
+          <p className="text-sm text-[var(--muted)]">New leads will appear here automatically</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ minHeight: 560 }}>

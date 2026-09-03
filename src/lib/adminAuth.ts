@@ -1,14 +1,14 @@
-import type { NextRequest } from "next/server";
-import { cfg } from "@/lib/config";
+import "server-only";
+import { getSessionUser, type SessionUser } from "@/server/auth/session";
 
 /**
  * Shared guard for the marketing site's admin-only endpoints (lead
- * export/management, communications). Fails CLOSED: if ADMIN_SECRET isn't
- * configured, every request is rejected rather than the check being
- * silently skipped — an unset secret must never mean "open to anyone."
+ * export/management, communications). Fails CLOSED: no session, an
+ * inactive user, or any role other than SUPER_ADMIN all mean "no access" —
+ * matches the check the /admin page itself enforces in its layout.
  */
-export function isAuthorizedAdmin(req: NextRequest): boolean {
-  const token = req.headers.get("x-admin-token") ?? req.nextUrl.searchParams.get("token") ?? "";
-  const expected = cfg.admin.secret;
-  return Boolean(expected) && token === expected;
+export async function requireAdminUser(): Promise<SessionUser | null> {
+  const user = await getSessionUser();
+  if (!user || user.role !== "SUPER_ADMIN") return null;
+  return user;
 }

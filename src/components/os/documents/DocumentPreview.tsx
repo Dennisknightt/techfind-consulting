@@ -42,7 +42,7 @@ export function DocumentPreview({
           <p className="text-[11px] text-gray-500 mt-0.5">Nairobi, Kenya · techfind.co.ke</p>
         </div>
         <div className="text-right">
-          <p className="font-bold text-sm" style={{ color: "#6D28D9" }}>{TITLE_MAP[type] ?? type}</p>
+          <p className="font-bold text-sm" style={{ color: "#C026D3" }}>{TITLE_MAP[type] ?? type}</p>
           <p className="text-[11px] text-gray-500 mt-0.5">{number}</p>
         </div>
       </div>
@@ -112,7 +112,7 @@ export function DocumentPreview({
         </div>
       )}
 
-      <div className="mt-5 rounded-lg p-4 text-white" style={{ background: "#6D28D9" }}>
+      <div className="mt-5 rounded-lg p-4 text-white" style={{ background: "#C026D3" }}>
         <p className="text-sm font-bold">Pay securely online</p>
         <p className="text-[10px] mt-1 opacity-80">Payment link generates once this document is created</p>
       </div>

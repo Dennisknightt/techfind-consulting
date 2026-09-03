@@ -3,7 +3,8 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task } from "@prisma/client";
+import type { Company, Contact, User, Meeting, Product, Task } from "@prisma/client";
+import type { DealMoney, ProductFootprintMoney } from "@/lib/os/moneyTypes";
 import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban } from "lucide-react";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -20,9 +21,9 @@ import type { DealWithRelations } from "@/components/os/deals/PipelineView";
 type CompanyFull = Company & {
   contacts: Contact[];
   owner: User | null;
-  deals: (Deal & { owner: User | null })[];
+  deals: (DealMoney & { owner: User | null })[];
   meetings: Meeting[];
-  footprint: (ProductFootprint & { product: Product })[];
+  footprint: (ProductFootprintMoney & { product: Product })[];
 };
 
 const FOOTPRINT_META: Record<string, { label: string; tone: "success" | "warning" | "neutral"; icon: string }> = {
@@ -46,13 +47,15 @@ function recommendNextProduct(footprint: CompanyFull["footprint"]) {
 }
 
 export function ClientDetail({
-  company, tasks, allProducts, users, currentUserId,
+  company, tasks, allProducts, users, currentUserId, canCreateDeal, canCreateMeeting,
 }: {
   company: CompanyFull;
   tasks: (Task & { assignee: User | null })[];
   allProducts: Product[];
   users: User[];
   currentUserId: string;
+  canCreateDeal: boolean;
+  canCreateMeeting: boolean;
 }) {
   const router = useRouter();
   const [dealOpen, setDealOpen] = useState(false);
@@ -81,8 +84,12 @@ export function ClientDetail({
           </div>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="secondary" onClick={() => setMeetingOpen(true)} className="gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> Meeting</Button>
-          <Button size="sm" onClick={() => setDealOpen(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> New Deal</Button>
+          {canCreateMeeting && (
+            <Button size="sm" variant="secondary" onClick={() => setMeetingOpen(true)} className="gap-1.5"><CalendarDays className="w-3.5 h-3.5" /> Meeting</Button>
+          )}
+          {canCreateDeal && (
+            <Button size="sm" onClick={() => setDealOpen(true)} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> New Deal</Button>
+          )}
         </div>
       </div>
 
@@ -108,7 +115,7 @@ export function ClientDetail({
             <p className="text-sm font-bold text-[var(--text)]">Recommended Next Product: {recommendation.name}</p>
             <p className="text-xs text-[var(--text-muted)] mt-0.5">{recommendation.reason}</p>
           </div>
-          <Button size="sm" variant="secondary" onClick={() => setDealOpen(true)} className="shrink-0">Create Opportunity</Button>
+          {canCreateDeal && <Button size="sm" variant="secondary" onClick={() => setDealOpen(true)} className="shrink-0">Create Opportunity</Button>}
         </div>
       )}
 

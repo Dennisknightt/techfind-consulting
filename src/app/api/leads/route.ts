@@ -4,7 +4,7 @@
  * POST — create a lead from the audit + qualification flow.
  *         Full enforcement: validates, rate-limits, deduplicates, then saves.
  *
- * GET  — list all leads (admin only; requires ADMIN_SECRET header).
+ * GET  — list all leads (admin only; requires a logged-in SUPER_ADMIN session).
  *
  * Protection pipeline (POST):
  *   1. Payload size guard
@@ -25,7 +25,7 @@ import { getClientIp, hashIp, hashId } from "@/lib/ip";
 import { rateLimit } from "@/lib/ratelimit";
 import { validateAuditPayload, dupeKey } from "@/lib/validate";
 import { cfg } from "@/lib/config";
-import { isAuthorizedAdmin } from "@/lib/adminAuth";
+import { requireAdminUser } from "@/lib/adminAuth";
 import { trackEvent } from "@/lib/metrics";
 
 export const runtime = "nodejs";
@@ -33,8 +33,8 @@ export const dynamic = "force-dynamic";
 
 /* ─── GET /api/leads ─────────────────────────────────────────────── */
 
-export async function GET(req: NextRequest) {
-  if (!isAuthorizedAdmin(req)) {
+export async function GET() {
+  if (!(await requireAdminUser())) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
   return NextResponse.json({ leads: getAllLeads() });

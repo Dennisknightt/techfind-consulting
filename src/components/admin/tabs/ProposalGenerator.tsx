@@ -95,7 +95,7 @@ export function ProposalGenerator() {
           <Users className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--muted)" }} />
           <p className="font-bold text-[var(--text)] mb-1">No qualified leads yet</p>
           <p className="text-sm text-[var(--muted)]">
-            A+ and A leads who pass qualification appear here. Run the /audit page to capture leads.
+            A+ and A leads who pass qualification appear here.
           </p>
         </div>
       )}
@@ -199,7 +199,7 @@ export function ProposalGenerator() {
                             it {selected.overallScore >= 80 ? "above" : "below"} the industry average of 72. Despite this,
                             there are significant gaps preventing the business from being recommended by AI assistants
                             like ChatGPT, Claude, and Gemini when potential customers search in the {selected.industry} space.
-                            This proposal outlines TechFind Consulting's plan to close those gaps and drive qualified
+                            This proposal outlines TechFind Consulting&rsquo;s plan to close those gaps and drive qualified
                             inbound leads from AI-powered search within 60–90 days.
                           </p>
                         </div>
@@ -245,7 +245,7 @@ export function ProposalGenerator() {
                         {/* Deliverables */}
                         <div>
                           <h4 className="font-bold text-[var(--text)] mb-3 flex items-center gap-2">
-                            <Calendar className="w-4 h-4" style={{ color: "var(--accent)" }} /> What We'll Deliver
+                            <Calendar className="w-4 h-4" style={{ color: "var(--accent)" }} /> What We&rsquo;ll Deliver
                           </h4>
                           <div className="space-y-2">
                             {deliverables.map(({ item, week }, i) => (

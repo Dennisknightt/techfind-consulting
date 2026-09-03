@@ -60,16 +60,19 @@ Exactly three route groups don't require a session:
   CRM described elsewhere in these docs — its data lives in `src/lib/store.ts`, not Prisma).
   `POST /api/leads` is the public audit/qualification form submission, protected by payload-size
   limits, input validation, a honeypot field, and layered IP/email/phone rate limiting. Every
-  other verb on these routes is admin-only, gated by `x-admin-token` / `?token=` against
-  `ADMIN_SECRET` via `src/lib/adminAuth.ts#isAuthorizedAdmin`.
+  other verb on these routes is admin-only, gated by `src/lib/adminAuth.ts#requireAdminUser` — a
+  real session check (same `getSessionUser()` the CRM itself uses) requiring role `SUPER_ADMIN`,
+  not a shared secret. `/admin` (the panel these endpoints feed) enforces the identical check in
+  its own layout, so a browser session and the API calls it makes are gated by the same rule.
 
-  **Two real bugs were found here and fixed**: (1) `PATCH`/`DELETE /api/leads/[id]` and both
-  verbs on `/api/leads/[id]/communications` had **no auth check at all** — anyone who
-  knew or guessed a lead id could edit, delete, or inject into a lead's communication
-  thread. (2) The admin-token check on the routes that did have one was **fail-open**: written
-  as `if (expected && token !== expected)`, so an unset `ADMIN_SECRET` silently skipped the
-  check entirely rather than rejecting the request — the shared helper now fails closed
-  (`Boolean(expected) && token === expected`, so unset means every request is rejected).
+  **Two real bugs were found and fixed in an earlier pass, before the real login existed**: (1)
+  `PATCH`/`DELETE /api/leads/[id]` and both verbs on `/api/leads/[id]/communications` had **no
+  auth check at all** — anyone who knew or guessed a lead id could edit, delete, or inject into a
+  lead's communication thread. (2) The token check these routes originally had (`ADMIN_SECRET`
+  via an `x-admin-token` header) was **fail-open**: written as `if (expected && token !==
+  expected)`, so an unset secret silently skipped the check entirely. Both are moot now — the
+  token scheme was removed outright in favor of the session/role check described above, which
+  fails closed by construction (no session or wrong role ⇒ `null` ⇒ rejected).
 
 ## Audit trail
 
@@ -88,15 +91,6 @@ new environment can be configured without guessing.
 
 ## Known gaps (not closed in this pass)
 
-- **The marketing site's `/admin` panel has no login of its own.** It relies entirely on the
-  `ADMIN_SECRET` token described above, but the admin UI itself (`useLeads.ts`,
-  `useCommunications.ts`) never actually sends that token — it only "worked" before this pass
-  because of the fail-open bug just described. With that bug fixed, `/admin` will show
-  Unauthorized/empty until either `ADMIN_SECRET` is left unset in an environment nobody exposes
-  publicly, or (properly) a real login flow is added in front of the admin panel. This is a
-  pre-existing gap in the marketing site, separate from the CRM's own session-based auth, and
-  building that login flow was out of scope for this pass — **flagged here rather than silently
-  left in a state that looks fixed but isn't.**
 - **VIEWER-role users still see write buttons in the CRM UI** (New Client, New Deal, etc.) that
   the server correctly rejects on click (with a toast, not a crash — verified) rather than the
   UI hiding them up front. Not a security issue (the server enforcement is what actually

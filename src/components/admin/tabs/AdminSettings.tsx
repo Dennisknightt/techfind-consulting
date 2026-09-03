@@ -103,7 +103,7 @@ export function AdminSettings() {
           <h2 className="font-semibold text-[var(--text)]">Sending Window</h2>
         </div>
         <p className="text-xs text-[var(--muted)] mb-4 leading-relaxed">
-          Best practice: send outreach Tue–Thu, 8–11am and 1–3pm in the prospect's local timezone.
+          Best practice: send outreach Tue–Thu, 8–11am and 1–3pm in the prospect&rsquo;s local timezone.
         </p>
         <label className="text-xs font-semibold text-[var(--muted)] uppercase tracking-wider block mb-2">
           Your Timezone
@@ -137,7 +137,7 @@ export function AdminSettings() {
           </span>
         </div>
         <p className="text-xs text-[var(--muted)] leading-relaxed">
-          Leads are automatically scored and qualified when they complete the /audit form.
+          Leads are automatically scored and qualified as they come in.
           Those without budget, authority, or a valid timeline are routed to <strong>Nurture</strong> instead of the sales pipeline.
           This firewall is always on and cannot be disabled.
         </p>

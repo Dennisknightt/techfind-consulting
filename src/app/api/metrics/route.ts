@@ -79,7 +79,6 @@ export async function GET(req: NextRequest) {
         process.env.UPSTASH_REDIS_REST_URL
       ),
       turnstile_configured:  !!cfg.turnstile.secret,
-      admin_secret_set:      !!cfg.admin.secret,
     },
   });
 }

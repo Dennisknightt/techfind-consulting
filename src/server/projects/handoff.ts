@@ -1,7 +1,7 @@
 import "server-only";
 import { db } from "@/server/db";
 import { writeAudit } from "@/server/audit";
-import type { SalesDocument } from "@prisma/client";
+import type { SalesDocumentMoney as SalesDocument } from "@/lib/os/moneyTypes";
 
 /**
  * The single trigger for sales → delivery handoff: a deposit payment that

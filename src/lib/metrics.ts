@@ -22,7 +22,6 @@ export type MetricEvent =
   | "errors";
 
 declare global {
-  // eslint-disable-next-line no-var
   var __metrics: Record<string, number> | undefined;
 }
 

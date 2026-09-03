@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
+import { can } from "@/server/auth/roles";
 import { db } from "@/server/db";
 import { PipelineView } from "@/components/os/deals/PipelineView";
 
@@ -12,6 +13,7 @@ export default async function DealsPage({
 }) {
   const user = await requireUser();
   const { new: openCreate } = await searchParams;
+  const canCreate = can(user.role, "pipeline.write");
 
   const [deals, users, products] = await Promise.all([
     db.deal.findMany({
@@ -23,5 +25,14 @@ export default async function DealsPage({
     db.product.findMany({ where: { isQuickChip: true, active: true }, orderBy: { sortOrder: "asc" } }),
   ]);
 
-  return <PipelineView initialDeals={deals} users={users} products={products} currentUserId={user.id} openCreateOnLoad={openCreate === "1"} />;
+  return (
+    <PipelineView
+      initialDeals={deals}
+      users={users}
+      products={products}
+      currentUserId={user.id}
+      openCreateOnLoad={openCreate === "1" && canCreate}
+      canCreate={canCreate}
+    />
+  );
 }

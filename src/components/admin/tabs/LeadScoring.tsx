@@ -54,7 +54,7 @@ export function LeadScoring() {
         <div className="surface rounded-2xl p-10 text-center">
           <p className="text-2xl mb-3">📭</p>
           <p className="font-bold text-[var(--text)] mb-1">No leads yet</p>
-          <p className="text-sm text-[var(--muted)]">Leads appear here as visitors complete the /audit form</p>
+          <p className="text-sm text-[var(--muted)]">Leads appear here automatically as they come in</p>
         </div>
       )}
 
