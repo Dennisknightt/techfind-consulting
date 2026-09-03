@@ -75,12 +75,38 @@ export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; 
               type="button"
               {...fadeInUp}
               onClick={() => setSelected(p)}
-              className="os-row-hover w-full grid grid-cols-2 sm:grid-cols-[1fr_1fr_90px_100px_110px_90px_32px] items-center gap-3 px-4 py-2.5 text-left"
+              className="os-row-hover w-full block sm:grid sm:grid-cols-[1fr_1fr_90px_100px_110px_90px_32px] items-center gap-3 px-4 py-2.5 text-left"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
-              <div className="min-w-0">
+              {/* Mobile card layout */}
+              <div className="flex sm:hidden items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{p.company?.name ?? "—"}</p>
+                  <p className="os-text-meta truncate">{p.reference}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    <Badge tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status.replace(/_/g, " ")}</Badge>
+                    <span className="os-text-meta">{p.method} · {friendlyDate(p.createdAt)}</span>
+                  </div>
+                </div>
+                <div className="flex flex-col items-end gap-1.5 shrink-0">
+                  <span className="os-text-number text-sm" style={{ color: "var(--text)" }}>{formatKES(p.amount, { compact: true })}</span>
+                  {p.receipt && (
+                    <a
+                      href={`/api/os/receipts/${p.receipt.id}/pdf`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={e => e.stopPropagation()}
+                      aria-label="Download receipt"
+                      style={{ color: "var(--text-faint)" }}
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                    </a>
+                  )}
+                </div>
+              </div>
+
+              <div className="hidden sm:block min-w-0">
                 <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{p.company?.name ?? "—"}</p>
-                <p className="os-text-meta truncate sm:hidden">{p.reference}</p>
               </div>
               <div className="hidden sm:block min-w-0">
                 {p.document ? (
@@ -100,7 +126,7 @@ export function PaymentsList({ payments, canRecord }: { payments: PaymentRow[]; 
               <span className="hidden sm:block os-text-number text-sm" style={{ color: "var(--text)" }}>{formatKES(p.amount, { compact: true })}</span>
               <div className="hidden sm:block"><Badge tone={STATUS_TONE[p.status] ?? "neutral"}>{p.status.replace(/_/g, " ")}</Badge></div>
               <span className="hidden sm:block os-text-meta">{friendlyDate(p.createdAt)}</span>
-              <div className="flex justify-end">
+              <div className="hidden sm:flex justify-end">
                 {p.receipt && (
                   <a
                     href={`/api/os/receipts/${p.receipt.id}/pdf`}

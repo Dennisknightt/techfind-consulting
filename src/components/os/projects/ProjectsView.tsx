@@ -90,6 +90,10 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
                   <p className="os-text-meta truncate">{p.name}</p>
                 </div>
               </div>
+              <div className="flex sm:hidden items-center gap-1.5 flex-wrap -mt-0.5">
+                <Badge tone={stageTone(p.stage)}>{PROJECT_STAGE_LABEL[p.stage] ?? p.stage}</Badge>
+                <span className="os-text-meta ml-auto">{daysBetween(p.startedAt)}d in delivery</span>
+              </div>
               <div className="hidden sm:block">
                 <div className="h-1.5 rounded-full" style={{ background: "var(--surface-hover)" }}>
                   <div

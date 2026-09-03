@@ -191,6 +191,19 @@ export function LeadsView({
                 </div>
               </Link>
 
+              <div className="flex sm:hidden items-center gap-1.5 flex-wrap -mt-0.5">
+                <Badge tone={isLeadWon(lead.status) ? "success" : isLeadLost(lead.status) ? "neutral" : "accent"}>
+                  {stageLabel(lead.status)}
+                </Badge>
+                <TemperatureBadge temperature={lead.temperature} />
+                <AttentionBadge lead={lead} />
+                {lead.value > 0 && (
+                  <span className="os-text-number text-xs ml-auto" style={{ color: "var(--text)" }}>
+                    {formatKES(lead.value, { compact: true })}
+                  </span>
+                )}
+              </div>
+
               <span className="hidden sm:block">
                 <Badge tone={isLeadWon(lead.status) ? "success" : isLeadLost(lead.status) ? "neutral" : "accent"}>
                   {stageLabel(lead.status)}

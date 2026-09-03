@@ -83,7 +83,13 @@ export function ClientsView({ initialCompanies, openCreateOnLoad }: { initialCom
                   <CompanyAvatar name={c.name} size={28} />
                   <div className="min-w-0">
                     <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{c.name}</p>
-                    <p className="os-text-meta truncate">{c.industry ?? "—"}</p>
+                    <p className="os-text-meta truncate">
+                      {c.industry ?? "—"}
+                      <span className="sm:hidden">
+                        {" "}· {c._count.deals} opportunit{c._count.deals === 1 ? "y" : "ies"}
+                        {lifetimeValue > 0 && <> · {formatKES(lifetimeValue, { compact: true })}</>}
+                      </span>
+                    </p>
                   </div>
                 </div>
                 <div className="relative z-10 pointer-events-auto sm:block">

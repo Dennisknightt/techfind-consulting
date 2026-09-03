@@ -58,17 +58,31 @@ export function DocumentsList({
           {documents.map((doc, i) => (
             <div
               key={doc.id}
-              className="os-row-hover relative grid grid-cols-2 sm:grid-cols-[110px_1fr_130px_110px_110px] items-center gap-3 px-4 py-2.5"
+              className="os-row-hover relative block sm:grid sm:grid-cols-[110px_1fr_130px_110px_110px] items-center gap-3 px-4 py-2.5"
               style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
               <Link href={`/app/quotes/${doc.id}`} className="absolute inset-0" aria-label={`Open ${doc.number}`} />
-              <div>
+
+              {/* Mobile card layout */}
+              <div className="flex sm:hidden items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{doc.number}</p>
+                  <p className="text-sm truncate" style={{ color: "var(--text-muted)" }}>{doc.company.name}</p>
+                  <div className="flex items-center gap-1.5 flex-wrap mt-1.5">
+                    <Badge tone={STATUS_TONE[doc.status] ?? "neutral"}>{doc.status.replace(/_/g, " ")}</Badge>
+                    <span className="os-text-meta">{friendlyDay(doc.createdAt)}</span>
+                  </div>
+                </div>
+                <span className="os-text-number text-sm shrink-0" style={{ color: "var(--text)" }}>{formatKES(doc.total, { compact: true })}</span>
+              </div>
+
+              <div className="hidden sm:block">
                 <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{doc.number}</p>
                 <p className="os-text-meta">{friendlyDay(doc.createdAt)}</p>
               </div>
               <p className="hidden sm:block text-sm truncate" style={{ color: "var(--text)" }}>{doc.company.name}</p>
               <div className="hidden sm:block"><Badge tone={STATUS_TONE[doc.status] ?? "neutral"}>{doc.status.replace(/_/g, " ")}</Badge></div>
-              <span className="os-text-number text-sm text-right sm:text-left" style={{ color: "var(--text)" }}>{formatKES(doc.total, { compact: true })}</span>
+              <span className="hidden sm:block os-text-number text-sm" style={{ color: "var(--text)" }}>{formatKES(doc.total, { compact: true })}</span>
               <div className="relative z-10 hidden sm:flex justify-end">
                 {doc.balance > 0 && (
                   <RequestPaymentButton documentId={doc.id} label={doc.paidAmount > 0 ? "Balance" : "Request"} size="sm" variant="secondary" />
