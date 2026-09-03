@@ -60,6 +60,18 @@
   --radius-xl:  1.125rem;
 
   color-scheme: light;
+
+  /* Compatibility aliases — the Revenue Engine admin portal (src/components/admin/*)
+     was ported in from the old (marketing) route group, which named a few tokens
+     differently. Aliasing here (rather than rewriting ~2,600 lines of admin JSX)
+     moves it onto the OS's actual accent/surface system with no visual rewrite —
+     this is the fix for the old "admin reads marketing tokens" mismatch. No new
+     code should introduce fresh usage of these names; use the canonical ones above. */
+  --card:          var(--surface);
+  --card-hover:    var(--surface-hover);
+  --muted:         var(--text-muted);
+  --border-accent: var(--accent-soft);
+  --accent-glow:   var(--accent-soft);
 }
 
 .dark {
@@ -102,6 +114,13 @@
   --shadow-glow:   0 8px 32px rgba(232, 121, 249, 0.28);
 
   color-scheme: dark;
+
+  /* Revenue Engine compatibility aliases — see :root above. */
+  --card:          var(--surface);
+  --card-hover:    var(--surface-hover);
+  --muted:         var(--text-muted);
+  --border-accent: var(--accent-soft);
+  --accent-glow:   var(--accent-soft);
 }
 
 @theme inline {
@@ -168,3 +187,42 @@ body {
 .os-sheet-slide[data-side="right"][data-state="closed"] { transform: translateX(100%); }
 .os-sheet-slide[data-side="bottom"] { transform: translateY(0); }
 .os-sheet-slide[data-side="bottom"][data-state="closed"] { transform: translateY(100%); }
+
+/* .btn-primary / .btn-secondary — the Revenue Engine admin portal (ported from the old
+   marketing route group, see the compatibility-alias note above) reaches for these two
+   classes directly instead of the <Button> component. Defined here, on the OS's own
+   tokens/radius, so they read as part of the CRM rather than a leftover from the deleted
+   marketing site. New OS code should use <Button variant="primary"|"secondary"> instead —
+   these exist only so the ported admin JSX didn't need a line-by-line rewrite. */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+  font-weight: 600;
+  border: none;
+  box-shadow: var(--shadow-sm);
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+.btn-primary:hover { box-shadow: var(--shadow-glow); }
+.btn-primary:active { transform: scale(0.98); }
+.btn-primary:disabled { opacity: 0.4; pointer-events: none; }
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1.25rem;
+  border-radius: var(--radius-md);
+  background: var(--surface-hover);
+  color: var(--text);
+  font-weight: 500;
+  border: 1px solid var(--border);
+  transition: background-color 0.15s ease, transform 0.15s ease;
+}
+.btn-secondary:hover { background: var(--surface-sunken); }
+.btn-secondary:active { transform: scale(0.98); }
+.btn-secondary:disabled { opacity: 0.4; pointer-events: none; }

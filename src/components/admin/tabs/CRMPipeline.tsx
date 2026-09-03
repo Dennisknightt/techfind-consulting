@@ -96,7 +96,7 @@ export function CRMPipeline() {
         <div className="surface rounded-2xl p-10 text-center">
           <p className="text-2xl mb-3">📋</p>
           <p className="font-bold text-[var(--text)] mb-1">Pipeline is empty</p>
-          <p className="text-sm text-[var(--muted)]">Leads from your /audit page will appear here automatically</p>
+          <p className="text-sm text-[var(--muted)]">New leads will appear here automatically</p>
         </div>
       )}
 

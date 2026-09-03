@@ -95,7 +95,7 @@ export function ProposalGenerator() {
           <Users className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--muted)" }} />
           <p className="font-bold text-[var(--text)] mb-1">No qualified leads yet</p>
           <p className="text-sm text-[var(--muted)]">
-            A+ and A leads who pass qualification appear here. Run the /audit page to capture leads.
+            A+ and A leads who pass qualification appear here.
           </p>
         </div>
       )}

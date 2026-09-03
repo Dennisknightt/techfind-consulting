@@ -1,11 +1,10 @@
 # Design System
 
-Full visual overhaul (see IMPLEMENTATION note below): the OS moved off the public site's
-violet/blue onto its own fuchsia/indigo identity — the two apps no longer share a brand palette,
-each keeps its own token set in its own route group. The OS remains a dense, premium SaaS
-interior (closer to Linear/Stripe/Attio) rather than the marketing site's motion-heavy
-landing-page feel. Tokens live in
-`src/app/(os)/globals.css`, scoped to the `(os)` route group only.
+This app is the Techfind Revenue OS only — the public marketing site (formerly the `(marketing)`
+route group: the GSAP/Lenis motion landing pages, the AI-service pages, the audit funnel) has
+been removed. `src/app/(os)` is now the entire app, so `/` redirects straight to `/login`
+(`src/app/(os)/page.tsx`). Tokens live in `src/app/(os)/globals.css`, a dense, premium SaaS
+interior (closer to Linear/Stripe/Attio), fuchsia/indigo accent.
 
 ## Tokens
 
@@ -61,42 +60,20 @@ variants get higher opacity in dark mode for the same reason. In practice this i
 unreachable in the running app — `(os)/layout.tsx` sets `defaultTheme="light"` with
 `enableSystem={false}` and there's no in-app toggle — kept ready for one, not wasted work.
 
-## Known inconsistency: the Revenue Engine admin portal
+## The Revenue Engine admin portal, and its compatibility token aliases
 
-`(marketing)/admin/*` (the SUPER_ADMIN-only "Revenue Engine" panel) physically lives in the
-`(marketing)` route group and so reads the *marketing* site's tokens, not the OS's — it's
-functionally a dense internal data tool, not a brand/landing page, so this is a real mismatch.
-Not fixed in the OS's own redesign pass since it can't reach OS tokens without importing across
-route groups; addressed instead in the marketing site's own redesign (below) by picking a
-restrained accent pairing rather than leaning into the landing page's full brand treatment. The
-underlying architectural mismatch (two token systems, one route group) is unchanged — only the
-values on both sides are now closer in weight.
-
-## Marketing site (`(marketing)` route group)
-
-Tokens live in `src/app/(marketing)/globals.css`, entirely separate from the OS's — the two apps
-share zero brand color by design (see the OS overhaul note above). Palette: `--accent` emerald
-(`#059669` light / `#10B981` dark), `--accent-2` amber (`#D97706` light / `#F59E0B` dark),
-`--highlight` sky (`#0EA5E9` light / `#38BDF8` dark) — distinct from both the OS's fuchsia/indigo
-and every techfind-saas-core vertical accent, and picked to still read calmly on the dense
-Revenue Engine admin tables rather than only working for the landing page's hero treatment.
-
-Unlike the OS and saas-core (both light-locked), this app has a real, user-facing dark mode
-toggle (`ThemeProvider` in `src/components/layout/ThemeProvider.tsx`, `defaultTheme="dark"`,
-`enableSystem`) — dark is actually the *default* experience here, so both palettes were verified
-in-browser, not just the light one.
-
-The motion architecture (Lenis smooth scroll, the custom `cursor:none` ring/dot cursor, GSAP-
-style scroll reveals, ambient orbs, the animated gradient border, marquee, particle streams) is
-unchanged — every animated utility class in `globals.css` reads its color from the token set
-above (`var(--accent)`, `var(--accent-2)`, `var(--highlight)`), so the redesign is a token swap
-that cascades through the existing effects rather than a rebuild of them. `Navbar`, `Footer`, and
-the shared motion widgets (`AnimatedCounter`, `MagneticButton`, `TextReveal`, `GradientOrb`) were
-already fully token-driven and needed no direct edits — `GradientOrb`'s hardcoded Tailwind
-classes were the one exception, updated to match. Hardcoded hex elsewhere in `src/components/home/`
-(testimonial/case-study avatar gradients, the world-map node colors, real third-party AI-platform
-brand colors in `AiPlatformLogo`) is deliberate per-item variety or genuine external branding, not
-this site's identity, and was left alone — same convention as `channels.ts` in the OS.
+`/admin` (the SUPER_ADMIN-only "Revenue Engine" panel — prospect discovery/audit, lead scoring,
+outreach, proposals, CRM pipeline, communications, calendar booking, settings) used to live in
+the marketing route group and read the *marketing* site's tokens, which was a real mismatch for
+what's functionally a dense internal data tool. Now that the marketing site is gone, it's been
+ported into `src/app/(os)/admin/*` unchanged, restyled onto the OS's own tokens rather than
+rewritten. Its ~2,600 lines of JSX use a handful of token names the marketing site had that the
+OS didn't (`--card`, `--card-hover`, `--muted`, `--border-accent`, `--accent-glow`) — rather than
+rewrite every reference, `globals.css` defines these as aliases onto the canonical OS tokens
+(`--surface`, `--surface-hover`, `--text-muted`, `--accent-soft` twice) in both `:root` and
+`.dark`. The admin portal now genuinely reads the OS's fuchsia/indigo accent instead of the old
+marketing palette — no new component should introduce fresh usage of the alias names; use the
+canonical ones above instead.
 
 ## What's deliberately *not* here
 

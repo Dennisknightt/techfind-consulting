@@ -113,7 +113,7 @@ export function OutreachAgent() {
           <Users className="w-10 h-10 mx-auto mb-3" style={{ color: "var(--muted)" }} />
           <p className="font-bold text-[var(--text)] mb-1">No A+ or A leads yet</p>
           <p className="text-sm text-[var(--muted)]">
-            As visitors complete the /audit page and score 80+, they&rsquo;ll appear here ready for outreach
+            As leads come in and score 80+, they&rsquo;ll appear here ready for outreach
           </p>
         </div>
       )}

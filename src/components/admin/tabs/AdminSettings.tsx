@@ -137,7 +137,7 @@ export function AdminSettings() {
           </span>
         </div>
         <p className="text-xs text-[var(--muted)] leading-relaxed">
-          Leads are automatically scored and qualified when they complete the /audit form.
+          Leads are automatically scored and qualified as they come in.
           Those without budget, authority, or a valid timeline are routed to <strong>Nurture</strong> instead of the sales pipeline.
           This firewall is always on and cannot be disabled.
         </p>
