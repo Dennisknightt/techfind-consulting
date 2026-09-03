@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  AlertCircle, AlertTriangle, ArrowRight, Flame, Users, CalendarDays, ListTodo, Wallet,
+  AlertTriangle, ArrowRight, Flame, Users, CalendarDays, ListTodo, Wallet,
   Sparkles, PartyPopper, Clock, ShieldCheck, Handshake,
 } from "lucide-react";
 import { formatKES } from "@/lib/os/money";
@@ -228,11 +228,10 @@ function StatPill({
 
 function AttentionRow({ item }: { item: AttentionItem }) {
   const critical = item.severity === "critical";
-  const Icon = critical ? AlertCircle : AlertTriangle;
-  const color = critical ? "var(--danger)" : "var(--warning)";
+  const color = critical ? "var(--danger)" : "var(--accent-2)";
   return (
     <motion.div variants={staggerItem} className="os-row-hover flex items-center gap-3 px-4 py-3">
-      <Icon className="w-4 h-4 shrink-0" style={{ color }} />
+      <span className="w-2 h-2 rounded-full shrink-0" style={{ background: color }} />
       <div className="flex-1 min-w-[180px]">
         <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>{item.title}</p>
         <p className="os-text-meta mt-0.5">{item.description}</p>
@@ -242,7 +241,10 @@ function AttentionRow({ item }: { item: AttentionItem }) {
           {formatKES(item.valueAtRisk, { compact: true })}
         </span>
       ) : null}
-      <Button size="sm" variant="secondary" asChild className="shrink-0">
+      <Button
+        size="sm" variant="outline" asChild
+        className="shrink-0 rounded-full border-[var(--accent)] text-[var(--accent)] hover:bg-[var(--accent-soft)]"
+      >
         <Link href={item.actionHref} className="flex items-center gap-1">
           {item.actionLabel} <ArrowRight className="w-3.5 h-3.5" />
         </Link>
