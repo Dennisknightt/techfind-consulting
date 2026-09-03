@@ -12,10 +12,10 @@ interface GradientOrbProps {
 }
 
 const colorMap = {
-  blue: "bg-blue-600/20",
-  violet: "bg-violet-600/20",
-  cyan: "bg-cyan-500/20",
-  mixed: "bg-gradient-to-br from-blue-600/20 to-violet-600/20",
+  blue: "bg-sky-500/20",
+  violet: "bg-emerald-600/20",
+  cyan: "bg-amber-500/20",
+  mixed: "bg-gradient-to-br from-emerald-600/20 to-sky-500/20",
 };
 
 const sizeMap = {

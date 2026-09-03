@@ -5,27 +5,35 @@
 
 /* ─────────────────────────────────────────────
    DESIGN TOKENS — Light (default)
+   Full visual overhaul: off the old violet/blue/cyan trio (now the CRM's
+   ex-palette — see (os)/globals.css, which itself moved to fuchsia/indigo)
+   onto an emerald/amber/sky identity. Distinct from both the CRM app and
+   every saas-core vertical accent, and chosen restrained enough to also
+   read well on the dense Revenue Engine admin portal that lives in this
+   route group (see docs/DESIGN_SYSTEM.md "Known inconsistency" section).
+   Same token *names* as before — every consumer (Navbar, Footer, section
+   components) picks this up with zero changes.
 ───────────────────────────────────────────── */
 :root {
-  --bg:            #F8FAFC;
+  --bg:            #F7FAF8;
   --card:          #FFFFFF;
-  --card-hover:    #F1F5F9;
+  --card-hover:    #EFF6F1;
   --border:        rgba(15, 23, 42, 0.10);
-  --border-accent: rgba(124, 58, 237, 0.25);
+  --border-accent: rgba(5, 150, 105, 0.25);
   --text:          #0F172A;
   --muted:         #475569;
-  --accent:        #7C3AED;
-  --accent-2:      #2563EB;
-  --highlight:     #0891B2;
-  --accent-glow:   rgba(124, 58, 237, 0.12);
-  --accent-2-glow: rgba(37, 99, 235, 0.10);
-  --nav-bg:        rgba(248, 250, 252, 0.88);
+  --accent:        #059669;
+  --accent-2:      #D97706;
+  --highlight:     #0EA5E9;
+  --accent-glow:   rgba(5, 150, 105, 0.12);
+  --accent-2-glow: rgba(217, 119, 6, 0.10);
+  --nav-bg:        rgba(247, 250, 248, 0.88);
   --shadow-sm:     0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.04);
   --shadow-md:     0 4px 16px rgba(15, 23, 42, 0.10);
-  --shadow-glow:   0 8px 32px rgba(124, 58, 237, 0.18);
-  --orb-1:         rgba(124, 58, 237, 0.08);
-  --orb-2:         rgba(37, 99, 235, 0.08);
-  --orb-3:         rgba(8, 145, 178, 0.06);
+  --shadow-glow:   0 8px 32px rgba(5, 150, 105, 0.18);
+  --orb-1:         rgba(5, 150, 105, 0.08);
+  --orb-2:         rgba(217, 119, 6, 0.08);
+  --orb-3:         rgba(14, 165, 233, 0.06);
   --grid-line:     rgba(15, 23, 42, 0.04);
 }
 
@@ -33,25 +41,25 @@
    DESIGN TOKENS — Dark
 ───────────────────────────────────────────── */
 .dark {
-  --bg:            #070B14;
-  --card:          #0E1628;
-  --card-hover:    #131F35;
+  --bg:            #070F0C;
+  --card:          #0D1B16;
+  --card-hover:    #12261F;
   --border:        rgba(255, 255, 255, 0.08);
-  --border-accent: rgba(124, 58, 237, 0.30);
+  --border-accent: rgba(16, 185, 129, 0.30);
   --text:          #FFFFFF;
   --muted:         #94A3B8;
-  --accent:        #7C3AED;
-  --accent-2:      #3B82F6;
-  --highlight:     #22D3EE;
-  --accent-glow:   rgba(124, 58, 237, 0.18);
-  --accent-2-glow: rgba(59, 130, 246, 0.12);
-  --nav-bg:        rgba(7, 11, 20, 0.88);
+  --accent:        #10B981;
+  --accent-2:      #F59E0B;
+  --highlight:     #38BDF8;
+  --accent-glow:   rgba(16, 185, 129, 0.18);
+  --accent-2-glow: rgba(245, 158, 11, 0.14);
+  --nav-bg:        rgba(7, 15, 12, 0.88);
   --shadow-sm:     0 1px 3px rgba(0, 0, 0, 0.4);
   --shadow-md:     0 4px 24px rgba(0, 0, 0, 0.4);
-  --shadow-glow:   0 8px 40px rgba(124, 58, 237, 0.25);
-  --orb-1:         rgba(124, 58, 237, 0.14);
-  --orb-2:         rgba(59, 130, 246, 0.10);
-  --orb-3:         rgba(34, 211, 238, 0.08);
+  --shadow-glow:   0 8px 40px rgba(16, 185, 129, 0.25);
+  --orb-1:         rgba(16, 185, 129, 0.14);
+  --orb-2:         rgba(245, 158, 11, 0.10);
+  --orb-3:         rgba(56, 189, 248, 0.10);
   --grid-line:     rgba(255, 255, 255, 0.03);
 }
 
@@ -150,7 +158,7 @@ html, a, button, input, select, textarea, label, summary,
    SELECTION
 ───────────────────────────────────────────── */
 ::selection {
-  background: rgba(124, 58, 237, 0.25);
+  background: rgba(5, 150, 105, 0.25);
   color: var(--text);
 }
 
@@ -516,13 +524,13 @@ footer {
    HERO LOGO CENTREPIECE
 ───────────────────────────────────────────── */
 .logo-hero-glow {
-  filter: drop-shadow(0 8px 32px rgba(124, 58, 237, 0.18))
-          drop-shadow(0 2px 8px rgba(37, 99, 235, 0.12));
+  filter: drop-shadow(0 8px 32px rgba(5, 150, 105, 0.18))
+          drop-shadow(0 2px 8px rgba(217, 119, 6, 0.12));
 }
 
 .dark .logo-hero-glow {
   filter: brightness(0) invert(1)
-          drop-shadow(0 8px 32px rgba(124, 58, 237, 0.35))
+          drop-shadow(0 8px 32px rgba(16, 185, 129, 0.35))
           drop-shadow(0 2px 8px rgba(255, 255, 255, 0.15));
 }
 
