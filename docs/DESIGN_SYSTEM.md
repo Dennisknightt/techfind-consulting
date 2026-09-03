@@ -77,9 +77,12 @@ canonical ones above instead.
 
 ## Sign-in screen
 
-`/login` is one centered card on an ambient canvas, one decision at a time — modelled on
-Airbnb's sign-in rather than the split-screen-with-marketing-panel pattern (a first pass used
-that and was rejected as "every other login page"). `src/components/os/auth/LoginForm.tsx`:
+`/login` pairs a focused, stepped card (modelled on Airbnb's sign-in — one decision at a time)
+with a full-height photograph panel: Nairobi at golden hour from the KICC rooftop, tinted in the
+OS's fuchsia/indigo, naming the product and the city (`src/components/os/auth/AuthPhotoPanel.tsx`).
+The photo is self-hosted (`public/auth/nairobi.jpg`, Wikimedia Commons, CC BY-SA 4.0, Lebu Ayiga)
+and credited on the panel — that credit is a license requirement, not decoration. Below `lg` the
+panel becomes a 240px banner above the card. `src/components/os/auth/LoginForm.tsx`:
 
 - **Stepped**: email → *Continue* → password. The email step is client-only (format check,
   shake on invalid, Enter advances); the password step shows the email as an editable chip
