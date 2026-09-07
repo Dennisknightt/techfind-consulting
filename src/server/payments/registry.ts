@@ -2,20 +2,23 @@ import "server-only";
 import { db } from "@/server/db";
 import { mockProvider } from "./mockProvider";
 import { intasendProvider } from "./intasendProvider";
+import { darajaProvider } from "./darajaProvider";
 import type { PaymentProvider } from "./provider";
 
 const PROVIDERS: Record<string, PaymentProvider> = {
   MOCK: mockProvider,
   INTASEND: intasendProvider,
+  DARAJA: darajaProvider,
 };
 
 /**
  * Resolves the active payment provider from Settings.
  *
- * Safety guard: IntaSend is configured with LIVE keys (real money). Outside
- * of production, this always resolves to the mock provider regardless of
- * the configured setting, so nothing run from a dev/test environment can
- * trigger a real M-Pesa prompt or card charge. Set
+ * Safety guard: every non-mock provider here (IntaSend, Daraja) is
+ * configured with LIVE keys (real money). Outside of production, this
+ * always resolves to the mock provider regardless of the configured
+ * setting, so nothing run from a dev/test environment can trigger a real
+ * M-Pesa prompt or card charge. Set
  * ALLOW_LIVE_PAYMENTS_IN_DEV=true to deliberately opt out when a real
  * end-to-end test is genuinely intended. See /docs/PAYMENTS.md.
  */

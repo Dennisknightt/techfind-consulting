@@ -33,18 +33,29 @@ checkout UI, the reconciliation logic, or the Revenue Control Centre. This means
 second real provider (Pesapal, Flutterwave, Stripe, whatever comes next) is a new file
 implementing the same interface plus a registry entry, not a rewrite.
 
-Two implementations exist today:
+Three implementations exist today:
 
 - **`mockProvider.ts`** — the default everywhere except production. No external calls. Simulates
   the full lifecycle deterministically: `createCharge` returns `PENDING`, and `checkStatus`
   flips it to `SUCCESSFUL` once 2.5 seconds have passed. This makes the entire commercial chain
   (proforma → checkout → poll → reconciled → receipt → project) genuinely clickable and testable
   with zero external credentials.
-- **`intasendProvider.ts`** — the real integration, via the `intasend-node` SDK. Supports M-Pesa
-  STK push and card charges. IntaSend's API responses are untyped; field extraction is
-  defensive (`pick()` over a list of possible key paths) and status mapping never guesses a
-  success — anything not explicitly recognized as a success/failure/cancellation state maps to
-  `PENDING`, never `SUCCESSFUL`.
+- **`intasendProvider.ts`** — a real integration via the `intasend-node` SDK, going through
+  IntaSend as an aggregator. Supports M-Pesa STK push and card charges. IntaSend's API responses
+  are untyped; field extraction is defensive (`pick()` over a list of possible key paths) and
+  status mapping never guesses a success — anything not explicitly recognized as a
+  success/failure/cancellation state maps to `PENDING`, never `SUCCESSFUL`.
+- **`darajaProvider.ts`** — a real integration straight against Safaricom's own Daraja API, no
+  aggregator in between (own paybill/till, no per-transaction cut to a middleman). M-Pesa only —
+  `supportedMethods` is `["MPESA"]`, so the checkout UI never offers Card while this provider is
+  active. Handles Daraja's OAuth token exchange (cached in-memory per warm serverless instance,
+  ~1hr TTL), STK push, and the STK query endpoint for `checkStatus`. Amounts are rounded to
+  whole KES for the outbound request (Daraja rejects decimals) — the `Payment` row itself still
+  records the exact decimal amount. `refund` deliberately throws: Daraja's reversal API needs a
+  separate initiator security credential nothing here provisions, and nothing in the app calls
+  `refund` today, so failing loudly beats silently no-op-ing or faking success on real money.
+  Requires `MPESA_CONSUMER_KEY`/`MPESA_CONSUMER_SECRET`/`MPESA_SHORTCODE`/`MPESA_PASSKEY` — see
+  `.env.example`.
 
 ## The dev-safety guard
 
@@ -52,7 +63,7 @@ Two implementations exist today:
 
 ```
 configured = Setting["payment_provider"].active   (defaults to, and is currently, "MOCK";
-                                                     can be set to "INTASEND")
+                                                     can be set to "INTASEND" or "DARAJA")
 isProd     = NODE_ENV === "production"
 override   = ALLOW_LIVE_PAYMENTS_IN_DEV === "true"
 
@@ -91,8 +102,11 @@ Neither path trusts:
 - a client-supplied amount or status (the charge amount is always read server-side from
   `PaymentSession.amountDue`, never from the request body — see
   `/api/os/pay/[token]/charge/route.ts`),
-- the webhook payload's claimed status (it's used only to identify *which* payment to
-  re-verify, never to directly credit it — see `/api/webhooks/payments/intasend/route.ts`).
+- the webhook/callback payload's claimed status (it's used only to identify *which* payment to
+  re-verify, never to directly credit it — see `/api/webhooks/payments/intasend/route.ts` and
+  `/api/webhooks/payments/daraja/route.ts`). This matters even more for Daraja, which — unlike
+  IntaSend's optional challenge secret — has no signature or shared-secret mechanism on its
+  callback at all; the re-verification is the *only* defense, not a backstop.
 
 `confirmPayment` is idempotent (`if (payment.status === "SUCCESSFUL") return payment` at the
 top), so it's safe to call it repeatedly from both paths without double-crediting a document.

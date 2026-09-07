@@ -51,12 +51,12 @@ export function PaymentProviderSettings({
               className="px-4 py-2.5 rounded-[var(--radius-md)] text-sm font-semibold disabled:opacity-60"
               style={{ background: active === name ? "var(--accent-soft)" : "var(--surface-hover)", color: active === name ? "var(--accent)" : "var(--text-muted)", border: `1px solid ${active === name ? "var(--accent)" : "transparent"}` }}
             >
-              {name === "INTASEND" ? "IntaSend (M-Pesa, Card)" : "Mock (sandbox)"}
+              {name === "INTASEND" ? "IntaSend (M-Pesa, Card)" : name === "DARAJA" ? "Daraja (M-Pesa direct)" : "Mock (sandbox)"}
             </button>
           ))}
         </div>
 
-        {active === "INTASEND" && (
+        {(active === "INTASEND" || active === "DARAJA") && (
           <div
             className="flex items-start gap-2.5 px-3.5 py-3 rounded-[var(--radius-md)]"
             style={{ background: devSafetyOverride ? "var(--info-soft)" : "var(--success-soft)" }}
@@ -65,14 +65,14 @@ export function PaymentProviderSettings({
               <>
                 <ShieldAlert className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--info)" }} />
                 <p className="text-xs" style={{ color: "var(--info)" }}>
-                  IntaSend is configured, but this environment isn&rsquo;t production — payments here are automatically simulated by the Mock provider so no real M-Pesa or card charge can happen accidentally. Deploying to production activates live IntaSend.
+                  {active} is configured, but this environment isn&rsquo;t production — payments here are automatically simulated by the Mock provider so no real M-Pesa or card charge can happen accidentally. Deploying to production activates it live.
                 </p>
               </>
             ) : (
               <>
                 <ShieldCheck className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--success)" }} />
                 <p className="text-xs" style={{ color: "var(--success)" }}>
-                  IntaSend is live in this environment. Real M-Pesa prompts and card charges will be sent to customers who pay.
+                  {active} is live in this environment. Real M-Pesa prompts{active === "INTASEND" ? " and card charges" : ""} will be sent to customers who pay.
                 </p>
               </>
             )}
