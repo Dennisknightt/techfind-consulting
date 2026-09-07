@@ -3,19 +3,22 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task } from "@prisma/client";
-import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban } from "lucide-react";
-import { PageHeader } from "@/components/os/common/PageHeader";
+import type { Company, Contact, Deal, User, Meeting, ProductFootprint, Product, Task, SalesDocument } from "@prisma/client";
+import { Plus, Phone, Mail, Globe, Star, CalendarDays, MessageSquare, FileText, FolderKanban, CreditCard, ArrowRight } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/os/ui/Button";
 import { Badge, TemperatureBadge } from "@/components/os/ui/Badge";
 import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/os/ui/Tabs";
 import { ComingSoon } from "@/components/os/common/ComingSoon";
+import { RequestPaymentButton } from "@/components/os/payments/RequestPaymentButton";
+import { ClientStatusBadge } from "./ClientStatusBadge";
 import { formatKES } from "@/lib/os/money";
 import { friendlyDate, friendlyDay } from "@/lib/os/dates";
 import { CreateDealSheet } from "@/components/os/deals/CreateDealSheet";
 import { ScheduleMeetingSheet } from "@/components/os/meetings/MeetingsView";
 import type { DealWithRelations } from "@/components/os/deals/PipelineView";
+import { updateFootprintStatusAction, type FootprintStatus } from "@/server/actions/clients";
 
 type CompanyFull = Company & {
   contacts: Contact[];
@@ -29,6 +32,12 @@ const FOOTPRINT_META: Record<string, { label: string; tone: "success" | "warning
   ACTIVE: { label: "Active", tone: "success", icon: "✅" },
   OPPORTUNITY: { label: "Opportunity", tone: "warning", icon: "🟡" },
   NOT_PITCHED: { label: "Not Pitched", tone: "neutral", icon: "⚪" },
+};
+
+const FOOTPRINT_NEXT: Record<string, FootprintStatus> = {
+  NOT_PITCHED: "OPPORTUNITY",
+  OPPORTUNITY: "ACTIVE",
+  ACTIVE: "NOT_PITCHED",
 };
 
 function recommendNextProduct(footprint: CompanyFull["footprint"]) {
@@ -46,17 +55,38 @@ function recommendNextProduct(footprint: CompanyFull["footprint"]) {
 }
 
 export function ClientDetail({
-  company, tasks, allProducts, users, currentUserId,
+  company, tasks, allProducts, users, currentUserId, documents,
 }: {
   company: CompanyFull;
   tasks: (Task & { assignee: User | null })[];
   allProducts: Product[];
   users: User[];
   currentUserId: string;
+  documents: SalesDocument[];
 }) {
   const router = useRouter();
   const [dealOpen, setDealOpen] = useState(false);
   const [meetingOpen, setMeetingOpen] = useState(false);
+  const [footprintOverrides, setFootprintOverrides] = useState<Record<string, FootprintStatus>>({});
+  const [footprintSaving, setFootprintSaving] = useState<string | null>(null);
+
+  function statusFor(productId: string): FootprintStatus {
+    return footprintOverrides[productId] ?? (company.footprint.find(f => f.productId === productId)?.status as FootprintStatus | undefined) ?? "NOT_PITCHED";
+  }
+
+  async function cycleFootprint(productId: string) {
+    const next = FOOTPRINT_NEXT[statusFor(productId)];
+    setFootprintOverrides(prev => ({ ...prev, [productId]: next }));
+    setFootprintSaving(productId);
+    try {
+      await updateFootprintStatusAction(company.id, productId, next);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : "Couldn't update — try again");
+      setFootprintOverrides(prev => { const { [productId]: _drop, ...rest } = prev; return rest; });
+    } finally {
+      setFootprintSaving(null);
+    }
+  }
 
   const wonDeals = company.deals.filter(d => d.stage === "WON");
   const openDeals = company.deals.filter(d => !["WON", "LOST"].includes(d.stage));
@@ -64,6 +94,8 @@ export function ClientDetail({
   const pipelineValue = openDeals.reduce((s, d) => s + d.value, 0);
   const recurring = company.footprint.filter(f => f.status === "ACTIVE" && f.mrr).reduce((s, f) => s + (f.mrr ?? 0), 0);
   const recommendation = recommendNextProduct(company.footprint);
+  const outstandingDocs = documents.filter(d => d.balance > 0).sort((a, b) => b.balance - a.balance);
+  const outstandingBalance = outstandingDocs.reduce((s, d) => s + d.balance, 0);
 
   return (
     <div className="p-6 lg:p-8 max-w-5xl">
@@ -71,7 +103,10 @@ export function ClientDetail({
         <div className="flex items-center gap-3.5">
           <CompanyAvatar name={company.name} size={52} />
           <div>
-            <h1 className="text-xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{company.name}</h1>
+            <div className="flex items-center gap-2 flex-wrap">
+              <h1 className="text-xl font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{company.name}</h1>
+              <ClientStatusBadge companyId={company.id} status={company.status} />
+            </div>
             <div className="flex items-center gap-3 mt-1 text-xs text-[var(--text-faint)] flex-wrap">
               {company.industry && <span>{company.industry}</span>}
               {company.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{company.phone}</span>}
@@ -87,26 +122,39 @@ export function ClientDetail({
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
         {[
           { label: "Lifetime Value", value: formatKES(lifetimeValue, { compact: true }) },
           { label: "Open Pipeline", value: `${formatKES(pipelineValue, { compact: true })} (${openDeals.length})` },
           { label: "Recurring Revenue", value: recurring > 0 ? `${formatKES(recurring, { compact: true })}/mo` : "—" },
-          { label: "Outstanding Balance", value: "—" },
+          { label: "Outstanding Balance", value: outstandingBalance > 0 ? formatKES(outstandingBalance, { compact: true }) : "KES 0", tone: outstandingBalance > 0 ? "warning" as const : undefined },
         ].map(s => (
-          <div key={s.label} className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-            <p className="text-lg font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{s.value}</p>
-            <p className="text-xs text-[var(--text-faint)] mt-0.5">{s.label}</p>
+          <div key={s.label}>
+            <p className="os-text-number text-base" style={{ color: s.tone === "warning" ? "var(--warning)" : "var(--text)" }}>{s.value}</p>
+            <p className="os-text-meta mt-0.5">{s.label}</p>
           </div>
         ))}
       </div>
 
+      {outstandingDocs.length > 0 && (
+        <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-center justify-between gap-3 flex-wrap" style={{ background: "var(--warning-soft)" }}>
+          <p className="text-sm" style={{ color: "var(--warning)" }}>
+            <strong>{formatKES(outstandingBalance, { compact: true })}</strong> outstanding across {outstandingDocs.length} invoice{outstandingDocs.length === 1 ? "" : "s"}
+          </p>
+          <RequestPaymentButton
+            documentId={outstandingDocs[0].id}
+            label={outstandingDocs[0].paidAmount > 0 ? "Request Balance" : "Request Payment"}
+            size="sm"
+          />
+        </div>
+      )}
+
       {recommendation && (
-        <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-start gap-3" style={{ background: "var(--accent-soft)", border: "1px solid var(--border-strong)" }}>
+        <div className="mt-4 rounded-[var(--radius-lg)] p-4 flex items-start gap-3 border" style={{ borderColor: "var(--border)" }}>
           <Star className="w-4 h-4 shrink-0 mt-0.5" style={{ color: "var(--accent)" }} />
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-[var(--text)]">Recommended Next Product: {recommendation.name}</p>
-            <p className="text-xs text-[var(--text-muted)] mt-0.5">{recommendation.reason}</p>
+            <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>Recommended next: {recommendation.name}</p>
+            <p className="os-text-meta mt-0.5">{recommendation.reason}</p>
           </div>
           <Button size="sm" variant="secondary" onClick={() => setDealOpen(true)} className="shrink-0">Create Opportunity</Button>
         </div>
@@ -127,12 +175,21 @@ export function ClientDetail({
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
               {allProducts.filter(p => p.isQuickChip || company.footprint.some(f => f.productId === p.id)).map(p => {
                 const fp = company.footprint.find(f => f.productId === p.id);
-                const meta = FOOTPRINT_META[fp?.status ?? "NOT_PITCHED"];
+                const status = statusFor(p.id);
+                const meta = FOOTPRINT_META[status];
                 return (
-                  <div key={p.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)]" style={{ background: "var(--surface-hover)" }}>
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => cycleFootprint(p.id)}
+                    disabled={footprintSaving === p.id}
+                    title={`Tap to mark as ${FOOTPRINT_META[FOOTPRINT_NEXT[status]].label}`}
+                    className="os-press flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)] text-left transition-colors hover:bg-[var(--surface-sunken)] disabled:opacity-60"
+                    style={{ background: "var(--surface-hover)" }}
+                  >
                     <span className="text-sm text-[var(--text)]">{p.name}</span>
                     <Badge tone={meta.tone}>{meta.icon} {meta.label}{fp?.mrr ? ` · ${formatKES(fp.mrr, { compact: true })}/mo` : ""}</Badge>
-                  </div>
+                  </button>
                 );
               })}
             </div>
@@ -155,20 +212,25 @@ export function ClientDetail({
           </div>
         </TabsContent>
 
-        <TabsContent value="opportunities" className="mt-5 space-y-2">
-          {company.deals.length === 0 && <ComingSoon title="No opportunities yet" note="Create one to start tracking this client through the pipeline." />}
-          {company.deals.map(d => (
-            <Link key={d.id} href={`/app/deals/${d.id}`} className="flex items-center justify-between gap-3 px-4 py-3 rounded-[var(--radius-lg)] hover:bg-[var(--surface-hover)] transition-colors" style={{ border: "1px solid var(--border)" }}>
-              <div className="min-w-0">
-                <p className="text-sm font-medium text-[var(--text)] truncate">{d.title}</p>
-                <p className="text-xs text-[var(--text-faint)] mt-0.5">{d.stage.replace(/_/g, " ")}</p>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <TemperatureBadge temperature={d.temperature} />
-                <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>{formatKES(d.value, { compact: true })}</span>
-              </div>
-            </Link>
-          ))}
+        <TabsContent value="opportunities" className="mt-5">
+          {company.deals.length === 0 ? (
+            <ComingSoon title="No opportunities yet" note="Create one to start tracking this client through the pipeline." />
+          ) : (
+            <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+              {company.deals.map(d => (
+                <Link key={d.id} href={`/app/deals/${d.id}`} className="os-row-hover flex items-center justify-between gap-3 px-4 py-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{d.title}</p>
+                    <p className="os-text-meta mt-0.5">{d.stage.replace(/_/g, " ")}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    <TemperatureBadge temperature={d.temperature} />
+                    <span className="os-text-number text-sm" style={{ color: "var(--text)" }}>{formatKES(d.value, { compact: true })}</span>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="meetings" className="mt-5 space-y-2">
@@ -195,9 +257,10 @@ export function ClientDetail({
         </TabsContent>
 
         <TabsContent value="more" className="mt-5 grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <ComingSoonCard icon={MessageSquare} title="Conversations" note="WhatsApp, email and call history — Phase 3." />
-          <ComingSoonCard icon={FileText} title="Quotes, Proformas & Invoices" note="Full document history — Phase 4." />
-          <ComingSoonCard icon={FolderKanban} title="Payments & Projects" note="Reconciled payments and project delivery — Phase 5–6." />
+          <LinkOutCard icon={MessageSquare} title="Conversations" note="WhatsApp, email and call history" href={`/app/communications?company=${company.id}`} />
+          <LinkOutCard icon={FileText} title="Quotes & Proformas" note="Documents sent to this client" href="/app/quotes" />
+          <LinkOutCard icon={CreditCard} title="Payments" note="Reconciled payments" href="/app/payments" />
+          <LinkOutCard icon={FolderKanban} title="Projects" note="Delivery once a deal is won" href="/app/projects" />
         </TabsContent>
       </Tabs>
 
@@ -220,12 +283,17 @@ export function ClientDetail({
   );
 }
 
-function ComingSoonCard({ icon: Icon, title, note }: { icon: typeof MessageSquare; title: string; note: string }) {
+function LinkOutCard({ icon: Icon, title, note, href }: { icon: typeof MessageSquare; title: string; note: string; href: string }) {
   return (
-    <div className="rounded-[var(--radius-lg)] border border-dashed p-5" style={{ borderColor: "var(--border-strong)" }}>
-      <Icon className="w-4 h-4 mb-2" style={{ color: "var(--text-faint)" }} />
-      <p className="text-sm font-semibold text-[var(--text)]">{title}</p>
-      <p className="text-xs text-[var(--text-faint)] mt-1">{note}</p>
-    </div>
+    <Link href={href} className="os-row-hover flex items-start justify-between gap-3 rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+      <div className="flex items-start gap-3 min-w-0">
+        <Icon className="w-4 h-4 mt-0.5 shrink-0" style={{ color: "var(--text-faint)" }} />
+        <div className="min-w-0">
+          <p className="os-text-body font-medium" style={{ color: "var(--text)" }}>{title}</p>
+          <p className="os-text-meta mt-0.5">{note}</p>
+        </div>
+      </div>
+      <ArrowRight className="w-3.5 h-3.5 shrink-0 mt-0.5" style={{ color: "var(--text-faint)" }} />
+    </Link>
   );
 }

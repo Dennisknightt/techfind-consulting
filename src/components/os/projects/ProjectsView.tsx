@@ -4,12 +4,14 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Project, Company, User } from "@prisma/client";
 import { Search, FolderKanban } from "lucide-react";
+import { motion } from "framer-motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Input } from "@/components/os/ui/Input";
 import { Badge } from "@/components/os/ui/Badge";
 import { CompanyAvatar, Avatar } from "@/components/os/ui/Avatar";
 import { PROJECT_STAGES, PROJECT_STAGE_LABEL, projectStageIndex } from "@/lib/os/projects";
 import { daysBetween } from "@/lib/os/dates";
+import { fadeInUp } from "@/lib/os/motion";
 
 type ProjectRow = Project & { company: Company; owner: User | null };
 
@@ -48,7 +50,7 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
             <button
               key={s}
               onClick={() => setStageFilter(s)}
-              className="px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
+              className="os-press px-3 py-1.5 rounded-full text-xs font-medium transition-colors whitespace-nowrap"
               style={{
                 background: stageFilter === s ? "var(--accent-soft)" : "var(--surface-hover)",
                 color: stageFilter === s ? "var(--accent)" : "var(--text-muted)",
@@ -67,20 +69,32 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
           <p className="text-xs text-[var(--text-faint)] mt-1">A project starts itself the moment a client's deposit clears.</p>
         </div>
       ) : (
-        <div className="space-y-2 mt-5">
-          {filtered.map(p => (
-            <button
+        <div className="mt-5 rounded-[var(--radius-lg)] border overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <div className="hidden sm:grid items-center gap-3 px-4 py-2 border-b" style={{ gridTemplateColumns: "1fr 140px 130px 100px 32px", borderColor: "var(--border)" }}>
+            {["Project", "Progress", "Stage", "In delivery", ""].map(h => (
+              <span key={h} className="os-text-meta font-semibold uppercase tracking-wide" style={{ fontSize: 11 }}>{h}</span>
+            ))}
+          </div>
+          {filtered.map((p, i) => (
+            <motion.button
               key={p.id}
+              {...fadeInUp}
               onClick={() => router.push(`/app/projects/${p.id}`)}
-              className="w-full text-left flex items-center gap-3.5 px-4 py-3.5 rounded-[var(--radius-lg)] transition-shadow hover:shadow-[var(--shadow-sm)]"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+              className="os-row-hover w-full grid grid-cols-1 sm:grid-cols-[1fr_140px_130px_100px_32px] items-center gap-3 px-4 py-2.5 text-left"
+              style={{ borderTop: i === 0 ? "none" : "1px solid var(--border)" }}
             >
-              <CompanyAvatar name={p.company.name} size={38} />
-              <div className="min-w-0 flex-1">
-                <p className="text-sm font-semibold text-[var(--text)] truncate">{p.company.name}</p>
-                <p className="text-xs text-[var(--text-faint)] truncate">{p.name}</p>
+              <div className="flex items-center gap-2.5 min-w-0">
+                <CompanyAvatar name={p.company.name} size={28} />
+                <div className="min-w-0">
+                  <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{p.company.name}</p>
+                  <p className="os-text-meta truncate">{p.name}</p>
+                </div>
               </div>
-              <div className="hidden sm:block w-40">
+              <div className="flex sm:hidden items-center gap-1.5 flex-wrap -mt-0.5">
+                <Badge tone={stageTone(p.stage)}>{PROJECT_STAGE_LABEL[p.stage] ?? p.stage}</Badge>
+                <span className="os-text-meta ml-auto">{daysBetween(p.startedAt)}d in delivery</span>
+              </div>
+              <div className="hidden sm:block">
                 <div className="h-1.5 rounded-full" style={{ background: "var(--surface-hover)" }}>
                   <div
                     className="h-1.5 rounded-full"
@@ -88,12 +102,12 @@ export function ProjectsView({ initialProjects }: { initialProjects: ProjectRow[
                   />
                 </div>
               </div>
-              <Badge tone={stageTone(p.stage)}>{PROJECT_STAGE_LABEL[p.stage] ?? p.stage}</Badge>
-              <span className="hidden md:inline text-xs text-[var(--text-faint)] w-24 text-right">
-                {daysBetween(p.startedAt)}d in delivery
+              <div className="hidden sm:block"><Badge tone={stageTone(p.stage)}>{PROJECT_STAGE_LABEL[p.stage] ?? p.stage}</Badge></div>
+              <span className="hidden sm:block os-text-meta">{daysBetween(p.startedAt)}d</span>
+              <span className="hidden sm:flex justify-center">
+                {p.owner && <Avatar name={p.owner.name} color={p.owner.avatarColor} size={22} />}
               </span>
-              {p.owner && <Avatar name={p.owner.name} color={p.owner.avatarColor} size={26} />}
-            </button>
+            </motion.button>
           ))}
         </div>
       )}

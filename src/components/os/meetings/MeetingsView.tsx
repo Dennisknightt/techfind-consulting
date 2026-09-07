@@ -4,7 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import type { Meeting, Company, Contact, Deal, Product } from "@prisma/client";
 import { Plus, Calendar, ChevronRight, CheckCircle2 } from "lucide-react";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { fadeInUp } from "@/lib/os/motion";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Input, Label, Textarea } from "@/components/os/ui/Input";
@@ -62,9 +64,11 @@ export function MeetingsView({
 
       {needsCompletion.length > 0 && (
         <Section title="Needs a recap" tone="danger">
-          {needsCompletion.map(m => (
-            <MeetingCard key={m.id} meeting={m} onComplete={() => setCompleting(m)} />
-          ))}
+          <MeetingList>
+            {needsCompletion.map(m => (
+              <MeetingCard key={m.id} meeting={m} onComplete={() => setCompleting(m)} />
+            ))}
+          </MeetingList>
         </Section>
       )}
 
@@ -72,13 +76,17 @@ export function MeetingsView({
         {upcoming.length === 0 ? (
           <EmptyRow text="Nothing scheduled — meetings you book will appear here." />
         ) : (
-          upcoming.map(m => <MeetingCard key={m.id} meeting={m} onComplete={() => setCompleting(m)} />)
+          <MeetingList>
+            {upcoming.map(m => <MeetingCard key={m.id} meeting={m} onComplete={() => setCompleting(m)} />)}
+          </MeetingList>
         )}
       </Section>
 
       {done.length > 0 && (
         <Section title="Recently completed">
-          {done.map(m => <MeetingCard key={m.id} meeting={m} completed />)}
+          <MeetingList>
+            {done.map(m => <MeetingCard key={m.id} meeting={m} completed />)}
+          </MeetingList>
         </Section>
       )}
 
@@ -99,10 +107,18 @@ export function MeetingsView({
 function Section({ title, tone, children }: { title: string; tone?: "danger"; children: React.ReactNode }) {
   return (
     <div className="mt-6">
-      <p className="text-xs font-bold uppercase tracking-wider mb-2.5" style={{ color: tone === "danger" ? "var(--danger)" : "var(--text-faint)" }}>
+      <p className="os-text-meta font-semibold uppercase tracking-wider mb-2.5" style={{ color: tone === "danger" ? "var(--danger)" : undefined }}>
         {title}
       </p>
-      <div className="space-y-2.5">{children}</div>
+      {children}
+    </div>
+  );
+}
+
+function MeetingList({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+      {children}
     </div>
   );
 }
@@ -119,7 +135,7 @@ function EmptyRow({ text }: { text: string }) {
 function MeetingCard({ meeting, onComplete, completed }: { meeting: MeetingWithRelations; onComplete?: () => void; completed?: boolean }) {
   const overdue = meeting.status === "SCHEDULED" && isOverdue(meeting.scheduledAt);
   return (
-    <div className="rounded-[var(--radius-lg)] p-4 flex items-center gap-3" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+    <motion.div {...fadeInUp} className="os-row-hover px-4 py-3 flex items-center gap-3">
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-[var(--text)]">{meeting.company.name}</span>
@@ -145,7 +161,7 @@ function MeetingCard({ meeting, onComplete, completed }: { meeting: MeetingWithR
         </Button>
       )}
       {!completed && !onComplete && <ChevronRight className="w-4 h-4 shrink-0" style={{ color: "var(--text-faint)" }} />}
-    </div>
+    </motion.div>
   );
 }
 

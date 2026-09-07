@@ -40,7 +40,14 @@ export async function confirmPayment(paymentId: string): Promise<Payment> {
   return updated;
 }
 
-async function applySuccessfulPayment(payment: Payment): Promise<void> {
+/**
+ * Applies every downstream effect of a payment landing (document balance,
+ * deal WON, project handoff, receipt, notification). Exported so a manually
+ * recorded payment (see recordManualPaymentAction) goes through the exact
+ * same real logic as a provider-confirmed one — never a second, drifting
+ * copy of "what happens when money arrives."
+ */
+export async function applySuccessfulPayment(payment: Payment): Promise<void> {
   await writeAudit({ action: "PAYMENT_CONFIRMED", entityType: "Payment", entityId: payment.id, after: payment });
 
   if (!payment.documentId) return;

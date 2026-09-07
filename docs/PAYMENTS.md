@@ -1,5 +1,29 @@
 # Payments
 
+## Philosophy: automation, not administration
+
+Techfind has no walk-in customers, so there is no cash/POS/manual-receipt workflow to
+digitize — there's manual work to eliminate instead. The standard journey is:
+
+```
+Deal Closed → Invoice Created → Payment Link Generated → Link Sent →
+STK Push → M-Pesa Confirms → CRM Updates → Receipt Generated
+```
+
+Concretely: every proforma/invoice gets a `PaymentSession` the moment it's created
+(`createDocumentAction`), scoped to whatever's due right now (deposit, then balance).
+From anywhere the CRM already shows that document — the document itself, its deal, its
+client, the Money view — a one-click **Request Payment** (`RequestPaymentButton`) sends
+that link with zero re-entry, and **Send M-Pesa Prompt** (`SendStkPushButton`) fires the
+STK push directly against the phone on file, no link needed. Both call
+`src/server/actions/payments.ts`, which always resolves the session to the document's
+*current* outstanding balance — so "Request Payment" before anything is paid and
+"Request Balance" after a deposit are the same code path, just a different button label.
+
+The only manual/administrative path is `payments.write` (Finance/Super Admin) —
+reconciliation and refunds for genuine edge cases, never the normal flow. There is
+deliberately no cash-collection screen, POS flow, or manual "mark as paid" button.
+
 ## Provider abstraction
 
 `src/server/payments/provider.ts` defines the `PaymentProvider` interface every gateway
@@ -9,18 +33,29 @@ checkout UI, the reconciliation logic, or the Revenue Control Centre. This means
 second real provider (Pesapal, Flutterwave, Stripe, whatever comes next) is a new file
 implementing the same interface plus a registry entry, not a rewrite.
 
-Two implementations exist today:
+Three implementations exist today:
 
 - **`mockProvider.ts`** — the default everywhere except production. No external calls. Simulates
   the full lifecycle deterministically: `createCharge` returns `PENDING`, and `checkStatus`
   flips it to `SUCCESSFUL` once 2.5 seconds have passed. This makes the entire commercial chain
   (proforma → checkout → poll → reconciled → receipt → project) genuinely clickable and testable
   with zero external credentials.
-- **`intasendProvider.ts`** — the real integration, via the `intasend-node` SDK. Supports M-Pesa
-  STK push and card charges. IntaSend's API responses are untyped; field extraction is
-  defensive (`pick()` over a list of possible key paths) and status mapping never guesses a
-  success — anything not explicitly recognized as a success/failure/cancellation state maps to
-  `PENDING`, never `SUCCESSFUL`.
+- **`intasendProvider.ts`** — a real integration via the `intasend-node` SDK, going through
+  IntaSend as an aggregator. Supports M-Pesa STK push and card charges. IntaSend's API responses
+  are untyped; field extraction is defensive (`pick()` over a list of possible key paths) and
+  status mapping never guesses a success — anything not explicitly recognized as a
+  success/failure/cancellation state maps to `PENDING`, never `SUCCESSFUL`.
+- **`darajaProvider.ts`** — a real integration straight against Safaricom's own Daraja API, no
+  aggregator in between (own paybill/till, no per-transaction cut to a middleman). M-Pesa only —
+  `supportedMethods` is `["MPESA"]`, so the checkout UI never offers Card while this provider is
+  active. Handles Daraja's OAuth token exchange (cached in-memory per warm serverless instance,
+  ~1hr TTL), STK push, and the STK query endpoint for `checkStatus`. Amounts are rounded to
+  whole KES for the outbound request (Daraja rejects decimals) — the `Payment` row itself still
+  records the exact decimal amount. `refund` deliberately throws: Daraja's reversal API needs a
+  separate initiator security credential nothing here provisions, and nothing in the app calls
+  `refund` today, so failing loudly beats silently no-op-ing or faking success on real money.
+  Requires `MPESA_CONSUMER_KEY`/`MPESA_CONSUMER_SECRET`/`MPESA_SHORTCODE`/`MPESA_PASSKEY` — see
+  `.env.example`.
 
 ## The dev-safety guard
 
@@ -28,7 +63,7 @@ Two implementations exist today:
 
 ```
 configured = Setting["payment_provider"].active   (defaults to, and is currently, "MOCK";
-                                                     can be set to "INTASEND")
+                                                     can be set to "INTASEND" or "DARAJA")
 isProd     = NODE_ENV === "production"
 override   = ALLOW_LIVE_PAYMENTS_IN_DEV === "true"
 
@@ -47,6 +82,15 @@ simulating provider response" notice under the same condition.
 and a real provider configured, confirm real credentials are what's actually wanted for that
 run.** There is no other gate.
 
+## Direct STK push — rate limits
+
+`sendStkPushAction` (`src/server/actions/payments.ts`) is the CRM-triggered version of
+the public checkout's M-Pesa flow — same provider, same trust rules, but authenticated
+and against the client's phone on file rather than one they type in. To avoid buzzing a
+non-responsive customer repeatedly, it enforces per-document limits before calling the
+provider: a 60-second cooldown between attempts, and a hard cap of 3 attempts per hour.
+Both are checked against `Payment` rows already on record — no separate rate-limit store.
+
 ## Reconciliation — the trust boundary
 
 `src/server/payments/reconcile.ts#confirmPayment` is the **only** place a `Payment` is ever
@@ -58,8 +102,11 @@ Neither path trusts:
 - a client-supplied amount or status (the charge amount is always read server-side from
   `PaymentSession.amountDue`, never from the request body — see
   `/api/os/pay/[token]/charge/route.ts`),
-- the webhook payload's claimed status (it's used only to identify *which* payment to
-  re-verify, never to directly credit it — see `/api/webhooks/payments/intasend/route.ts`).
+- the webhook/callback payload's claimed status (it's used only to identify *which* payment to
+  re-verify, never to directly credit it — see `/api/webhooks/payments/intasend/route.ts` and
+  `/api/webhooks/payments/daraja/route.ts`). This matters even more for Daraja, which — unlike
+  IntaSend's optional challenge secret — has no signature or shared-secret mechanism on its
+  callback at all; the re-verification is the *only* defense, not a backstop.
 
 `confirmPayment` is idempotent (`if (payment.status === "SUCCESSFUL") return payment` at the
 top), so it's safe to call it repeatedly from both paths without double-crediting a document.
@@ -72,9 +119,34 @@ ever regressing an already-`WON` deal), triggers the sales→project handoff
 ## Public payment endpoints
 
 `/api/os/pay/[token]/charge` and `/api/os/pay/[token]/status` are the only unauthenticated
-endpoints in the app besides the webhook. Both are rate-limited (`src/lib/ratelimit.ts` +
-`hashIp`) and scoped strictly to the `PaymentSession` identified by the URL token — a token
+endpoints in the app besides the gateway webhooks. Both are rate-limited (`src/lib/ratelimit.ts`
++ `hashIp`) and scoped strictly to the `PaymentSession` identified by the URL token — a token
 never exposes another session's payments.
+
+## M-Pesa Account Balance (Daraja only)
+
+A separate, optional feature from the payment flow above: Settings → Payment Provider (once
+Daraja is active) shows a **Check Balance** card that queries Daraja's `AccountBalance` command
+— the real balance sitting in Techfind's own paybill/till, not a payment. It's a genuinely
+different Safaricom trust model than STK push:
+
+- STK push authenticates with the Lipa Na M-Pesa **passkey** (`MPESA_PASSKEY`).
+- Account Balance (and Daraja's other org-level commands — B2C, B2B, Reversal) authenticate with
+  an **Initiator** identity instead: `MPESA_INITIATOR_NAME` + a `SecurityCredential`, which is
+  `MPESA_INITIATOR_PASSWORD` RSA-encrypted (PKCS#1 v1.5) against Safaricom's own public
+  certificate for the target environment. That certificate is **not bundled with this app** —
+  sandbox and production use different ones, and embedding a copy we can't independently verify
+  risks silently producing a `SecurityCredential` that's simply wrong. Download it from your
+  Daraja app and set `MPESA_CERT_PEM` to its exact contents (see `.env.example`).
+- The result is **asynchronous**: Daraja's immediate response to `requestAccountBalance()`
+  (`src/server/payments/mpesaBalance.ts`) only confirms the request was accepted — the actual
+  balance arrives later as a POST to `/api/webhooks/payments/daraja-balance`, parsed by
+  `applyBalanceCallback` and stored in `Setting["mpesa_account_balance"]`. The Settings card polls
+  for that update after triggering a check.
+- Unlike the payment webhooks above, this one has no independent re-verification step to fall
+  back on — there's no equivalent of `checkStatus` for a balance figure — so its callback is
+  taken at face value. That's an acceptable trade here because it only ever updates a read-only
+  display; nothing financial gets credited or trusted off of it.
 
 ## Receipts and the Revenue Control Centre
 

@@ -8,8 +8,11 @@ type Variant = "primary" | "secondary" | "ghost" | "danger" | "outline";
 type Size = "sm" | "md" | "lg" | "icon";
 
 const variantClass: Record<Variant, string> = {
+  // Flat fill, no gradient — a gradient CTA is one of the fastest tells
+  // of a generic AI-dashboard template. Attio-style primary actions are a
+  // single solid color with barely any shadow at rest.
   primary:
-    "text-white shadow-[var(--shadow-sm)] hover:shadow-[var(--shadow-md)] active:scale-[0.98]",
+    "bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] active:scale-[0.98]",
   secondary:
     "bg-[var(--surface-hover)] text-[var(--text)] hover:bg-[var(--surface-sunken)] active:scale-[0.98]",
   outline:
@@ -43,11 +46,9 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       sizeClass[size],
       className
     );
-    const sharedStyle = variant === "primary" ? { background: "linear-gradient(135deg, var(--accent), var(--accent-2))", ...style } : style;
-
     if (asChild) {
       return (
-        <Slot ref={ref} className={sharedClassName} style={sharedStyle} {...props}>
+        <Slot ref={ref} className={sharedClassName} style={style} {...props}>
           {children}
         </Slot>
       );
@@ -58,7 +59,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
         ref={ref}
         disabled={disabled || loading}
         className={sharedClassName}
-        style={sharedStyle}
+        style={style}
         {...props}
       >
         {loading ? (

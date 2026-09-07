@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import Link from "next/link";
 import type { Task, User, Deal, Company } from "@prisma/client";
 import { Plus, Check, CheckCircle2 } from "lucide-react";
+import { AnimatePresence, motion } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -14,6 +15,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetBody, SheetFooter } 
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
 import { friendlyDay, isOverdue, dayjs } from "@/lib/os/dates";
 import { createTaskAction, completeTaskAction } from "@/server/actions/tasks";
+import { fadeInUp } from "@/lib/os/motion";
 
 type TaskWithRelations = Task & { assignee: User | null; deal: (Deal & { company: Company }) | null };
 
@@ -100,7 +102,7 @@ export function TasksView({
           <button
             key={v.key}
             onClick={() => setView(v.key)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
+            className="os-press flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-colors"
             style={{ background: view === v.key ? "var(--accent-soft)" : "var(--surface-hover)", color: view === v.key ? "var(--accent)" : "var(--text-muted)" }}
           >
             {v.label} <span className="opacity-60">{counts[v.key]}</span>
@@ -115,13 +117,10 @@ export function TasksView({
           <p className="text-xs text-[var(--text-faint)] mt-1">You&rsquo;re caught up on this view.</p>
         </div>
       ) : (
-        <div className="mt-5 space-y-2">
+        <div className="mt-5 rounded-[var(--radius-lg)] border divide-y overflow-hidden" style={{ borderColor: "var(--border)" }}>
+          <AnimatePresence initial={false}>
           {filtered.map(task => (
-            <div
-              key={task.id}
-              className="flex items-center gap-3 rounded-[var(--radius-lg)] p-3.5"
-              style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-            >
+            <motion.div key={task.id} {...fadeInUp} className="os-row-hover flex items-center gap-3 px-4 py-3">
               <button
                 onClick={() => complete(task)}
                 disabled={completing.has(task.id)}
@@ -131,7 +130,7 @@ export function TasksView({
                 <Check className="w-3 h-3 opacity-0 group-hover:opacity-60" style={{ color: "var(--accent)" }} />
               </button>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-[var(--text)] truncate">{task.title}</p>
+                <p className="text-sm font-medium truncate" style={{ color: "var(--text)" }}>{task.title}</p>
                 <div className="flex items-center gap-2 mt-1 flex-wrap">
                   {task.dueAt && (
                     <span className="text-xs" style={{ color: isOverdue(task.dueAt) ? "var(--danger)" : "var(--text-faint)" }}>
@@ -147,8 +146,9 @@ export function TasksView({
                 </div>
               </div>
               {task.assignee && <Avatar name={task.assignee.name} color={task.assignee.avatarColor} size={28} />}
-            </div>
+            </motion.div>
           ))}
+          </AnimatePresence>
         </div>
       )}
 

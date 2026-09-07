@@ -5,12 +5,14 @@ import { db } from "@/server/db";
 import type { Role } from "./roles";
 
 const COOKIE_NAME = "tf_session";
-const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days
+const SESSION_TTL_MS = 30 * 24 * 60 * 60 * 1000; // 30 days — "Remember Me" checked
+const SHORT_SESSION_TTL_MS = 24 * 60 * 60 * 1000; // 1 day — "Remember Me" unchecked
 
 export interface SessionUser {
   id: string;
   name: string;
   email: string;
+  phone: string | null;
   role: Role;
   avatarColor: string;
   welcomeSoundEnabled: boolean;
@@ -21,14 +23,22 @@ function newToken(): string {
   return randomBytes(32).toString("hex");
 }
 
-export async function createSession(userId: string): Promise<void> {
+/**
+ * `remember` controls both the server-side session lifetime and whether the
+ * cookie survives a browser restart: checked gets the full 30-day window as
+ * a persistent cookie; unchecked gets a much shorter server-side TTL *and*
+ * a session-only cookie (no `expires`), so it's gone the moment the browser
+ * closes even if the tab is left open past the TTL.
+ */
+export async function createSession(userId: string, remember = true): Promise<void> {
   const token = newToken();
+  const ttl = remember ? SESSION_TTL_MS : SHORT_SESSION_TTL_MS;
   const h = await headers();
   await db.session.create({
     data: {
       id: token,
       userId,
-      expiresAt: new Date(Date.now() + SESSION_TTL_MS),
+      expiresAt: new Date(Date.now() + ttl),
       userAgent: h.get("user-agent") ?? undefined,
       ip: h.get("x-forwarded-for") ?? undefined,
     },
@@ -40,7 +50,7 @@ export async function createSession(userId: string): Promise<void> {
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
-    expires: new Date(Date.now() + SESSION_TTL_MS),
+    ...(remember ? { expires: new Date(Date.now() + ttl) } : {}),
   });
 }
 
@@ -74,6 +84,7 @@ export async function getSessionUser(): Promise<SessionUser | null> {
     id: u.id,
     name: u.name,
     email: u.email,
+    phone: u.phone,
     role: u.role as Role,
     avatarColor: u.avatarColor,
     welcomeSoundEnabled: u.welcomeSoundEnabled,

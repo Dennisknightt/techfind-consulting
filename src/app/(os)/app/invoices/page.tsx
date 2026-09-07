@@ -1,18 +1,27 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
-import { PageHeader } from "@/components/os/common/PageHeader";
-import { ComingSoon } from "@/components/os/common/ComingSoon";
+import { db } from "@/server/db";
+import { DocumentsList } from "@/components/os/documents/DocumentsList";
 
 export const metadata: Metadata = { title: "Invoices — Techfind" };
 
 export default async function InvoicesPage() {
   await requireUser();
+
+  const documents = await db.salesDocument.findMany({
+    where: { type: "INVOICE" },
+    include: { company: true, owner: true },
+    orderBy: { createdAt: "desc" },
+    take: 200,
+  });
+
   return (
-    <div className="p-6 lg:p-8">
-      <PageHeader title="Invoices" subtitle="What's owed, by whom, and since when" />
-      <div className="mt-6">
-        <ComingSoon title="Invoices arrive in Phase 4" note="Generated automatically from paid proformas, carrying the full document chain." />
-      </div>
-    </div>
+    <DocumentsList
+      documents={documents}
+      title="Invoices"
+      subtitle="What's owed, by whom, and since when"
+      emptyTitle="No invoices yet"
+      emptyNote="Invoices are generated automatically once a proforma is paid."
+    />
   );
 }

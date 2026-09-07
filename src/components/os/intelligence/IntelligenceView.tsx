@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Sparkles, ArrowRight, Star, Copy, Download, TrendingUp, FolderKanban, Trophy } from "lucide-react";
+import { Sparkles, ArrowRight, Star, Copy, Download } from "lucide-react";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
@@ -68,11 +68,11 @@ export function IntelligenceView({
       />
 
       {/* Snapshot stats */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6">
-        <Stat label="Open Pipeline" value={formatKES(snapshot.pipelineValue, { compact: true })} icon={TrendingUp} />
-        <Stat label="Received This Month" value={formatKES(snapshot.revenue.receivedThisMonth, { compact: true })} icon={Trophy} />
-        <Stat label="Expected" value={formatKES(snapshot.revenue.expected, { compact: true })} icon={ArrowRight} />
-        <Stat label="Projects In Delivery" value={String(activeProjects)} icon={FolderKanban} />
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mt-6 rounded-[var(--radius-lg)] border p-4" style={{ borderColor: "var(--border)" }}>
+        <Stat label="Open Pipeline" value={formatKES(snapshot.pipelineValue, { compact: true })} />
+        <Stat label="Received This Month" value={formatKES(snapshot.revenue.receivedThisMonth, { compact: true })} />
+        <Stat label="Expected" value={formatKES(snapshot.revenue.expected, { compact: true })} />
+        <Stat label="Projects In Delivery" value={String(activeProjects)} />
       </div>
 
       {/* Pipeline funnel */}
@@ -106,15 +106,14 @@ export function IntelligenceView({
         {attention.length === 0 ? (
           <Empty text="Nothing urgent — the pipeline is under control." success />
         ) : (
-          <div className="space-y-2">
+          <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
             {attention.map(item => (
-              <div key={item.id} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3.5 py-2.5 flex-wrap" style={{ background: "var(--surface-hover)" }}>
-                <span>{item.severity === "critical" ? "🔴" : "🟠"}</span>
+              <div key={item.id} className="os-row-hover flex items-center gap-3 px-4 py-3 flex-wrap">
                 <div className="flex-1 min-w-[180px]">
-                  <p className="text-sm font-medium text-[var(--text)]">{item.title}</p>
-                  <p className="text-xs text-[var(--text-faint)]">{item.description}</p>
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.title}</p>
+                  <p className="os-text-meta">{item.description}</p>
                 </div>
-                {item.valueAtRisk ? <span className="text-xs font-bold text-[var(--text)]">{formatKES(item.valueAtRisk, { compact: true })}</span> : null}
+                {item.valueAtRisk ? <span className="os-text-number text-xs" style={{ color: "var(--text)" }}>{formatKES(item.valueAtRisk, { compact: true })}</span> : null}
                 <Link href={item.actionHref} className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--accent)" }}>
                   {item.actionLabel} <ArrowRight className="w-3 h-3" />
                 </Link>
@@ -127,14 +126,14 @@ export function IntelligenceView({
       {/* Opportunities */}
       {opportunities.length > 0 && (
         <Section title="Opportunities" icon={Star}>
-          <div className="space-y-2">
+          <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
             {opportunities.map(item => (
-              <div key={item.id} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3.5 py-2.5 flex-wrap" style={{ background: "var(--accent-soft)" }}>
+              <div key={item.id} className="os-row-hover flex items-center gap-3 px-4 py-3 flex-wrap">
                 <div className="flex-1 min-w-[180px]">
-                  <p className="text-sm font-medium text-[var(--text)]">{item.title}</p>
-                  <p className="text-xs text-[var(--text-muted)]">{item.description}</p>
+                  <p className="text-sm font-medium" style={{ color: "var(--text)" }}>{item.title}</p>
+                  <p className="os-text-meta">{item.description}</p>
                 </div>
-                <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>{formatKES(item.potentialValue, { compact: true })}</span>
+                <span className="os-text-number text-xs" style={{ color: "var(--accent)" }}>{formatKES(item.potentialValue, { compact: true })}</span>
                 <Link href={item.actionHref} className="text-xs font-semibold flex items-center gap-1" style={{ color: "var(--accent)" }}>
                   {item.actionLabel} <ArrowRight className="w-3 h-3" />
                 </Link>
@@ -147,28 +146,34 @@ export function IntelligenceView({
       {/* Top clients + team performance */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-7">
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2.5">Top Clients</p>
-          <div className="space-y-2">
-            {snapshot.topClients.length === 0 && <Empty text="No won deals yet." />}
-            {snapshot.topClients.map(c => (
-              <Link key={c.companyId} href={`/app/clients/${c.companyId}`} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)] hover:bg-[var(--surface-hover)]" style={{ background: "var(--surface-hover)" }}>
-                <span className="text-sm text-[var(--text)]">{c.name}</span>
-                <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>{formatKES(c.lifetimeValue, { compact: true })}</span>
-              </Link>
-            ))}
-          </div>
+          <p className="os-text-meta font-semibold uppercase tracking-wider mb-2.5">Top Clients</p>
+          {snapshot.topClients.length === 0 ? (
+            <Empty text="No won deals yet." />
+          ) : (
+            <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+              {snapshot.topClients.map(c => (
+                <Link key={c.companyId} href={`/app/clients/${c.companyId}`} className="os-row-hover flex items-center justify-between px-4 py-2.5">
+                  <span className="text-sm" style={{ color: "var(--text)" }}>{c.name}</span>
+                  <span className="os-text-number text-xs" style={{ color: "var(--accent)" }}>{formatKES(c.lifetimeValue, { compact: true })}</span>
+                </Link>
+              ))}
+            </div>
+          )}
         </div>
         <div>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2.5">Team Performance</p>
-          <div className="space-y-2">
-            {snapshot.teamPerformance.length === 0 && <Empty text="No won deals yet." />}
-            {snapshot.teamPerformance.map(t => (
-              <div key={t.userId} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)]" style={{ background: "var(--surface-hover)" }}>
-                <span className="text-sm text-[var(--text)]">{t.name}</span>
-                <Badge tone="success">{t.wonCount} won · {formatKES(t.wonValue, { compact: true })}</Badge>
-              </div>
-            ))}
-          </div>
+          <p className="os-text-meta font-semibold uppercase tracking-wider mb-2.5">Team Performance</p>
+          {snapshot.teamPerformance.length === 0 ? (
+            <Empty text="No won deals yet." />
+          ) : (
+            <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+              {snapshot.teamPerformance.map(t => (
+                <div key={t.userId} className="os-row-hover flex items-center justify-between px-4 py-2.5">
+                  <span className="text-sm" style={{ color: "var(--text)" }}>{t.name}</span>
+                  <Badge tone="success">{t.wonCount} won · {formatKES(t.wonValue, { compact: true })}</Badge>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
 
@@ -199,12 +204,11 @@ export function IntelligenceView({
   );
 }
 
-function Stat({ label, value, icon: Icon }: { label: string; value: string; icon: React.ComponentType<{ className?: string; style?: React.CSSProperties }> }) {
+function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-[var(--radius-lg)] p-4" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
-      <Icon className="w-3.5 h-3.5 mb-2" style={{ color: "var(--text-faint)" }} />
-      <p className="text-lg font-bold text-[var(--text)]" style={{ fontFamily: "var(--font-space)" }}>{value}</p>
-      <p className="text-xs text-[var(--text-faint)] mt-0.5">{label}</p>
+    <div>
+      <p className="os-text-number text-base" style={{ color: "var(--text)" }}>{value}</p>
+      <p className="os-text-meta mt-0.5">{label}</p>
     </div>
   );
 }
@@ -224,8 +228,8 @@ function Section({ title, icon: Icon, children }: { title: string; icon?: React.
 function Empty({ text, success }: { text: string; success?: boolean }) {
   if (success) {
     return (
-      <div className="rounded-[var(--radius-lg)] p-5 text-center" style={{ background: "var(--success-soft)", border: "1px solid var(--border)" }}>
-        <p className="text-sm font-semibold" style={{ color: "var(--success)" }}>{text}</p>
+      <div className="py-5">
+        <p className="text-sm font-medium" style={{ color: "var(--success)" }}>{text}</p>
       </div>
     );
   }

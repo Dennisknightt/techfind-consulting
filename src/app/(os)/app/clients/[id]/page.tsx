@@ -28,10 +28,11 @@ export default async function ClientDetailPage({ params }: { params: Promise<{ i
     ? await db.task.findMany({ where: { dealId: { in: dealIds }, status: "OPEN" }, include: { assignee: true }, orderBy: { dueAt: "asc" } })
     : [];
 
-  const [allProducts, users] = await Promise.all([
+  const [allProducts, users, documents] = await Promise.all([
     db.product.findMany({ where: { active: true }, orderBy: { sortOrder: "asc" } }),
     db.user.findMany({ where: { active: true }, orderBy: { name: "asc" } }),
+    db.salesDocument.findMany({ where: { companyId: id }, orderBy: { createdAt: "desc" } }),
   ]);
 
-  return <ClientDetail company={company} tasks={tasks} allProducts={allProducts} users={users} currentUserId={user.id} />;
+  return <ClientDetail company={company} tasks={tasks} allProducts={allProducts} users={users} currentUserId={user.id} documents={documents} />;
 }

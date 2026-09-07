@@ -4,8 +4,12 @@ import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { Command } from "cmdk";
 import { Search, ArrowRight } from "lucide-react";
-import { DESKTOP_NAV } from "./nav";
+import { ALL_NAV } from "./nav";
+import { QUICK_CREATE_ITEMS } from "./QuickCreate";
 import { globalSearchAction, type SearchResult } from "@/server/actions/search";
+
+const GROUP_HEADING_CLASS =
+  "[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--text-faint)]";
 
 export function CommandPalette() {
   const [open, setOpen] = useState(false);
@@ -63,8 +67,8 @@ export function CommandPalette() {
             autoFocus
             value={query}
             onValueChange={runSearch}
-            placeholder="Ask Techfind or search anything…"
-            className="flex-1 h-14 bg-transparent outline-none text-sm text-[var(--text)] placeholder:text-[var(--text-faint)]"
+            placeholder="Search or jump to…"
+            className="flex-1 h-12 bg-transparent outline-none text-sm text-[var(--text)] placeholder:text-[var(--text-faint)]"
           />
           <kbd className="text-[10px] px-1.5 py-0.5 rounded border" style={{ borderColor: "var(--border)", color: "var(--text-faint)" }}>
             ESC
@@ -73,22 +77,36 @@ export function CommandPalette() {
 
         <Command.List className="max-h-[60vh] overflow-y-auto p-2">
           {query.trim().length < 2 && (
-            <Command.Group heading="Go to" className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--text-faint)]">
-              {DESKTOP_NAV.map(({ label, href, icon: Icon }) => (
-                <Command.Item
-                  key={href}
-                  onSelect={() => go(href)}
-                  className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[var(--radius-md)] text-sm text-[var(--text)] cursor-pointer data-[selected=true]:bg-[var(--surface-hover)]"
-                >
-                  <Icon className="w-4 h-4" style={{ color: "var(--text-faint)" }} />
-                  {label}
-                </Command.Item>
-              ))}
-            </Command.Group>
+            <>
+              <Command.Group heading="Create" className={GROUP_HEADING_CLASS}>
+                {QUICK_CREATE_ITEMS.map(({ label, href, icon: Icon, color }) => (
+                  <Command.Item
+                    key={href}
+                    onSelect={() => go(href)}
+                    className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[var(--radius-md)] text-sm text-[var(--text)] cursor-pointer data-[selected=true]:bg-[var(--surface-hover)]"
+                  >
+                    <Icon className="w-4 h-4" style={{ color }} />
+                    {label === "Proforma" ? "Create Quotation" : `Add ${label}`}
+                  </Command.Item>
+                ))}
+              </Command.Group>
+              <Command.Group heading="Go to" className={GROUP_HEADING_CLASS}>
+                {ALL_NAV.map(({ label, href, icon: Icon }) => (
+                  <Command.Item
+                    key={href}
+                    onSelect={() => go(href)}
+                    className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[var(--radius-md)] text-sm text-[var(--text)] cursor-pointer data-[selected=true]:bg-[var(--surface-hover)]"
+                  >
+                    <Icon className="w-4 h-4" style={{ color: "var(--text-faint)" }} />
+                    {label}
+                  </Command.Item>
+                ))}
+              </Command.Group>
+            </>
           )}
 
           {query.trim().length >= 2 && (
-            <Command.Group heading={loading ? "Searching…" : `${results.length} result${results.length === 1 ? "" : "s"}`} className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-[11px] [&_[cmdk-group-heading]]:font-bold [&_[cmdk-group-heading]]:uppercase [&_[cmdk-group-heading]]:tracking-wider [&_[cmdk-group-heading]]:text-[var(--text-faint)]">
+            <Command.Group heading={loading ? "Searching…" : `${results.length} result${results.length === 1 ? "" : "s"}`} className={GROUP_HEADING_CLASS}>
               {results.map(r => (
                 <Command.Item
                   key={`${r.type}-${r.id}`}
@@ -96,8 +114,8 @@ export function CommandPalette() {
                   className="flex items-center gap-2.5 px-2.5 py-2.5 rounded-[var(--radius-md)] text-sm text-[var(--text)] cursor-pointer data-[selected=true]:bg-[var(--surface-hover)]"
                 >
                   <span
-                    className="text-[10px] font-bold uppercase px-1.5 py-0.5 rounded shrink-0"
-                    style={{ background: "var(--accent-soft)", color: "var(--accent)" }}
+                    className="text-[10px] font-semibold uppercase tracking-wide w-14 shrink-0"
+                    style={{ color: "var(--text-faint)" }}
                   >
                     {r.type}
                   </span>
@@ -112,7 +130,26 @@ export function CommandPalette() {
             </Command.Group>
           )}
         </Command.List>
+
+        <div
+          className="hidden sm:flex items-center gap-4 px-4 py-2 border-t text-[11px]"
+          style={{ borderColor: "var(--border)", color: "var(--text-faint)" }}
+        >
+          <span className="flex items-center gap-1"><Kbd>↑</Kbd><Kbd>↓</Kbd> Navigate</span>
+          <span className="flex items-center gap-1"><Kbd>↵</Kbd> Select</span>
+          <span className="flex items-center gap-1"><Kbd>Esc</Kbd> Close</span>
+          <span className="flex-1" />
+          <span className="flex items-center gap-1"><Kbd>?</Kbd> All shortcuts</span>
+        </div>
       </Command>
     </div>
+  );
+}
+
+function Kbd({ children }: { children: React.ReactNode }) {
+  return (
+    <kbd className="px-1 py-0.5 rounded border text-[10px] font-semibold" style={{ borderColor: "var(--border)" }}>
+      {children}
+    </kbd>
   );
 }

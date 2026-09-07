@@ -46,7 +46,8 @@ export async function loginAction(_prev: LoginState, formData: FormData): Promis
     return { error: "Invalid email or password." };
   }
 
-  await createSession(user.id);
+  const remember = formData.get("remember") === "on";
+  await createSession(user.id, remember);
   await writeAudit({ actorId: user.id, action: "LOGIN", entityType: "User", entityId: user.id });
 
   redirect("/app");

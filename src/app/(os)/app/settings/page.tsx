@@ -1,23 +1,38 @@
 import type { Metadata } from "next";
 import { requireUser } from "@/server/auth/guard";
 import { can } from "@/server/auth/roles";
+import { db } from "@/server/db";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/os/ui/Tabs";
 import { ExperienceSettings } from "@/components/os/settings/ExperienceSettings";
+import { ProfileSettings } from "@/components/os/settings/ProfileSettings";
+import { TeamSettings } from "@/components/os/settings/TeamSettings";
+import { CatalogueSettings } from "@/components/os/settings/CatalogueSettings";
 import { TaxSettings } from "@/components/os/settings/TaxSettings";
 import { PaymentProviderSettings } from "@/components/os/settings/PaymentProviderSettings";
+import { MpesaBalanceCard } from "@/components/os/settings/MpesaBalanceCard";
 import { PageHeader } from "@/components/os/common/PageHeader";
-import { ComingSoon } from "@/components/os/common/ComingSoon";
 import { getTaxConfigAction } from "@/server/actions/settings";
 import { getActiveProvider, listProviderNames } from "@/server/payments/registry";
+import { getMpesaBalanceState } from "@/server/payments/mpesaBalance";
 
 export const metadata: Metadata = { title: "Settings — Techfind" };
 
 export default async function SettingsPage() {
   const user = await requireUser();
   const canManageSettings = can(user.role, "settings.write");
+  const canManageTeam = can(user.role, "users.write");
   const canEditTax = can(user.role, "tax.write");
-  const taxConfig = await getTaxConfigAction();
-  const { configuredName, devSafetyOverride } = await getActiveProvider();
+
+  const [taxConfig, providerInfo, users, products, quickItems, packages] = await Promise.all([
+    getTaxConfigAction(),
+    getActiveProvider(),
+    db.user.findMany({ orderBy: [{ active: "desc" }, { name: "asc" }] }),
+    db.product.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.quickItem.findMany({ orderBy: { sortOrder: "asc" } }),
+    db.package.findMany({ orderBy: { sortOrder: "asc" } }),
+  ]);
+  const { configuredName, devSafetyOverride } = providerInfo;
+  const mpesaBalance = configuredName === "DARAJA" ? await getMpesaBalanceState() : null;
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl">
@@ -38,31 +53,31 @@ export default async function SettingsPage() {
         </TabsContent>
 
         <TabsContent value="profile" className="mt-5">
-          <ComingSoon title="Profile settings" note="Name, phone, avatar colour and password changes." />
+          <ProfileSettings name={user.name} email={user.email} phone={user.phone} avatarColor={user.avatarColor} role={user.role} />
         </TabsContent>
 
         <TabsContent value="team" className="mt-5">
-          <ComingSoon title="Team management" note="Invite teammates and assign roles (Sales, Finance, Management)." />
+          <TeamSettings users={users} canEdit={canManageTeam} currentUserId={user.id} />
         </TabsContent>
 
         <TabsContent value="catalogue" className="mt-5">
-          <ComingSoon
-            title="Product catalogue"
-            note={canManageSettings ? "Configure quick prices, quick items and packages — arrives with the Proforma Generator." : "Only Super Admins and Management can configure the catalogue."}
-          />
+          <CatalogueSettings products={products} quickItems={quickItems} packages={packages} canEdit={canManageSettings} />
         </TabsContent>
 
         <TabsContent value="tax" className="mt-5">
           <TaxSettings initial={taxConfig} canEdit={canEditTax} />
         </TabsContent>
 
-        <TabsContent value="payments" className="mt-5">
+        <TabsContent value="payments" className="mt-5 space-y-5">
           <PaymentProviderSettings
             configuredName={configuredName}
             devSafetyOverride={devSafetyOverride}
             canEdit={canEditTax}
             providers={listProviderNames()}
           />
+          {configuredName === "DARAJA" && (
+            <MpesaBalanceCard initial={mpesaBalance} canEdit={canEditTax} />
+          )}
         </TabsContent>
       </Tabs>
     </div>

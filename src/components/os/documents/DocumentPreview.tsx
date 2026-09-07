@@ -42,7 +42,7 @@ export function DocumentPreview({
           <p className="text-[11px] text-gray-500 mt-0.5">Nairobi, Kenya · techfind.co.ke</p>
         </div>
         <div className="text-right">
-          <p className="font-bold text-sm" style={{ color: "#6D28D9" }}>{TITLE_MAP[type] ?? type}</p>
+          <p className="font-bold text-sm" style={{ color: "#2F4A3E" }}>{TITLE_MAP[type] ?? type}</p>
           <p className="text-[11px] text-gray-500 mt-0.5">{number}</p>
         </div>
       </div>
@@ -69,7 +69,7 @@ export function DocumentPreview({
 
       <table className="w-full text-xs border-t border-gray-200">
         <thead>
-          <tr className="border-b border-gray-200" style={{ background: "#F7F8FA" }}>
+          <tr className="border-b border-gray-200" style={{ background: "#F7F3EC" }}>
             <th className="text-left py-2 px-1 font-semibold text-[9px] uppercase tracking-wide text-gray-500">Item</th>
             <th className="text-center py-2 px-1 font-semibold text-[9px] uppercase tracking-wide text-gray-500 w-12">Qty</th>
             <th className="text-right py-2 px-1 font-semibold text-[9px] uppercase tracking-wide text-gray-500 w-20">Unit Price</th>
@@ -105,14 +105,14 @@ export function DocumentPreview({
       </div>
 
       {depositRequired > 0 && depositRequired < total && (
-        <div className="mt-5 rounded-lg p-3 flex justify-between text-xs" style={{ background: "#F7F8FA" }}>
+        <div className="mt-5 rounded-lg p-3 flex justify-between text-xs" style={{ background: "#F7F3EC" }}>
           <div><p className="text-[9px] uppercase text-gray-400 mb-0.5">Deposit Required</p><p className="font-semibold">{formatKES(depositRequired)}</p></div>
           <div><p className="text-[9px] uppercase text-gray-400 mb-0.5">Balance</p><p className="font-semibold">{formatKES(balance)}</p></div>
           <div><p className="text-[9px] uppercase text-gray-400 mb-0.5">Terms</p><p className="font-semibold">{paymentTermsLabel}</p></div>
         </div>
       )}
 
-      <div className="mt-5 rounded-lg p-4 text-white" style={{ background: "#6D28D9" }}>
+      <div className="mt-5 rounded-lg p-4 text-white" style={{ background: "#2F4A3E" }}>
         <p className="text-sm font-bold">Pay securely online</p>
         <p className="text-[10px] mt-1 opacity-80">Payment link generates once this document is created</p>
       </div>

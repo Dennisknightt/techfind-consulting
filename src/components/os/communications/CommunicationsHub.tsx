@@ -97,9 +97,10 @@ export function CommunicationsHub({
               <button
                 key={c.id}
                 onClick={() => select(c.id)}
-                className="w-full text-left px-4 py-3 border-b flex items-start gap-3 transition-colors"
-                style={{ borderColor: "var(--border)", background: active ? "var(--accent-soft)" : "transparent" }}
+                className="os-row-hover relative w-full text-left px-4 py-3 border-b flex items-start gap-3"
+                style={{ borderColor: "var(--border)", background: active ? "var(--surface-hover)" : "transparent" }}
               >
+                {active && <span className="absolute left-0 top-0 bottom-0 w-[3px]" style={{ background: "var(--accent)" }} />}
                 <CompanyAvatar name={c.name} size={36} />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center justify-between gap-2">
@@ -285,10 +286,10 @@ function ContextPanel({ context, currentUserId }: { context: Context | null; cur
       </div>
 
       {deal ? (
-        <div className="rounded-[var(--radius-lg)] p-4 space-y-2" style={{ background: "var(--surface-hover)" }}>
-          <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)]">Opportunity</p>
+        <div className="rounded-[var(--radius-lg)] border p-4 space-y-2" style={{ borderColor: "var(--border)" }}>
+          <p className="os-text-meta font-semibold uppercase tracking-wider">Opportunity</p>
           <Link href={`/app/deals/${deal.id}`} className="text-sm font-semibold text-[var(--text)] hover:underline block">{deal.title}</Link>
-          <p className="text-lg font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value)}</p>
+          <p className="os-text-number text-lg" style={{ color: "var(--accent)" }}>{formatKES(deal.value)}</p>
           <div className="flex items-center gap-2 flex-wrap">
             <Badge tone="accent">{STAGE_LABEL[deal.stage] ?? deal.stage}</Badge>
             <TemperatureBadge temperature={deal.temperature} />
@@ -297,7 +298,7 @@ function ContextPanel({ context, currentUserId }: { context: Context | null; cur
           {deal.lastContactAt && <p className="text-[11px] text-[var(--text-faint)]">Last interaction {friendlyDate(deal.lastContactAt)}</p>}
         </div>
       ) : (
-        <div className="rounded-[var(--radius-lg)] p-4 text-center" style={{ background: "var(--surface-hover)" }}>
+        <div className="rounded-[var(--radius-lg)] border p-4 text-center" style={{ borderColor: "var(--border)" }}>
           <p className="text-xs text-[var(--text-faint)] mb-2.5">No open opportunity yet</p>
           <Button size="sm" variant="secondary" asChild className="w-full">
             <Link href={`/app/clients/${company.id}`}>Start Opportunity</Link>

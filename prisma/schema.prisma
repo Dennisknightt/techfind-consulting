@@ -72,6 +72,7 @@ model Session {
 // ─────────────────────────────────────────────────────────────────────────
 
 /// source: WHATSAPP | WEBSITE | META | TIKTOK | EMAIL | PHONE | REFERRAL | MANUAL
+/// status (relationship stage, independent of any individual Deal's pipeline stage): COLD | WARM | PITCHED | WON | LOST | CLOSED
 model Company {
   id          String   @id @default(cuid())
   name        String
@@ -81,6 +82,7 @@ model Company {
   website     String?
   address     String?
   source      String   @default("MANUAL")
+  status      String   @default("COLD")
   notes       String?
   ownerId     String?
   owner       User?    @relation("CompanyOwner", fields: [ownerId], references: [id])
@@ -123,8 +125,14 @@ model Contact {
 // PIPELINE
 // ─────────────────────────────────────────────────────────────────────────
 
-/// temperature: HOT | WARM | COLD
-/// status: NEW | CONTACTED | QUALIFIED | CONVERTED | DISQUALIFIED
+/// temperature: HOT | WARM | COLD | NURTURE
+/// status (pipeline stage — pre-conversion): NEW | CONTACTED | QUALIFIED | DEMO_BOOKED | DEMO_DONE |
+///         PROPOSAL_SENT | NEGOTIATING | CONVERTED ("Won") | LOST
+///         (DISQUALIFIED / ALREADY_HAS_SYSTEM are legacy values from before `lostReason` existed —
+///         treated as LOST everywhere; never written by new code, see src/lib/os/leadStage.ts)
+/// nextActionType: CALL | WHATSAPP | EMAIL | DEMO | PROPOSAL | FOLLOW_UP | WAIT
+/// lostReason: NOT_INTERESTED | ALREADY_HAS_SYSTEM | TOO_EXPENSIVE | NOT_READY | NO_BUDGET |
+///             NO_RESPONSE | COMPETITOR | DIDNT_SEE_VALUE | BUILT_INTERNALLY | POSTPONED | OTHER
 model Lead {
   id                String    @id @default(cuid())
   name              String
@@ -142,7 +150,13 @@ model Lead {
   temperature       String    @default("WARM")
   status            String    @default("NEW")
   nextAction        String?
+  nextActionType    String?
   nextActionDue     DateTime?
+  wonAt             DateTime?
+  wonProductKeys    String    @default("[]")
+  lostReason        String?
+  lostNote          String?
+  lostAt            DateTime?
   convertedDealId   String?   @unique
   convertedDeal     Deal?     @relation("LeadToDeal", fields: [convertedDealId], references: [id])
   createdAt         DateTime  @default(now())
@@ -170,6 +184,8 @@ model Deal {
   ownerId        String?
   owner          User?     @relation("DealOwner", fields: [ownerId], references: [id])
   productKeys    String    @default("[]") // JSON string[] of Product.key
+  /// nextActionType: CALL | WHATSAPP | EMAIL | DEMO | PROPOSAL | FOLLOW_UP | WAIT
+  nextActionType String?
   nextAction     String?
   nextActionDue  DateTime?
   lastContactAt  DateTime?

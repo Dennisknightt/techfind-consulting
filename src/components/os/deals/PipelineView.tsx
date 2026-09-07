@@ -1,21 +1,25 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Deal, Company, User, Product } from "@prisma/client";
-import { Plus, Kanban, List, Flame } from "lucide-react";
+import { Plus, Kanban, List, Flame, Check, MessageCircle } from "lucide-react";
+import { motion, AnimatePresence, type PanInfo } from "framer-motion";
 import { toast } from "sonner";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { Button } from "@/components/os/ui/Button";
 import { Avatar } from "@/components/os/ui/Avatar";
 import { TemperatureBadge, Badge } from "@/components/os/ui/Badge";
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from "@/components/os/ui/Select";
+import { Sheet, SheetContent } from "@/components/os/ui/Sheet";
 import { formatKES } from "@/lib/os/money";
 import { timeAgo, daysBetween } from "@/lib/os/dates";
 import { PIPELINE_STAGES, STAGE_LABEL } from "@/lib/os/pipeline";
-import { updateDealStageAction } from "@/server/actions/deals";
+import { springy } from "@/lib/os/motion";
+import { updateDealStageAction, getDealDetailAction } from "@/server/actions/deals";
 import { CreateDealSheet } from "./CreateDealSheet";
 import { LostDealDialog } from "./LostDealDialog";
+import { DealDetail, type DealFull } from "./DealDetail";
 
 export type DealWithRelations = Deal & { company: Company; owner: User | null };
 
@@ -24,6 +28,37 @@ const STALL_DAYS = 7;
 function isStalled(deal: DealWithRelations): boolean {
   if (deal.stage === "WON" || deal.stage === "LOST") return false;
   return daysBetween(deal.stageEnteredAt) > STALL_DAYS;
+}
+
+/** The stage a right-swipe advances to, or null once there's nowhere further forward to go. */
+function nextPipelineStage(stage: string): string | null {
+  const i = PIPELINE_STAGES.indexOf(stage as (typeof PIPELINE_STAGES)[number]);
+  if (i === -1 || i >= PIPELINE_STAGES.length - 1) return null;
+  return PIPELINE_STAGES[i + 1];
+}
+
+function waLink(phone: string, text: string) {
+  const digits = phone.replace(/[^\d]/g, "");
+  return `https://wa.me/${digits}?text=${encodeURIComponent(text)}`;
+}
+
+/** Contextual toast after a stage move — a nudge toward the obvious next step, not just a confirmation. */
+function celebrateMove(deal: DealWithRelations, stage: string, router: ReturnType<typeof useRouter>) {
+  if (stage === "WON") {
+    toast.success(`${formatKES(deal.value, { compact: true })} WON 🎉`, {
+      description: deal.company.name,
+      action: { label: "Create Proforma", onClick: () => router.push(`/app/quotes/new?deal=${deal.id}`) },
+    });
+    return;
+  }
+  if (stage === "PROPOSAL" || stage === "PROFORMA_SENT") {
+    toast.success("Moved to Proposal ✨", {
+      description: "Create a quotation for this deal?",
+      action: { label: "Create Quote", onClick: () => router.push(`/app/quotes/new?deal=${deal.id}`) },
+    });
+    return;
+  }
+  toast.success(`Moved to ${STAGE_LABEL[stage]} ✨`);
 }
 
 export function PipelineView({
@@ -45,6 +80,29 @@ export function PipelineView({
   const [createOpen, setCreateOpen] = useState(openCreateOnLoad);
   const [dragDealId, setDragDealId] = useState<string | null>(null);
   const [lostTarget, setLostTarget] = useState<DealWithRelations | null>(null);
+  const [drawerDealId, setDrawerDealId] = useState<string | null>(null);
+  const [drawerDeal, setDrawerDeal] = useState<DealFull | null>(null);
+
+  // Opening a deal from Pipeline shows it in a drawer instead of navigating
+  // away — preserves board scroll position/context per the redesign brief.
+  useEffect(() => {
+    if (!drawerDealId) { setDrawerDeal(null); return; }
+    let cancelled = false;
+    getDealDetailAction(drawerDealId).then(d => { if (!cancelled) setDrawerDeal(d); });
+    return () => { cancelled = true; };
+  }, [drawerDealId]);
+
+  function openDrawer(id: string) { setDrawerDealId(id); }
+  function closeDrawer() { setDrawerDealId(null); }
+
+  function onDrawerDealChange(updated: DealFull) {
+    setDeals(prev => prev.map(d => (d.id === updated.id ? { ...d, ...updated } : d)));
+  }
+
+  function onDrawerDealLost(reason: string) {
+    if (drawerDealId) onDealLost(drawerDealId, reason);
+    closeDrawer();
+  }
 
   const pipelineValue = deals.reduce((sum, d) => sum + d.value, 0);
   const stalledCount = deals.filter(isStalled).length;
@@ -62,7 +120,7 @@ export function PipelineView({
     setDeals(prev => prev.map(d => (d.id === deal.id ? { ...d, stage, stageEnteredAt: new Date() } : d)));
     try {
       await updateDealStageAction(deal.id, stage);
-      if (stage === "WON") toast.success(`${deal.company.name} — deal won! 🎉`);
+      celebrateMove(deal, stage, router);
     } catch {
       toast.error("Couldn't move that deal — reverting");
       setDeals(prev => prev.map(d => (d.id === deal.id ? deal : d)));
@@ -119,7 +177,7 @@ export function PipelineView({
                 dragDealId={dragDealId}
                 onDragStart={setDragDealId}
                 onDrop={(deal) => moveStage(deal, stage)}
-                onCardClick={(id) => router.push(`/app/deals/${id}`)}
+                onCardClick={openDrawer}
                 onMarkLost={(deal) => setLostTarget(deal)}
               />
             ))}
@@ -138,7 +196,7 @@ export function PipelineView({
             </div>
           </div>
         ) : (
-          <DealListTable deals={deals} onRowClick={(id) => router.push(`/app/deals/${id}`)} onMoveStage={moveStage} />
+          <DealListTable deals={deals} onRowClick={openDrawer} onMoveStage={moveStage} />
         )}
       </div>
 
@@ -155,7 +213,7 @@ export function PipelineView({
               </div>
               <div className="space-y-2.5">
                 {stageDeals.map(deal => (
-                  <MobileDealCard key={deal.id} deal={deal} onClick={() => router.push(`/app/deals/${deal.id}`)} onMoveStage={moveStage} />
+                  <MobileDealCard key={deal.id} deal={deal} onClick={() => openDrawer(deal.id)} onMoveStage={moveStage} />
                 ))}
               </div>
             </div>
@@ -171,6 +229,26 @@ export function PipelineView({
         onOpenChange={(v) => !v && setLostTarget(null)}
         onLost={onDealLost}
       />
+
+      <Sheet open={!!drawerDealId} onOpenChange={(v) => !v && closeDrawer()}>
+        <SheetContent side="right" className="max-w-2xl sm:max-w-2xl overflow-y-auto">
+          {drawerDeal ? (
+            <DealDetail
+              key={drawerDeal.id}
+              deal={drawerDeal}
+              users={users}
+              onDealChange={onDrawerDealChange}
+              onLost={onDrawerDealLost}
+            />
+          ) : (
+            <div className="p-8 space-y-3">
+              <div className="h-6 w-40 rounded os-skeleton" />
+              <div className="h-4 w-64 rounded os-skeleton" />
+              <div className="h-24 w-full rounded os-skeleton" />
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }
@@ -201,16 +279,18 @@ function StageColumn({
       }}
     >
       <div className="flex items-center justify-between mb-3 px-1">
-        <span className="text-xs font-bold text-[var(--text)]">{STAGE_LABEL[stage]}</span>
+        <span className="text-xs font-semibold text-[var(--text)]">{STAGE_LABEL[stage]}</span>
         <span className="text-[11px] text-[var(--text-faint)]">{deals.length} · {formatKES(stageValue, { compact: true })}</span>
       </div>
       <div
         className="space-y-2.5 min-h-24 rounded-[var(--radius-lg)] p-1.5 transition-colors"
         style={{ background: over ? "var(--accent-soft)" : "transparent" }}
       >
-        {deals.map(deal => (
-          <DealCard key={deal.id} deal={deal} draggable onDragStart={() => onDragStart(deal.id)} onClick={() => onCardClick(deal.id)} onMarkLost={() => onMarkLost(deal)} />
-        ))}
+        <AnimatePresence mode="popLayout">
+          {deals.map(deal => (
+            <DealCard key={deal.id} deal={deal} draggable onDragStart={() => onDragStart(deal.id)} onClick={() => onCardClick(deal.id)} onMarkLost={() => onMarkLost(deal)} />
+          ))}
+        </AnimatePresence>
         {deals.length === 0 && (
           <div className="rounded-[var(--radius-md)] border-2 border-dashed h-16 flex items-center justify-center" style={{ borderColor: "var(--border)" }}>
             <span className="text-[11px] text-[var(--text-faint)]">Empty</span>
@@ -232,11 +312,17 @@ function DealCard({
 }) {
   const stalled = isStalled(deal);
   return (
-    <div
+    <motion.div
+      layout
+      layoutId={`deal-${deal.id}`}
+      transition={springy}
+      initial={{ opacity: 0, scale: 0.97 }}
+      animate={{ opacity: 1, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.9 }}
       draggable={draggable}
       onDragStart={onDragStart}
       onClick={onClick}
-      className="rounded-[var(--radius-lg)] p-3.5 cursor-pointer transition-shadow hover:shadow-[var(--shadow-sm)]"
+      className="os-card-hover rounded-[var(--radius-lg)] p-3 cursor-pointer"
       style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
     >
       <div className="flex items-start justify-between gap-2 mb-1">
@@ -248,21 +334,26 @@ function DealCard({
         <span className="text-xs font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value, { compact: true })}</span>
         {deal.owner && <Avatar name={deal.owner.name} color={deal.owner.avatarColor} size={22} />}
       </div>
-      <div className="flex items-center justify-between text-[10px] text-[var(--text-faint)]">
-        <span>{deal.nextAction ? deal.nextAction : "No next action"}</span>
-        {stalled && (
-          <span
-            className="flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded-full"
-            style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
-            onClick={(e) => { e.stopPropagation(); onMarkLost(); }}
-          >
-            <Flame className="w-2.5 h-2.5" /> {daysBetween(deal.stageEnteredAt)}d
-          </span>
-        )}
+      <div className="text-[10px] text-[var(--text-faint)] space-y-1">
+        <p className="truncate">Last contact: {timeAgo(deal.lastContactAt ?? deal.createdAt)}</p>
+        <div className="flex items-center justify-between gap-2">
+          <span className="truncate">{deal.nextAction ? `Next: ${deal.nextAction}` : "No next action"}</span>
+          {stalled && (
+            <span
+              className="flex items-center gap-0.5 font-bold px-1.5 py-0.5 rounded-full shrink-0"
+              style={{ background: "var(--danger-soft)", color: "var(--danger)" }}
+              onClick={(e) => { e.stopPropagation(); onMarkLost(); }}
+            >
+              <Flame className="w-2.5 h-2.5" /> {daysBetween(deal.stageEnteredAt)}d
+            </span>
+          )}
+        </div>
       </div>
-    </div>
+    </motion.div>
   );
 }
+
+const SWIPE_THRESHOLD = 90;
 
 function MobileDealCard({
   deal, onClick, onMoveStage,
@@ -271,31 +362,63 @@ function MobileDealCard({
   onClick: () => void;
   onMoveStage: (deal: DealWithRelations, stage: string) => void;
 }) {
+  const [dragX, setDragX] = useState(0);
+  const nextStage = nextPipelineStage(deal.stage);
+  const canFollowUp = !!deal.company.phone;
+  const swipeable = !!nextStage || canFollowUp;
+
+  function handleDragEnd(_: unknown, info: PanInfo) {
+    setDragX(0);
+    if (info.offset.x > SWIPE_THRESHOLD && nextStage) {
+      onMoveStage(deal, nextStage);
+    } else if (info.offset.x < -SWIPE_THRESHOLD && canFollowUp) {
+      window.open(waLink(deal.company.phone!, `Hi, following up on ${deal.title} for ${deal.company.name}.`), "_blank");
+    }
+  }
+
   return (
-    <div
-      className="rounded-[var(--radius-lg)] p-4"
-      style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
-    >
-      <div onClick={onClick}>
-        <div className="flex items-start justify-between gap-2 mb-1">
-          <p className="text-sm font-semibold text-[var(--text)]">{deal.company.name}</p>
-          <TemperatureBadge temperature={deal.temperature} />
+    <div className="relative">
+      {swipeable && (
+        <div className="absolute inset-0 rounded-[var(--radius-lg)] flex items-center justify-between px-5 pointer-events-none">
+          <span className="text-xs font-bold flex items-center gap-1.5 transition-opacity" style={{ color: "var(--accent)", opacity: dragX < -20 ? 1 : 0 }}>
+            <MessageCircle className="w-4 h-4" /> Follow up
+          </span>
+          <span className="text-xs font-bold flex items-center gap-1.5 ml-auto transition-opacity" style={{ color: "var(--success)", opacity: dragX > 20 ? 1 : 0 }}>
+            {nextStage ? STAGE_LABEL[nextStage] : ""} <Check className="w-4 h-4" />
+          </span>
         </div>
-        <p className="text-xs text-[var(--text-faint)] mb-2">{deal.title}</p>
-        <div className="flex items-center justify-between">
-          <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value, { compact: true })}</span>
-          <span className="text-[11px] text-[var(--text-faint)]">{timeAgo(deal.lastContactAt ?? deal.createdAt)}</span>
+      )}
+      <motion.div
+        drag={swipeable ? "x" : false}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragElastic={0.7}
+        onDrag={(_, info) => setDragX(info.offset.x)}
+        onDragEnd={handleDragEnd}
+        whileDrag={{ scale: 1.02 }}
+        className="relative rounded-[var(--radius-lg)] p-4"
+        style={{ background: "var(--surface)", border: "1px solid var(--border)" }}
+      >
+        <div onClick={onClick}>
+          <div className="flex items-start justify-between gap-2 mb-1">
+            <p className="text-sm font-semibold text-[var(--text)]">{deal.company.name}</p>
+            <TemperatureBadge temperature={deal.temperature} />
+          </div>
+          <p className="text-xs text-[var(--text-faint)] mb-2">{deal.title}</p>
+          <div className="flex items-center justify-between">
+            <span className="text-sm font-bold" style={{ color: "var(--accent)" }}>{formatKES(deal.value, { compact: true })}</span>
+            <span className="text-[11px] text-[var(--text-faint)]">{timeAgo(deal.lastContactAt ?? deal.createdAt)}</span>
+          </div>
         </div>
-      </div>
-      <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }} onClick={e => e.stopPropagation()}>
-        <Select value={deal.stage} onValueChange={(v) => (v === "LOST" ? onMoveStage(deal, "LOST_TARGET") : onMoveStage(deal, v))}>
-          <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
-          <SelectContent>
-            {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}
-            <SelectItem value="LOST">Mark Lost</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
+        <div className="mt-3 pt-3 border-t" style={{ borderColor: "var(--border)" }} onClick={e => e.stopPropagation()}>
+          <Select value={deal.stage} onValueChange={(v) => (v === "LOST" ? onMoveStage(deal, "LOST_TARGET") : onMoveStage(deal, v))}>
+            <SelectTrigger className="h-9 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {PIPELINE_STAGES.map(s => <SelectItem key={s} value={s}>{STAGE_LABEL[s]}</SelectItem>)}
+              <SelectItem value="LOST">Mark Lost</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+      </motion.div>
     </div>
   );
 }

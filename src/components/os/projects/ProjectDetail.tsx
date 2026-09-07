@@ -180,7 +180,7 @@ export function ProjectDetail({ project: initialProject, users, payments }: { pr
       )}
 
       {/* Target live date + notes */}
-      <div className="mt-6 rounded-[var(--radius-lg)] p-5" style={{ background: "var(--surface)", border: "1px solid var(--border)" }}>
+      <div className="mt-6 rounded-[var(--radius-lg)] p-5 border" style={{ borderColor: "var(--border)" }}>
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="sm:w-48">
             <Label>Target Live Date</Label>
@@ -216,25 +216,28 @@ export function ProjectDetail({ project: initialProject, users, payments }: { pr
           <Input value={newTaskTitle} onChange={e => setNewTaskTitle(e.target.value)} onKeyDown={e => e.key === "Enter" && addTask()} placeholder="Add a task…" className="flex-1" />
           <Button size="sm" variant="secondary" onClick={addTask} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> Add</Button>
         </div>
-        <div className="space-y-2">
-          {tasks.length === 0 && <p className="text-xs text-[var(--text-faint)] px-1">No tasks yet.</p>}
-          {tasks.map(t => (
-            <div key={t.id} className="flex items-center gap-3 rounded-[var(--radius-md)] px-3.5 py-2.5" style={{ background: "var(--surface-hover)" }}>
-              <button
-                onClick={() => complete(t)}
-                disabled={completing.has(t.id)}
-                className="shrink-0 w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-colors hover:border-[var(--accent)]"
-                style={{ borderColor: t.status === "DONE" ? "var(--success)" : "var(--border-strong)", background: t.status === "DONE" ? "var(--success)" : "transparent" }}
-              >
-                {t.status === "DONE" && <Check className="w-2.5 h-2.5 text-white" />}
-              </button>
-              <span className="flex-1 text-xs text-[var(--text)]" style={{ textDecoration: t.status === "DONE" ? "line-through" : "none", opacity: t.status === "DONE" ? 0.5 : 1 }}>
-                {t.title}
-              </span>
-              {t.assignee && <Avatar name={t.assignee.name} color={t.assignee.avatarColor} size={20} />}
-            </div>
-          ))}
-        </div>
+        {tasks.length === 0 ? (
+          <p className="os-text-meta px-1">No tasks yet.</p>
+        ) : (
+          <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
+            {tasks.map(t => (
+              <div key={t.id} className="os-row-hover flex items-center gap-3 px-3.5 py-2.5">
+                <button
+                  onClick={() => complete(t)}
+                  disabled={completing.has(t.id)}
+                  className="shrink-0 w-4.5 h-4.5 rounded-full border-2 flex items-center justify-center transition-colors hover:border-[var(--accent)]"
+                  style={{ borderColor: t.status === "DONE" ? "var(--success)" : "var(--border-strong)", background: t.status === "DONE" ? "var(--success)" : "transparent" }}
+                >
+                  {t.status === "DONE" && <Check className="w-2.5 h-2.5 text-white" />}
+                </button>
+                <span className="flex-1 text-xs text-[var(--text)]" style={{ textDecoration: t.status === "DONE" ? "line-through" : "none", opacity: t.status === "DONE" ? 0.5 : 1 }}>
+                  {t.title}
+                </span>
+                {t.assignee && <Avatar name={t.assignee.name} color={t.assignee.avatarColor} size={20} />}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {/* Activity */}
@@ -265,11 +268,11 @@ export function ProjectDetail({ project: initialProject, users, payments }: { pr
       {payments.length > 0 && (
         <div className="mt-7">
           <p className="text-xs font-bold uppercase tracking-wider text-[var(--text-faint)] mb-2.5">Payments</p>
-          <div className="space-y-2">
+          <div className="rounded-[var(--radius-lg)] border divide-y" style={{ borderColor: "var(--border)" }}>
             {payments.map(p => (
-              <div key={p.id} className="flex items-center justify-between px-3.5 py-2.5 rounded-[var(--radius-md)]" style={{ background: "var(--surface-hover)" }}>
+              <div key={p.id} className="os-row-hover flex items-center justify-between px-3.5 py-2.5">
                 <span className="text-xs text-[var(--text)]">{p.paidAt ? friendlyDate(p.paidAt) : friendlyDay(p.createdAt)} · {p.method}</span>
-                <span className="text-xs font-bold" style={{ color: "var(--success)" }}>{formatKES(p.amount, { compact: true })}</span>
+                <span className="os-text-number text-xs" style={{ color: "var(--success)" }}>{formatKES(p.amount, { compact: true })}</span>
               </div>
             ))}
           </div>
