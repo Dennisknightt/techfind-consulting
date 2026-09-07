@@ -9,9 +9,11 @@ import { TeamSettings } from "@/components/os/settings/TeamSettings";
 import { CatalogueSettings } from "@/components/os/settings/CatalogueSettings";
 import { TaxSettings } from "@/components/os/settings/TaxSettings";
 import { PaymentProviderSettings } from "@/components/os/settings/PaymentProviderSettings";
+import { MpesaBalanceCard } from "@/components/os/settings/MpesaBalanceCard";
 import { PageHeader } from "@/components/os/common/PageHeader";
 import { getTaxConfigAction } from "@/server/actions/settings";
 import { getActiveProvider, listProviderNames } from "@/server/payments/registry";
+import { getMpesaBalanceState } from "@/server/payments/mpesaBalance";
 
 export const metadata: Metadata = { title: "Settings — Techfind" };
 
@@ -30,6 +32,7 @@ export default async function SettingsPage() {
     db.package.findMany({ orderBy: { sortOrder: "asc" } }),
   ]);
   const { configuredName, devSafetyOverride } = providerInfo;
+  const mpesaBalance = configuredName === "DARAJA" ? await getMpesaBalanceState() : null;
 
   return (
     <div className="p-6 lg:p-8 max-w-3xl">
@@ -65,13 +68,16 @@ export default async function SettingsPage() {
           <TaxSettings initial={taxConfig} canEdit={canEditTax} />
         </TabsContent>
 
-        <TabsContent value="payments" className="mt-5">
+        <TabsContent value="payments" className="mt-5 space-y-5">
           <PaymentProviderSettings
             configuredName={configuredName}
             devSafetyOverride={devSafetyOverride}
             canEdit={canEditTax}
             providers={listProviderNames()}
           />
+          {configuredName === "DARAJA" && (
+            <MpesaBalanceCard initial={mpesaBalance} canEdit={canEditTax} />
+          )}
         </TabsContent>
       </Tabs>
     </div>

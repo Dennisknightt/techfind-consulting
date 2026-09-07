@@ -119,9 +119,34 @@ ever regressing an already-`WON` deal), triggers the sales→project handoff
 ## Public payment endpoints
 
 `/api/os/pay/[token]/charge` and `/api/os/pay/[token]/status` are the only unauthenticated
-endpoints in the app besides the webhook. Both are rate-limited (`src/lib/ratelimit.ts` +
-`hashIp`) and scoped strictly to the `PaymentSession` identified by the URL token — a token
+endpoints in the app besides the gateway webhooks. Both are rate-limited (`src/lib/ratelimit.ts`
++ `hashIp`) and scoped strictly to the `PaymentSession` identified by the URL token — a token
 never exposes another session's payments.
+
+## M-Pesa Account Balance (Daraja only)
+
+A separate, optional feature from the payment flow above: Settings → Payment Provider (once
+Daraja is active) shows a **Check Balance** card that queries Daraja's `AccountBalance` command
+— the real balance sitting in Techfind's own paybill/till, not a payment. It's a genuinely
+different Safaricom trust model than STK push:
+
+- STK push authenticates with the Lipa Na M-Pesa **passkey** (`MPESA_PASSKEY`).
+- Account Balance (and Daraja's other org-level commands — B2C, B2B, Reversal) authenticate with
+  an **Initiator** identity instead: `MPESA_INITIATOR_NAME` + a `SecurityCredential`, which is
+  `MPESA_INITIATOR_PASSWORD` RSA-encrypted (PKCS#1 v1.5) against Safaricom's own public
+  certificate for the target environment. That certificate is **not bundled with this app** —
+  sandbox and production use different ones, and embedding a copy we can't independently verify
+  risks silently producing a `SecurityCredential` that's simply wrong. Download it from your
+  Daraja app and set `MPESA_CERT_PEM` to its exact contents (see `.env.example`).
+- The result is **asynchronous**: Daraja's immediate response to `requestAccountBalance()`
+  (`src/server/payments/mpesaBalance.ts`) only confirms the request was accepted — the actual
+  balance arrives later as a POST to `/api/webhooks/payments/daraja-balance`, parsed by
+  `applyBalanceCallback` and stored in `Setting["mpesa_account_balance"]`. The Settings card polls
+  for that update after triggering a check.
+- Unlike the payment webhooks above, this one has no independent re-verification step to fall
+  back on — there's no equivalent of `checkStatus` for a balance figure — so its callback is
+  taken at face value. That's an acceptable trade here because it only ever updates a read-only
+  display; nothing financial gets credited or trusted off of it.
 
 ## Receipts and the Revenue Control Centre
 

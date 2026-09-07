@@ -1,5 +1,6 @@
 import "server-only";
 import type { PaymentProvider, ChargeInput, ChargeResult, StatusResult, RefundInput, ProviderStatus } from "./provider";
+import { darajaFetch, darajaTimestamp } from "./darajaClient";
 
 /**
  * Direct Safaricom Daraja integration — M-Pesa STK push ("Lipa na M-Pesa
@@ -16,14 +17,6 @@ import type { PaymentProvider, ChargeInput, ChargeResult, StatusResult, RefundIn
  * with Safaricom's own STK query endpoint before anything is trusted. See
  * /docs/PAYMENTS.md.
  */
-
-const SANDBOX_HOST = "https://sandbox.safaricom.co.ke";
-const PRODUCTION_HOST = "https://api.safaricom.co.ke";
-
-function host(): string {
-  const env = process.env.MPESA_ENV ?? (process.env.NODE_ENV === "production" ? "production" : "sandbox");
-  return env === "production" ? PRODUCTION_HOST : SANDBOX_HOST;
-}
 
 function config() {
   const consumerKey = process.env.MPESA_CONSUMER_KEY;
@@ -45,54 +38,6 @@ function normalizePhone(raw: string): string {
   throw new Error("Enter a valid Safaricom M-Pesa number");
 }
 
-function timestamp(): string {
-  const d = new Date();
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`;
-}
-
-declare global {
-  // eslint-disable-next-line no-var
-  var __darajaTokenCache: { token: string; expiresAt: number } | undefined;
-}
-
-/** Cached in-memory per warm serverless instance — Daraja tokens are valid ~1 hour, no need to fetch one per request. */
-async function getAccessToken(): Promise<string> {
-  const cached = globalThis.__darajaTokenCache;
-  if (cached && cached.expiresAt > Date.now()) return cached.token;
-
-  const { consumerKey, consumerSecret } = config();
-  const basic = Buffer.from(`${consumerKey}:${consumerSecret}`).toString("base64");
-  const res = await fetch(`${host()}/oauth/v1/generate?grant_type=client_credentials`, {
-    headers: { Authorization: `Basic ${basic}` },
-  });
-  if (!res.ok) throw new Error(`Daraja auth failed (${res.status})`);
-  const data = (await res.json()) as { access_token?: string; expires_in?: string };
-  if (!data.access_token) throw new Error("Daraja auth response had no access_token");
-
-  const expiresInSec = Number(data.expires_in ?? 3599);
-  globalThis.__darajaTokenCache = {
-    token: data.access_token,
-    expiresAt: Date.now() + (expiresInSec - 60) * 1000, // refresh a minute early
-  };
-  return data.access_token;
-}
-
-async function darajaFetch(path: string, body: unknown): Promise<Record<string, unknown>> {
-  const token = await getAccessToken();
-  const res = await fetch(`${host()}${path}`, {
-    method: "POST",
-    headers: { Authorization: `Bearer ${token}`, "Content-Type": "application/json" },
-    body: JSON.stringify(body),
-  });
-  const data = (await res.json().catch(() => ({}))) as Record<string, unknown>;
-  if (!res.ok) {
-    const message = (data.errorMessage as string) ?? (data.ResponseDescription as string) ?? `Daraja request failed (${res.status})`;
-    throw new Error(message);
-  }
-  return data;
-}
-
 /** Maps an STK query's ResultCode to our status vocabulary — never guesses SUCCESSFUL. */
 function mapResultCode(resultCode: number | undefined): ProviderStatus {
   if (resultCode === 0) return "SUCCESSFUL";
@@ -111,7 +56,7 @@ export const darajaProvider: PaymentProvider = {
     if (!input.phone) throw new Error("Phone number is required for M-Pesa payments");
 
     const { shortcode, passkey } = config();
-    const ts = timestamp();
+    const ts = darajaTimestamp();
     const password = Buffer.from(`${shortcode}${passkey}${ts}`).toString("base64");
     const phone = normalizePhone(input.phone);
     const callbackBase = process.env.NEXT_PUBLIC_APP_URL;
@@ -141,7 +86,7 @@ export const darajaProvider: PaymentProvider = {
 
   async checkStatus(gatewayReference: string): Promise<StatusResult> {
     const { shortcode, passkey } = config();
-    const ts = timestamp();
+    const ts = darajaTimestamp();
     const password = Buffer.from(`${shortcode}${passkey}${ts}`).toString("base64");
 
     let raw: Record<string, unknown>;
