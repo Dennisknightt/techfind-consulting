@@ -69,7 +69,7 @@ export function ExperienceSettings({
           <div>
             <p className="text-sm font-semibold text-[var(--text)]">Welcome Sound</p>
             <p className="text-xs text-[var(--text-faint)] mt-0.5">
-              A short chime plays once per session when you first sign in.
+              A short sound plays once per session when you first sign in.
             </p>
           </div>
           <Switch
