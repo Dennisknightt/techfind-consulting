@@ -33,8 +33,13 @@ order for a next pass:
 5. **Real WhatsApp Cloud API / email sending** — see `docs/INTEGRATIONS.md`.
 6. **A real `prisma migrate` history on Postgres**, replacing the `prisma db push` schema-sync
    still in use — the provider itself moved to Postgres already (required for the first Vercel
-   deploy, since SQLite cannot run there), but migrations, not just the provider, should be
-   real and reviewable before this holds data worth protecting (see `docs/DATABASE.md`).
+   deploy, since SQLite cannot run there). `vercel-build` no longer risks silent data loss
+   (`--accept-data-loss` was dropped, so a destructive change now fails the build instead of
+   applying), and a baseline migration is generated and waiting at
+   `prisma/migrations/20260908000000_init` — but the cutover itself still needs one manual step
+   against each real database (`prisma migrate resolve --applied ...`, see `docs/DATABASE.md`)
+   that nothing here has DB network access to perform. Still highest priority before this holds
+   data worth protecting.
 7. **Money as integer minor-units or `Decimal`** instead of `Float`, before transaction volume
    makes floating-point drift a real (rather than theoretical) concern.
 8. **Refunds** — `PaymentProvider.refund()` exists in the interface and both providers

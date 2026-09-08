@@ -81,9 +81,24 @@ list is small, denormalized, and never queried by its contents from SQL (e.g.
 
 ## Migrations
 
-This stage of the build uses `prisma db push` (schema-sync, no migration history) rather than
-`prisma migrate` — appropriate for a fast-moving pre-production build where the schema is still
-settling. Before relying on this in a real production environment with data worth protecting,
-switch to `prisma migrate` with a real, committed migration history (`prisma migrate dev` locally
-to generate migrations, `prisma migrate deploy` in the deploy pipeline) so schema changes are
-reviewable and reversible rather than a silent sync.
+The build still runs `prisma db push` rather than `prisma migrate deploy` — appropriate for a
+fast-moving pre-production build where the schema is still settling, but `vercel-build` no longer
+passes `--accept-data-loss`: a schema change that would drop a column or table now fails the
+build loudly instead of applying it silently. That's a stopgap, not the fix — before this holds
+data worth protecting, finish the switch to a real migration history:
+
+1. A baseline migration already exists at `prisma/migrations/20260908000000_init`, generated with
+   `prisma migrate diff --from-empty --to-schema-datamodel prisma/schema.prisma --script` against
+   the schema as of that date — it was never applied anywhere, only diffed, so generating it
+   touched no database.
+2. Because every environment's tables already exist (created via `db push`), that migration has
+   to be marked as already applied rather than run — once, against each existing database
+   (production, and any preview/dev databases worth keeping in sync):
+   `DATABASE_URL=<target> npx prisma migrate resolve --applied 20260908000000_init`
+3. Only after that baseline step succeeds everywhere, switch `vercel-build` in `package.json` to
+   `prisma migrate deploy && prisma db seed && next build`. Doing this before baselining will
+   break the next deploy — `migrate deploy` will try to `CREATE TABLE` on tables that already
+   exist.
+4. From then on, schema changes go through `prisma migrate dev --name <change>` locally (commits
+   a reviewable SQL file under `prisma/migrations/`) instead of editing `schema.prisma` and
+   letting `db push` sync it live.
