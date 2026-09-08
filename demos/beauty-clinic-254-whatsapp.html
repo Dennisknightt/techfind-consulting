@@ -556,68 +556,71 @@
 
     const route = await askButtons(
       "Hi \u{1F44B} Welcome to Beauty Clinic 254 \u{1F49C}\nHealthy hair, beautiful confidence.\n\nHow can we help you today?",
-      [opt("\u{1F4C5} Book an appointment", "book"), opt("\u2702\uFE0F See our services", "services"),
-       opt("\u{1F4CD} Location & opening hours", "info"), opt("\u{1F4AC} Something else", "human")],
+      [opt("\u{1F4C5} Book an appointment", "book"), opt("\u{1F4CD} Location & hours", "info"),
+       opt("\u{1F4AC} Talk to the team", "human")],
       id);
 
     if (route.value === "info") {
-      await says("We're on Rose Avenue, Kilimani, Nairobi \u{1F4CD}\n\nMon\u2013Fri 9:00 AM \u2013 7:00 PM\nSaturday 9:00 AM \u2013 8:00 PM\nSunday 10:00 AM \u2013 5:00 PM", id);
-      await wait(260); guard(id);
+      await says("We're on Rose Avenue, Kilimani, Nairobi \u{1F4CD}\n\nMon\u2013Fri  9:00 AM \u2013 7:00 PM\nSaturday  9:00 AM \u2013 8:00 PM\nSunday  10:00 AM \u2013 5:00 PM", id);
+      await wait(280); guard(id);
     } else if (route.value === "human") {
-      await says("Of course \u2014 one of the team will pick this up shortly \u{1F49C}\n\nIn the meantime, would you like to book?", id);
-      await wait(260); guard(id);
+      await says("Of course \u2014 the team will pick this up shortly \u{1F49C}\n\nWhile you're here, shall we get you booked in?", id);
+      await wait(280); guard(id);
     }
 
-    if (route.value === "services") {
-      await says("Our menu \u{1F485}\n\n\u{1F487}\u200D\u2640\uFE0F *Hair* \u2014 wash, blow dry, treatments, hair spa, braiding, colour, silk press, natural hair, hair botox, keratin, wig installation & revamp, extensions, retouch\n\n\u2728 *Beauty* \u2014 facials, makeup, lashes, waxing, massage, nails", id);
-      await wait(260); guard(id);
+    /* 1 \u2014 service. The six most-booked in one tap; everything else one tap away. */
+    const POPULAR = ["Braiding", "Silk Press", "Hair Treatment", "Wig Installation", "Facials", "Nails"];
+    const HAIR = ["Wash", "Blow Dry", "Hair Treatment", "Hair Spa", "Braiding", "Hair Colour",
+                  "Silk Press", "Natural Hair", "Hair Botox", "Keratin Treatment",
+                  "Wig Installation", "Wig Revamp", "Hair Extensions", "Retouch"];
+    const BEAUTY = ["Facials", "Makeup", "Lashes", "Waxing", "Massage", "Nails"];
+
+    let service = null;
+    const first = await askButtons("Lovely \u{1F49C} What are you booking?",
+      [...POPULAR.map(n => opt(n)), opt("\u{1F50E} See all services", "all")], id);
+
+    if (first.value === "all") {
+      const cat = await askButtons("Sure \u2014 hair or beauty?",
+        [opt("\u{1F487}\u200D\u2640\uFE0F Hair", "hair"), opt("\u2728 Beauty", "beauty")], id);
+      const list = cat.value === "hair" ? HAIR : BEAUTY;
+      service = (await askButtons("Which one?", list.map(n => opt(n)), id)).label;
+    } else {
+      service = first.label;
     }
+    note("Service", service);
 
-    const cat = await askButtons("What are you booking today?",
-      [opt("\u{1F487}\u200D\u2640\uFE0F Hair", "hair"), opt("\u2728 Beauty", "beauty")], id);
-    note("Category", cat.value === "hair" ? "Hair" : "Beauty");
-
-    const HAIR = ["Hair Treatment", "Braiding", "Silk Press", "Hair Colour", "Wig Installation",
-                  "Natural Hair", "Hair Botox", "Keratin Treatment", "Blow Dry", "Retouch"];
-    const BEAUTY = ["Facials", "Nails", "Lashes", "Makeup", "Massage", "Waxing"];
-
-    const picked = await askMulti("Lovely \u{1F49C} Which service(s)? You can choose more than one.",
-      (cat.value === "hair" ? HAIR : BEAUTY).map(n => opt(n)), id);
-    note("Service", picked.join(", "));
-
-    const stylist = await askButtons("Who would you like to see?", [
+    /* 2 \u2014 stylist. "Any" first, because it is the fastest booking and most people take it. */
+    const who = await askButtons("Who would you like?", [
       opt("\u2B50 Any available stylist", "any"), opt("Senior Stylist", "senior"),
       opt("Master Stylist", "master"), opt("Hair Colour Specialist", "colour"),
       opt("Natural Hair Specialist", "natural")], id);
-    note("Stylist", stylist.label.replace(/^[^\p{L}]+/u, ""));
+    note("Stylist", who.value === "any" ? "Any available" : who.label);
 
-    const day = await askButtons("When suits you?", [
-      opt("Today"), opt("Tomorrow"), opt("This weekend"),
-      opt("Next week"), opt("I'll pick a date")], id);
+    /* 3 \u2014 day */
+    const day = await askButtons("When suits you?",
+      [opt("Today"), opt("Tomorrow"), opt("This weekend"), opt("Another day", "other")], id);
+    const dayLabel = day.value === "other"
+      ? await askText("No problem \u2014 which day works for you?", "e.g. Friday 12th", id)
+      : day.label;
+    note("Day", dayLabel);
 
-    let dayLabel = day.label;
-    if (day.label === "I'll pick a date") {
-      dayLabel = await askText("No problem \u2014 which date works for you?", "e.g. Friday 12th", id);
-    }
-    note("Date", dayLabel);
-
-    const time = await askButtons("And what time?", [
-      opt("Morning (9\u201312)"), opt("Afternoon (12\u20134)"),
-      opt("Evening (4\u20137)"), opt("I'll give a time")], id);
-
-    let timeLabel = time.label;
-    if (time.label === "I'll give a time") {
-      timeLabel = await askText("What time would you like?", "e.g. 4:30pm", id);
-    }
+    /* 4 \u2014 time, as real slots rather than vague windows */
+    const time = await askButtons("Great. Pick a time \u{1F551}", [
+      opt("9:30 AM"), opt("11:00 AM"), opt("1:00 PM"),
+      opt("3:30 PM"), opt("5:00 PM"), opt("Another time", "other")], id);
+    const timeLabel = time.value === "other"
+      ? await askText("What time would you like?", "e.g. 4:30pm", id)
+      : time.label;
     note("Time", timeLabel);
 
+    /* 5 \u2014 one look at it, then book */
     await close(id, brief,
-      "Perfect \u{1F49C} Almost done \u2014 how would you like to finish?",
-      [opt("\u2705 Confirm this booking", "book"), opt("\u{1F4DE} Have someone call me", "call")]);
+      `Here's your appointment \u{1F49C}\n\n\u2702\uFE0F  ${service}\n\u{1F464}  ${who.value === "any" ? "Any available stylist" : who.label}\n\u{1F4C5}  ${dayLabel}\n\u{1F551}  ${timeLabel}\n\nShall I book it?`,
+      [opt("\u2705 Yes, book it", "book"), opt("\u{1F4DE} Call me instead", "call")]);
   }
 
   const ENDINGS = {
-    book: { ask: "Lovely \u{1F49C} What name should we book this under?", title: "\u{1F4C5} Appointment Requested",
+    book: { ask: "Perfect \u{1F49C} What name should we book this under?", title: "\u{1F4C5} Appointment Requested",
             note: "Sent to the Beauty Clinic 254 front desk", label: "Booking" },
     call: { ask: "Sure \u{1F49C} What name should we use?", title: "\u{1F4DE} Callback Requested",
             note: "Sent to the Beauty Clinic 254 front desk", label: "Callback" }
