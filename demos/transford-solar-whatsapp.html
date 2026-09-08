@@ -1,0 +1,684 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transford Solar WhatsApp Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  :root{
+    --stage-bg-1:#f6efe2;
+    --stage-bg-2:#e9dfcd;
+    --stage-ink:#4a4034;
+    --stage-ink-soft:#8b7d6a;
+    --frame:#d8ccb6;
+
+    --chrome:#f0f2f5;
+    --chrome-ink:#111b21;
+    --chrome-ink-soft:#667781;
+    --chat-bg:#efe7dd;
+    --doodle-img:var(--doodle-light);
+    --bubble-in:#ffffff;
+    --bubble-in-ink:#111b21;
+    --bubble-out:#d9fdd3;
+    --bubble-out-ink:#111b21;
+    --meta:#667781;
+    --tick:#8696a0;
+    --tick-read:#53bdeb;
+    --reply-card:#ffffff;
+    --reply-ink:#0091ea;
+    --reply-line:rgba(17,27,33,.10);
+    --composer:#ffffff;
+    --composer-bg:#f0f2f5;
+    --send:#00a884;
+    --divider:rgba(17,27,33,.10);
+    --sun:#f6a723;
+    --sun-deep:#e07a1f;
+    --card:#ffffff;
+    --card-ink:#111b21;
+    --shadow:0 1px .5px rgba(11,20,26,.13);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      --stage-bg-1:#181410;
+      --stage-bg-2:#0e0c0a;
+      --stage-ink:#e6dccb;
+      --stage-ink-soft:#9b8f7c;
+      --frame:#2c261e;
+      --chrome:#202c33;
+      --chrome-ink:#e9edef;
+      --chrome-ink-soft:#8696a0;
+      --chat-bg:#0b141a;
+      --doodle-img:var(--doodle-dark);
+      --bubble-in:#202c33;
+      --bubble-in-ink:#e9edef;
+      --bubble-out:#005c4b;
+      --bubble-out-ink:#e9edef;
+      --meta:#8696a0;
+      --tick:#8696a0;
+      --tick-read:#53bdeb;
+      --reply-card:#1f2c33;
+      --reply-ink:#53bdeb;
+      --reply-line:rgba(233,237,239,.12);
+      --composer:#2a3942;
+      --composer-bg:#111b21;
+      --divider:rgba(233,237,239,.10);
+      --card:#182229;
+      --card-ink:#e9edef;
+      --shadow:0 1px .5px rgba(0,0,0,.35);
+    }
+  }
+  :root[data-theme="dark"]{
+    --stage-bg-1:#181410;
+    --stage-bg-2:#0e0c0a;
+    --stage-ink:#e6dccb;
+    --stage-ink-soft:#9b8f7c;
+    --frame:#2c261e;
+
+    --chrome:#202c33;
+    --chrome-ink:#e9edef;
+    --chrome-ink-soft:#8696a0;
+    --chat-bg:#0b141a;
+    --doodle-img:var(--doodle-dark);
+    --bubble-in:#202c33;
+    --bubble-in-ink:#e9edef;
+    --bubble-out:#005c4b;
+    --bubble-out-ink:#e9edef;
+    --meta:#8696a0;
+    --tick:#8696a0;
+    --tick-read:#53bdeb;
+    --reply-card:#1f2c33;
+    --reply-ink:#53bdeb;
+    --reply-line:rgba(233,237,239,.12);
+    --composer:#2a3942;
+    --composer-bg:#111b21;
+    --divider:rgba(233,237,239,.10);
+    --card:#182229;
+    --card-ink:#e9edef;
+    --shadow:0 1px .5px rgba(0,0,0,.35);
+  }
+
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--stage-bg-2);
+    color:var(--stage-ink);
+    font-family:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding:20px;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--stage-bg-1) 0%, var(--stage-bg-2) 70%);
+  }
+
+  .phone{
+    position:relative;
+    width:min(100%, 412px);
+    height:min(100%, 880px);
+    display:flex; flex-direction:column;
+    background:var(--chat-bg);
+    border-radius:30px;
+    overflow:hidden;
+    border:1px solid var(--frame);
+    box-shadow:0 30px 60px -24px rgba(28,20,8,.45), 0 2px 6px rgba(28,20,8,.10);
+  }
+
+  /* ---------- header ---------- */
+  .bar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:var(--chrome);
+    color:var(--chrome-ink);
+    border-bottom:1px solid var(--divider);
+    flex:0 0 auto;
+    z-index:3;
+  }
+  .back{display:flex; color:var(--chrome-ink-soft);}
+  .avatar{
+    width:40px; height:40px; border-radius:50%;
+    background:radial-gradient(circle at 32% 30%, #ffd670, var(--sun) 55%, var(--sun-deep));
+    display:grid; place-items:center; flex:0 0 auto;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+  }
+  .who{display:flex; flex-direction:column; min-width:0; flex:1;}
+  .who b{font-size:16px; font-weight:600; letter-spacing:-.01em; line-height:1.2;}
+  .who span{font-size:12.5px; color:var(--chrome-ink-soft); line-height:1.4; height:18px;}
+  .who span.typing{color:var(--send); font-weight:500;}
+  .bar-actions{display:flex; align-items:center; gap:2px;}
+  .icon-btn{
+    appearance:none; border:0; background:transparent; cursor:pointer;
+    width:38px; height:38px; border-radius:50%;
+    display:grid; place-items:center; color:var(--chrome-ink-soft);
+    transition:background .15s ease, color .15s ease, transform .3s ease;
+  }
+  .icon-btn:hover{background:rgba(128,128,128,.14); color:var(--chrome-ink);}
+  .icon-btn:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .icon-btn.spin{transform:rotate(-360deg);}
+
+  /* ---------- chat ---------- */
+  .chat{
+    flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain;
+    padding:14px 10px 8px;
+    display:flex; flex-direction:column; gap:3px;
+    background-color:var(--chat-bg);
+    background-image:var(--doodle-img);
+    background-size:340px;
+    scrollbar-width:thin;
+  }
+  .day{
+    align-self:center; margin:2px 0 10px;
+    font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--meta); background:var(--card);
+    padding:5px 12px; border-radius:8px; box-shadow:var(--shadow);
+  }
+  .row{display:flex; width:100%;}
+  .row.out{justify-content:flex-end;}
+  .msg{
+    position:relative;
+    max-width:82%;
+    padding:6px 9px 8px 10px;
+    border-radius:8px;
+    font-size:14.6px; line-height:1.38;
+    white-space:pre-wrap; word-wrap:break-word;
+    box-shadow:var(--shadow);
+    animation:pop .18s ease-out both;
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(7px) scale(.99);} to{opacity:1; transform:none;}}
+  .row.in .msg{background:var(--bubble-in); color:var(--bubble-in-ink); border-top-left-radius:2px;}
+  .row.out .msg{background:var(--bubble-out); color:var(--bubble-out-ink); border-top-right-radius:2px;}
+  .row + .row{margin-top:3px;}
+  .row.in + .row.out, .row.out + .row.in{margin-top:9px;}
+  .meta{
+    float:right; margin:8px -2px -4px 8px;
+    font-size:11px; color:var(--meta);
+    display:flex; align-items:center; gap:3px; line-height:1;
+  }
+  .tick{width:15px; height:15px; color:var(--tick); transition:color .2s ease;}
+  .tick.read{color:var(--tick-read);}
+
+  .typingBubble{display:flex; gap:4px; align-items:center; padding:11px 13px;}
+  .typingBubble i{
+    width:7px; height:7px; border-radius:50%; background:var(--meta); display:block;
+    animation:blink 1.25s infinite ease-in-out;
+  }
+  .typingBubble i:nth-child(2){animation-delay:.18s;}
+  .typingBubble i:nth-child(3){animation-delay:.36s;}
+  @keyframes blink{0%,60%,100%{opacity:.32; transform:translateY(0);} 30%{opacity:1; transform:translateY(-2px);}}
+
+  /* ---------- quick replies ---------- */
+  .replies{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin:7px 0 4px; padding:0 2px;
+    animation:pop .2s ease-out both;
+  }
+  .replies.stack{flex-direction:column;}
+  .reply{
+    appearance:none; cursor:pointer;
+    font:inherit; font-size:14.2px; font-weight:500;
+    color:var(--reply-ink); background:var(--reply-card);
+    border:1px solid var(--reply-line); border-radius:18px;
+    padding:9px 15px; box-shadow:var(--shadow);
+    transition:transform .12s ease, filter .12s ease;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .replies.stack .reply{justify-content:center; width:100%;}
+  .reply:hover{filter:brightness(1.03); transform:translateY(-1px);}
+  .reply:active{transform:translateY(0) scale(.985);}
+  .reply:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .reply.picked{background:var(--send); color:#fff; border-color:transparent;}
+  .reply .box{
+    width:16px; height:16px; border-radius:5px; flex:0 0 auto;
+    border:1.6px solid currentColor; opacity:.55;
+    display:grid; place-items:center;
+  }
+  .reply.picked .box{opacity:1; background:#fff; color:var(--send); border-color:#fff;}
+  .reply .box svg{opacity:0;}
+  .reply.picked .box svg{opacity:1;}
+  .reply.go{
+    background:var(--send); color:#fff; border-color:transparent; font-weight:600;
+    align-self:flex-end; padding:9px 20px;
+  }
+  .reply.go[disabled]{opacity:.45; cursor:not-allowed; transform:none;}
+
+  /* ---------- receipt card ---------- */
+  .receipt{
+    align-self:center; width:min(100%, 320px);
+    margin:12px 0 6px; padding:16px 16px 14px;
+    background:var(--card); color:var(--card-ink);
+    border-radius:14px; box-shadow:var(--shadow), 0 8px 24px -16px rgba(0,0,0,.5);
+    border-top:3px solid var(--sun);
+    animation:pop .25s ease-out both;
+  }
+  .receipt h3{margin:0 0 2px; font-size:15.5px; font-weight:600; letter-spacing:-.01em;}
+  .receipt p{margin:0 0 10px; font-size:12.5px; color:var(--meta);}
+  .receipt dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:12.8px;}
+  .receipt dt{color:var(--meta);}
+  .receipt dd{margin:0; text-align:right; font-weight:500; overflow-wrap:anywhere;}
+
+  /* ---------- composer ---------- */
+  .composer{
+    flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:var(--composer-bg);
+    border-top:1px solid var(--divider);
+  }
+  .field{
+    flex:1; display:flex; align-items:center; gap:8px;
+    background:var(--composer); border-radius:22px; padding:9px 14px;
+    color:var(--chrome-ink); box-shadow:var(--shadow);
+  }
+  .field input{
+    flex:1; border:0; background:transparent; outline:none;
+    font:inherit; font-size:15px; color:var(--chrome-ink); min-width:0;
+  }
+  .field input::placeholder{color:var(--chrome-ink-soft);}
+  .composer.locked .field{opacity:.72;}
+  .sendBtn{
+    width:44px; height:44px; border-radius:50%; border:0; cursor:pointer;
+    background:var(--send); color:#fff; display:grid; place-items:center; flex:0 0 auto;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .sendBtn:active{transform:scale(.94);}
+  .sendBtn[disabled]{opacity:.45; cursor:not-allowed;}
+  .sendBtn:focus-visible{outline:2px solid var(--chrome-ink); outline-offset:2px;}
+
+  .caption{
+    font-size:12.5px; color:var(--stage-ink-soft); letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px; text-align:center;
+  }
+  .caption b{font-weight:600; color:var(--stage-ink);}
+
+  @media (max-width:520px){
+    .stage{padding:0; gap:0;}
+    .phone{width:100%; height:100%; border-radius:0; border:0; box-shadow:none;}
+    .caption{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+</style>
+
+<div class="stage">
+  <div class="phone">
+    <header class="bar">
+      <span class="back" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="avatar" aria-hidden="true">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#7a3f06" stroke-width="1.9" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4.2" fill="#fff3d1" stroke="#7a3f06"/>
+          <path d="M12 2.6v2.2M12 19.2v2.2M2.6 12h2.2M19.2 12h2.2M5.4 5.4l1.6 1.6M17 17l1.6 1.6M18.6 5.4L17 7M7 17l-1.6 1.6"/>
+        </svg>
+      </span>
+      <span class="who">
+        <b>Transford Solar</b>
+        <span id="presence">online</span>
+      </span>
+      <span class="bar-actions">
+        <button class="icon-btn" id="restart" title="Restart the demo" aria-label="Restart the demo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 2.6-6.4"/><path d="M3 4v5h5"/></svg>
+        </button>
+      </span>
+    </header>
+
+    <main class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation with Transford Solar"></main>
+
+    <form class="composer locked" id="composer" autocomplete="off">
+      <label class="field">
+        <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" opacity=".6" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8" stroke-linecap="round"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <input id="input" placeholder="Choose an option above" aria-label="Message" readonly>
+      </label>
+      <button class="sendBtn" id="send" type="submit" disabled aria-label="Send">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.3 20.7 21 12 3.3 3.3 3.3 10l12 2-12 2z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <p class="caption"><b>Transford Solar</b> · WhatsApp enquiry demo · tap the arrow in the header to restart</p>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* Chat wallpaper: faint solar doodles, drawn once as a data URI. */
+  const doodle = (ink, alpha) => `<svg xmlns="http://www.w3.org/2000/svg" width="170" height="170" viewBox="0 0 170 170">
+    <g fill="none" stroke="${ink}" stroke-opacity="${alpha}" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+      <circle cx="30" cy="28" r="7"/><path d="M30 14v5M30 37v5M16 28h5M39 28h5M20 18l3.5 3.5M36.5 34.5 40 38M40 18l-3.5 3.5M23.5 34.5 20 38"/>
+      <path d="M96 20l-7 12h6l-6 12"/>
+      <path d="M124 118h22v14h-22zM128 118v-4h4v4M138 118v-4h4v4"/>
+      <path d="M112 44h30l-6 16h-30zM118 44l-4 16M128 44l-3 16"/>
+      <path d="M40 96h26l6 7H34zM38 103h30v18H38zM48 112h10v9H48z"/>
+      <path d="M138 84c0-4 3-7 7-7s7 3 7 7"/>
+      <circle cx="86" cy="86" r="6"/><path d="M86 76v3M86 93v3M76 86h3M93 86h3"/>
+    </g></svg>`;
+  const paper = (ink, alpha) => `url("data:image/svg+xml,${encodeURIComponent(doodle(ink, alpha))}")`;
+  document.documentElement.style.setProperty("--doodle-light", paper("rgb(120,95,55)", 0.16));
+  document.documentElement.style.setProperty("--doodle-dark", paper("rgb(233,237,239)", 0.07));
+
+  const chat = document.getElementById("chat");
+  const presence = document.getElementById("presence");
+  const composer = document.getElementById("composer");
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const restartBtn = document.getElementById("restart");
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ABORT = Symbol("restart");
+  let runId = 0;
+
+  const wait = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 120) : ms));
+  const guard = id => { if (id !== runId) throw ABORT; };
+  const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const toBottom = () => { chat.scrollTop = chat.scrollHeight; };
+
+  const TICK = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.6l3 3 5.6-6.8"/></svg>`;
+  const TICKS = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.4 9.6l3 3 5.6-6.8"/><path d="M7.2 12.6l5.6-6.8"/></svg>`;
+  const CHECK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.5L20 6.5"/></svg>`;
+
+  /* ---------------- primitives ---------------- */
+
+  function dayStamp() {
+    const el = document.createElement("div");
+    el.className = "day";
+    el.textContent = "Today";
+    chat.append(el);
+  }
+
+  function bubble(side, text) {
+    const row = document.createElement("div");
+    row.className = `row ${side}`;
+    const msg = document.createElement("div");
+    msg.className = "msg";
+    msg.textContent = text;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.innerHTML = `<span>${clock()}</span>`;
+    msg.append(meta);
+    row.append(msg);
+    chat.append(row);
+    toBottom();
+    return { row, msg, meta };
+  }
+
+  /* A sent message earns its ticks the way a real one does: sent, delivered, read. */
+  async function sent(text, id) {
+    const { meta } = bubble("out", text);
+    const mark = document.createElement("span");
+    mark.innerHTML = TICK;
+    meta.append(mark);
+    await wait(260); guard(id);
+    mark.innerHTML = TICKS;
+    await wait(420); guard(id);
+    mark.firstElementChild.classList.add("read");
+  }
+
+  async function typing(ms, id) {
+    presence.textContent = "typing…";
+    presence.classList.add("typing");
+    const row = document.createElement("div");
+    row.className = "row in";
+    row.innerHTML = `<div class="msg typingBubble"><i></i><i></i><i></i></div>`;
+    chat.append(row);
+    toBottom();
+    try { await wait(ms); guard(id); }
+    finally {
+      row.remove();
+      presence.textContent = "online";
+      presence.classList.remove("typing");
+    }
+  }
+
+  /* Reading time scales with the message, so long replies feel written, not pasted. */
+  const think = text => Math.min(1500, 480 + text.length * 11);
+
+  async function says(text, id) {
+    await wait(340); guard(id);
+    await typing(think(text), id);
+    bubble("in", text);
+    await wait(160); guard(id);
+  }
+
+  function replyBlock(stack) {
+    const box = document.createElement("div");
+    box.className = "replies" + (stack ? " stack" : "");
+    chat.append(box);
+    toBottom();
+    return box;
+  }
+
+  /* ---------------- asks ---------------- */
+
+  async function askButtons(text, options, id) {
+    await says(text, id);
+    const stack = options.some(o => o.label.length > 22) || options.length <= 3;
+    const box = replyBlock(stack);
+    const choice = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.textContent = opt.label;
+        b.addEventListener("click", () => resolve(opt), { once: true });
+        box.append(b);
+      });
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(choice.label, id);
+    return choice;
+  }
+
+  async function askMulti(text, options, id) {
+    await says(text, id);
+    const box = replyBlock(false);
+    const picked = new Set();
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "reply go";
+    go.textContent = "Continue →";
+    go.disabled = true;
+
+    const chosen = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.innerHTML = `<span class="box">${CHECK}</span><span></span>`;
+        b.lastElementChild.textContent = opt.label;
+        b.addEventListener("click", () => {
+          if (picked.has(opt.label)) picked.delete(opt.label);
+          else picked.add(opt.label);
+          b.classList.toggle("picked", picked.has(opt.label));
+          go.disabled = picked.size === 0;
+        });
+        box.append(b);
+      });
+      go.addEventListener("click", () => resolve([...picked]), { once: true });
+      box.append(go);
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(chosen.join(", "), id);
+    return chosen;
+  }
+
+  async function askText(text, placeholder, id) {
+    await says(text, id);
+    input.readOnly = false;
+    input.value = "";
+    input.placeholder = placeholder;
+    send.disabled = false;
+    composer.classList.remove("locked");
+    if (window.matchMedia("(min-width: 521px)").matches) input.focus();
+
+    const answer = await new Promise(resolve => {
+      composer.onsubmit = e => {
+        e.preventDefault();
+        const v = input.value.trim();
+        if (v) { composer.onsubmit = null; resolve(v); }
+      };
+    });
+    guard(id);
+    lockComposer();
+    await sent(answer, id);
+    return answer;
+  }
+
+  function lockComposer() {
+    composer.onsubmit = e => e.preventDefault();
+    input.value = "";
+    input.readOnly = true;
+    input.placeholder = "Choose an option above";
+    send.disabled = true;
+    composer.classList.add("locked");
+    input.blur();
+  }
+
+  function receipt(title, note, rows) {
+    const el = document.createElement("div");
+    el.className = "receipt";
+    const dl = rows.map(([k, v]) =>
+      `<dt>${k}</dt><dd>${String(v).replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]))}</dd>`).join("");
+    el.innerHTML = `<h3>${title}</h3><p>${note}</p><dl>${dl}</dl>`;
+    chat.append(el);
+    toBottom();
+  }
+
+  /* ---------------- the conversation ---------------- */
+
+  const opt = (label, value) => ({ label, value: value ?? label });
+
+  async function conversation(id) {
+    dayStamp();
+    const brief = [];
+    const note = (k, v) => brief.push([k, v]);
+
+    const route = await askButtons(
+      "Hi 👋 Welcome to Transford Solar ☀️\nHow can we help you today?",
+      [opt("🏠 Home Solar", "home"), opt("🏢 Business Solar", "business"), opt("🔧 Existing Solar System", "existing")],
+      id);
+
+    if (route.value === "home") {
+      note("Enquiry", "Home solar");
+
+      const goal = await askButtons("Great ☀️ What's most important to you?", [
+        opt("💰 Reduce my electricity bill"), opt("⚡ Backup during blackouts"),
+        opt("☀️ Run mostly on solar"), opt("🤔 Help me choose")], id);
+      note("Priority", goal.label.slice(2).trim());
+
+      const size = await askButtons("What size is your home?",
+        [opt("1–2 Bedroom"), opt("3 Bedroom"), opt("4+ Bedroom")], id);
+      note("Home size", size.label);
+
+      const bill = await askButtons("Roughly how much is your monthly electricity bill?",
+        [opt("Below KSh 5K"), opt("KSh 5K–15K"), opt("KSh 15K–30K"), opt("KSh 30K+")], id);
+      note("Monthly bill", bill.label);
+
+      const loads = await askMulti("Which major appliances would you like to keep running?", [
+        opt("💡 Lights"), opt("📺 TV + WiFi"), opt("🧊 Fridge"), opt("🧺 Washing Machine"),
+        opt("🚿 Instant Shower"), opt("💧 Water Pump"), opt("🍳 Electric Cooker"), opt("➕ Other")], id);
+      note("Appliances", loads.map(l => l.replace(/^[^\p{L}]+/u, "")).join(", "));
+
+      const where = await askText("Great. Where would the installation be?", "e.g. Ruiru, Kiambu", id);
+      note("Location", where);
+
+      await close(id, brief,
+        "Perfect 👍 Based on what you've told us, we have enough information to start assessing your solar requirements.\n\nA Transford solar specialist can review this and recommend the right system and pricing for you.\n\nWhat would you like to do next?",
+        [opt("💰 Get a Quote", "quote"), opt("📅 Book a Site Visit", "visit"), opt("📞 Talk to an Expert", "expert")]);
+      return;
+    }
+
+    if (route.value === "business") {
+      note("Enquiry", "Business solar");
+
+      const kind = await askButtons("What type of business/property is this?", [
+        opt("🏢 Office"), opt("🏪 Shop"), opt("🏨 Hotel"),
+        opt("🏭 Factory/Workshop"), opt("🏫 School"), opt("🌾 Farm"), opt("Other")], id);
+      note("Property", kind.label);
+
+      const bill = await askButtons("Roughly how much is your monthly electricity bill?",
+        [opt("Below KSh 20K"), opt("KSh 20K–50K"), opt("KSh 50K–100K"), opt("KSh 100K+")], id);
+      note("Monthly bill", bill.label);
+
+      const goal = await askButtons("What's your main goal?", [
+        opt("💰 Reduce electricity costs"), opt("⚡ Backup during outages"),
+        opt("⛽ Reduce generator use"), opt("☀️ Move mostly to solar")], id);
+      note("Main goal", goal.label.slice(2).trim());
+
+      const where = await askText("And where is the property located?", "e.g. Industrial Area, Nairobi", id);
+      note("Location", where);
+
+      await close(id, brief,
+        "Perfect 👍 We have enough information for a preliminary commercial solar assessment.\n\nWhat would you like to do next?",
+        [opt("💰 Get a Quote", "quote"), opt("📅 Book Site Visit", "visit"), opt("📞 Talk to an Expert", "expert")]);
+      return;
+    }
+
+    note("Enquiry", "Existing system");
+    const issue = await askButtons("What can we help with?", [
+      opt("🔋 Battery problem"), opt("⚠️ Inverter problem"), opt("☀️ Low solar production"),
+      opt("➕ Upgrade my system"), opt("🛠 Maintenance"), opt("❓ Other")], id);
+    note("Issue", issue.label.slice(2).trim());
+
+    const where = await askText("Where is the system located?", "e.g. Karen, Nairobi", id);
+    note("Location", where);
+
+    await close(id, brief, "Got it 👍 A Transford technician can help you with this.",
+      [opt("📅 Request Technician", "technician"), opt("📞 Talk to an Expert", "expert")]);
+  }
+
+  const ENDINGS = {
+    quote: { ask: "Great 👍 What name should we use?", title: "☀️ Quote Request Received",
+             note: "Sent to the Transford sales desk", label: "Quote request" },
+    visit: { ask: "Great 👍 What name should we use for the visit?", title: "📅 Site Visit Requested",
+             note: "Sent to the Transford scheduling desk", label: "Site visit" },
+    expert: { ask: "Sure 👍 What name should we use?", title: "📞 Callback Requested",
+              note: "Sent to the Transford sales desk", label: "Callback" },
+    technician: { ask: "Sure 👍 What name should we use?", title: "🛠 Technician Request Received",
+                  note: "Sent to the Transford service desk", label: "Technician visit" }
+  };
+
+  async function close(id, brief, prompt, options) {
+    const next = await askButtons(prompt, options, id);
+    const end = ENDINGS[next.value];
+
+    const name = await askText(end.ask, "Your name", id);
+    const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
+
+    await says(`✅ Thank you, ${name}.\n\nYour solar requirements have been captured.\n\nA Transford specialist would now be able to review your requirements and continue with you from here.`, id);
+    await wait(220); guard(id);
+
+    receipt(end.title, end.note,
+      [...brief, ["Request", end.label], ["Name", name], ["Phone", phone]]);
+    toBottom();
+  }
+
+  /* ---------------- lifecycle ---------------- */
+
+  async function start() {
+    const id = ++runId;
+    chat.innerHTML = "";
+    lockComposer();
+    try { await conversation(id); }
+    catch (e) { if (e !== ABORT) throw e; }
+  }
+
+  restartBtn.addEventListener("click", () => {
+    restartBtn.classList.add("spin");
+    setTimeout(() => restartBtn.classList.remove("spin"), 320);
+    start();
+  });
+
+  start();
+})();
+</script>
+</html>
