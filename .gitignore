@@ -50,8 +50,9 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# Claude Code
-.claude/
+# Claude Code (keep shared skills in the repo)
+/.claude/*
+!/.claude/skills/
 
 # agent scratch (playwright smoke-test scripts, screenshots)
 .tmp-shot/
