@@ -651,7 +651,8 @@
     const needs = await askMulti("What would you like us to handle?", [
       opt("\u{1F50A} Sound & PA"), opt("\u{1F3A7} DJ"), opt("\u{1F3A4} MC / Emcee"),
       opt("\u{1F4F8} Photography"), opt("\u{1F3A5} Videography"),
-      opt("\u{1F4E1} Livestream"), opt("\u{1F4A1} Lighting"), opt("\u2B50 The full package")], id);
+      opt("\u{1F4E1} Livestream"), opt("\u{1F4A1} Lighting"),
+      opt("\u{1F39B}\uFE0F Equipment hire"), opt("\u2B50 The full package")], id);
     note("Services", needs.map(n => n.replace(/^[^\p{L}]+/u, "")).join(", "));
 
     const size = await askButtons("Roughly how many guests?", GUESTS, id);
