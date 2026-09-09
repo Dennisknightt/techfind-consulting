@@ -554,21 +554,97 @@
     const brief = [];
     const note = (k, v) => brief.push([k, v]);
 
-    const kind = await askButtons(
-      "Hi \u{1F44B} Welcome to Divine Budget Entertainment \u{1F3B6}\nYour one-stop events and entertainment solution.\n\nWhat are you planning?",
-      [opt("\u{1F492} Wedding", "wedding"), opt("\u{1F3E2} Corporate event", "corporate"),
-       opt("\u{1F389} Birthday or party", "party"), opt("\u26EA Church event", "church"),
-       opt("\u{1F3A4} Concert or show", "concert"), opt("\u2728 Something else", "other")],
-      id);
-    note("Event", kind.value === "other" ? "Other" : kind.label.slice(2).trim());
+    const GUESTS = [opt("Under 50"), opt("50\u2013150"), opt("150\u2013400"),
+                    opt("400\u20131,000"), opt("Over 1,000")];
 
-    if (kind.value === "other") {
-      const what = await askText("Tell us a little about it.", "e.g. a product launch", id);
-      note("Event", what);
+    /* Booking the team and hiring the gear are priced and staffed differently,
+       so the first question separates them rather than burying hire in a list. */
+    const mode = await askButtons(
+      "Hi \u{1F44B} Welcome to Divine Budget Entertainment \u{1F3B6}\nYour one-stop events and entertainment solution.\n\nWhat can we help you with?",
+      [opt("\u{1F389} Book us for an event", "event"), opt("\u{1F50A} Hire equipment", "hire"),
+       opt("\u{1F393} Training", "training"), opt("\u{1F4AC} Something else", "other")],
+      id);
+
+    if (mode.value === "hire") {
+      note("Enquiry", "Equipment hire");
+
+      const gear = await askMulti("What do you need? Pick as many as you like.", [
+        opt("\u{1F50A} Speakers & PA"), opt("\u{1F3A4} Microphones"),
+        opt("\u{1F39B}\uFE0F Mixer / sound desk"), opt("\u{1F3A7} DJ setup"),
+        opt("\u{1F4A1} Lighting"), opt("\u{1F3AD} Stage")], id);
+      note("Equipment", gear.map(g => g.replace(/^[^\p{L}]+/u, "")).join(", "));
+
+      const dates = await askText("When do you need it? \u{1F4C5}", "e.g. 20th\u201322nd December", id);
+      note("Hire dates", dates);
+
+      /* The dry-hire question: gear only, or gear plus the crew to run it. */
+      const crew = await askButtons("Would you like our team to set up and run it?", [
+        opt("\u{1F477} Yes, with technicians"), opt("\u{1F4E6} Equipment only"),
+        opt("\u2753 Not sure yet")], id);
+      note("Crew", crew.label.replace(/^[^\p{L}]+/u, ""));
+
+      const size = await askButtons("Roughly how many people is it for?", GUESTS, id);
+      note("Audience size", size.label);
+
+      const where = await askText("And where is the venue?", "e.g. Kasarani, Nairobi", id);
+      note("Venue", where);
+
+      await close(id, brief,
+        "Thank you \u{1F44D} Our team will check the equipment is free on those dates and put a quote together.\n\nHow would you like to proceed?",
+        [opt("\u{1F4CB} Check availability & quote", "quote"), opt("\u{1F4DE} Talk to the team", "call")]);
+      return;
     }
 
-    /* Date first. For an events company availability decides everything else \u2014
-       there is no point pricing a package for a day that is already booked. */
+    if (mode.value === "training") {
+      note("Enquiry", "Training");
+
+      const subject = await askButtons("Which training are you interested in?", [
+        opt("\u{1F39A}\uFE0F Sound engineering"), opt("\u{1F3A7} Deejaying"),
+        opt("\u{1F4F8} Photography"), opt("\u{1F3A5} Videography"),
+        opt("\u{1F4E1} Livestreaming"), opt("\u2753 Help me choose")], id);
+      note("Training", subject.label.replace(/^[^\p{L}]+/u, ""));
+
+      const who = await askButtons("Who is it for?", [
+        opt("\u{1F464} Just me"), opt("\u26EA A church team"),
+        opt("\u{1F465} A company team"), opt("\u{1F3EB} A school or group")], id);
+      note("Trainee", who.label.slice(2).trim());
+
+      const level = await askButtons("What level are you at?",
+        [opt("Complete beginner"), opt("Some experience"), opt("Working already, want to sharpen")], id);
+      note("Level", level.label);
+
+      const where = await askText("And whereabouts are you?", "e.g. Thika", id);
+      note("Location", where);
+
+      await close(id, brief,
+        "Thank you \u{1F44D} Our team will come back to you with dates and what the training covers.\n\nHow would you like to proceed?",
+        [opt("\u{1F4CB} Send me the details", "quote"), opt("\u{1F4DE} Talk to the team", "call")]);
+      return;
+    }
+
+    if (mode.value === "other") {
+      note("Enquiry", "General");
+      const what = await askText("Of course \u2014 what do you have in mind?", "Type your message", id);
+      note("Message", what);
+
+      const where = await askText("And whereabouts are you?", "e.g. Nairobi", id);
+      note("Location", where);
+
+      await close(id, brief, "Thank you \u{1F44D} Our team will get back to you on this.",
+        [opt("\u{1F4CB} Ask the team to reply here", "quote"), opt("\u{1F4DE} Talk to the team", "call")]);
+      return;
+    }
+
+    /* ---- book us for an event ---- */
+    note("Enquiry", "Event booking");
+
+    const kind = await askButtons("Wonderful \u{1F389} What's the occasion?",
+      [opt("\u{1F492} Wedding"), opt("\u{1F3E2} Corporate event"),
+       opt("\u{1F388} Birthday or party"), opt("\u26EA Church event"),
+       opt("\u{1F3A4} Concert or show"), opt("\u2728 Other")], id);
+    note("Event", kind.label.slice(2).trim());
+
+    /* Date before anything else: availability decides the rest. */
     const date = await askText("When is it? \u{1F4C5}", "e.g. 20th December, or 'not fixed yet'", id);
     note("Date", date);
 
@@ -578,10 +654,7 @@
       opt("\u{1F4E1} Livestream"), opt("\u{1F4A1} Lighting"), opt("\u2B50 The full package")], id);
     note("Services", needs.map(n => n.replace(/^[^\p{L}]+/u, "")).join(", "));
 
-    /* Guest count is the sound question: it sets the PA size and the crew. */
-    const size = await askButtons("Roughly how many guests?", [
-      opt("Under 50"), opt("50\u2013150"), opt("150\u2013400"),
-      opt("400\u20131,000"), opt("Over 1,000")], id);
+    const size = await askButtons("Roughly how many guests?", GUESTS, id);
     note("Guests", size.label);
 
     const venue = await askText("And where is the venue?", "e.g. Naivasha", id);
@@ -589,13 +662,12 @@
 
     await close(id, brief,
       "Thank you \u{1F44D} Our team will confirm we're free on that date and put a quote together for you.\n\nHow would you like to proceed?",
-      [opt("\u{1F4CB} Check the date & send a quote", "quote"),
-       opt("\u{1F4DE} Talk to the team", "call")]);
+      [opt("\u{1F4CB} Check the date & send a quote", "quote"), opt("\u{1F4DE} Talk to the team", "call")]);
   }
 
   const ENDINGS = {
-    quote: { ask: "Great \u{1F44D} What name should we use?", title: "\u{1F3B6} Booking Enquiry Received",
-             note: "Sent to the Divine Budget team", label: "Date check & quote" },
+    quote: { ask: "Great \u{1F44D} What name should we use?", title: "\u{1F3B6} Enquiry Received",
+             note: "Sent to the Divine Budget team", label: "Quote request" },
     call:  { ask: "Sure \u{1F44D} What name should we use?", title: "\u{1F4DE} Callback Requested",
              note: "Sent to the Divine Budget team", label: "Callback" }
   };
@@ -607,7 +679,7 @@
     const name = await askText(end.ask, "Your name", id);
     const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
 
-    await says(`✅ Thank you, ${name}.\n\nYour event details have been captured.\n\nOur team would now confirm availability for that date and come back to you with a quote.`, id);
+    await says(`✅ Thank you, ${name}.\n\nYour details have been captured.\n\nOur team would now confirm availability and come back to you with a quote.`, id);
     await wait(220); guard(id);
 
     receipt(end.title, end.note,
