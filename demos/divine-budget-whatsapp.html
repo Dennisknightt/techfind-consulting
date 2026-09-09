@@ -205,6 +205,46 @@
   .receipt dt{color:var(--meta);}
   .receipt dd{margin:0; text-align:right; font-weight:500; overflow-wrap:anywhere;}
 
+  /* ---------- payment card & attachments ---------- */
+  .paycard{
+    align-self:flex-start; width:min(86%, 290px);
+    margin:6px 0 2px; padding:13px 14px 12px;
+    background:var(--bubble-in); color:var(--bubble-in-ink);
+    border-radius:8px; border-top-left-radius:2px;
+    box-shadow:var(--shadow);
+    animation:pop .22s ease-out both;
+  }
+  .paycard .pc-top{display:flex; align-items:center; gap:9px;}
+  .paycard .pc-ico{
+    width:34px; height:34px; border-radius:9px; flex:0 0 auto;
+    background:var(--sun); color:#fff; display:grid; place-items:center;
+  }
+  .paycard b{display:block; font-size:14.4px; font-weight:600; letter-spacing:-.01em;}
+  .paycard .pc-sub{font-size:12.2px; color:var(--meta);}
+  .paycard .pc-amt{
+    margin:11px 0 3px; padding-top:10px; border-top:1px solid var(--reply-line);
+    font-size:12.6px; color:var(--meta); display:flex; justify-content:space-between; gap:10px;
+  }
+  .paycard .pc-amt span:last-child{color:var(--bubble-in-ink); font-weight:500; text-align:right;}
+
+  .photo{
+    width:186px; margin:-1px -2px 3px; border-radius:6px; overflow:hidden;
+    background:linear-gradient(150deg,#cdd5dc,#aeb9c4);
+    display:block; position:relative; aspect-ratio:16/10;
+  }
+  .photo .ph-card{
+    position:absolute; inset:16% 12%; border-radius:4px; background:#f4f1ea;
+    box-shadow:0 2px 6px rgba(0,0,0,.22); padding:8px 9px;
+    display:flex; gap:7px; align-items:flex-start;
+  }
+  .photo .ph-face{width:24px; height:30px; border-radius:3px; background:#c3b6a4; flex:0 0 auto;}
+  .photo .ph-lines{flex:1; display:flex; flex-direction:column; gap:4px; padding-top:2px;}
+  .photo .ph-lines i{display:block; height:3.5px; border-radius:2px; background:#c9c1b3;}
+  .photo .ph-lines i:first-child{width:70%; background:#a89e8d;}
+  .photo .ph-lines i:nth-child(2){width:90%;}
+  .photo .ph-lines i:nth-child(3){width:55%;}
+  .msg .cap{font-size:12.4px; color:var(--meta); display:block; margin-top:1px;}
+
   /* ---------- composer ---------- */
   .composer{
     flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;
@@ -535,6 +575,59 @@
     input.blur();
   }
 
+  /* A WhatsApp-style payment request. No amount is stated: Divine Budget publish
+     no prices, so the figure has to come from the team with the quote. */
+  function payCard(title, sub, rows) {
+    const el = document.createElement("div");
+    el.className = "paycard";
+    el.innerHTML =
+      `<div class="pc-top"><span class="pc-ico">` +
+      `<svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round">` +
+      `<rect x="2.5" y="5" width="19" height="14" rx="2.5"/><path d="M2.5 10h19"/></svg></span>` +
+      `<span><b>${title}</b><span class="pc-sub">${sub}</span></span></div>` +
+      rows.map(([k, v]) => `<div class="pc-amt"><span>${k}</span><span>${v}</span></div>`).join("");
+    const row = document.createElement("div");
+    row.className = "row in";
+    row.append(el);
+    chat.append(row);
+    toBottom();
+  }
+
+  /* An outbound photo message, for the ID the customer sends through. */
+  function photoSent(caption) {
+    const { msg, meta } = bubble("out", "");
+    const ph = document.createElement("span");
+    ph.className = "photo";
+    ph.innerHTML = `<span class="ph-card"><span class="ph-face"></span>` +
+      `<span class="ph-lines"><i></i><i></i><i></i></span></span>`;
+    const cap = document.createElement("span");
+    cap.className = "cap";
+    cap.textContent = caption;
+    msg.prepend(cap);
+    msg.prepend(ph);
+    meta.innerHTML = `<span>${clock()}</span>` + TICKS;
+    toBottom();
+    return msg;
+  }
+
+  /* One button that does not echo itself as a text bubble. */
+  async function askAction(text, label, id) {
+    await says(text, id);
+    const box = replyBlock(true);
+    await new Promise(resolve => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "reply go";
+      b.style.alignSelf = "stretch";
+      b.textContent = label;
+      b.addEventListener("click", () => resolve(), { once: true });
+      box.append(b);
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+  }
+
   function receipt(title, note, rows) {
     const el = document.createElement("div");
     el.className = "receipt";
@@ -589,9 +682,14 @@
       const where = await askText("And where is the venue?", "e.g. Kasarani, Nairobi", id);
       note("Venue", where);
 
-      await close(id, brief,
+      const next = await askButtons(
         "Thank you \u{1F44D} Our team will check the equipment is free on those dates and put a quote together.\n\nHow would you like to proceed?",
-        [opt("\u{1F4CB} Check availability & quote", "quote"), opt("\u{1F4DE} Talk to the team", "call")]);
+        [opt("\u{1F4CB} Check availability & quote", "quote"),
+         opt("\u2705 I'm ready to hire", "hire"),
+         opt("\u{1F4DE} Talk to the team", "call")], id);
+
+      if (next.value === "hire") { await checkout(id, brief); return; }
+      await finish(id, brief, ENDINGS[next.value]);
       return;
     }
 
@@ -672,6 +770,54 @@
     call:  { ask: "Sure \u{1F44D} What name should we use?", title: "\u{1F4DE} Callback Requested",
              note: "Sent to the Divine Budget team", label: "Callback" }
   };
+
+  /* Hiring out equipment runs on a deposit and a copy of the hirer's ID. This is
+     that handover, done in the chat instead of over three phone calls. */
+  async function checkout(id, brief) {
+    await says("Wonderful \u{1F389}\n\nTo hold the equipment on those dates we take a deposit and a copy of your ID.", id);
+    await wait(300); guard(id);
+
+    payCard("Deposit \u2014 Divine Budget Entertainment",
+            "To reserve your dates",
+            [["Amount", "Confirmed with your quote"], ["Pay by", "M-Pesa"]]);
+    await wait(360); guard(id);
+
+    await askAction("Tap below once you're ready and we'll send the payment details.",
+                    "\u{1F4B3} Pay the deposit", id);
+    await sent("Pay the deposit", id);
+    await says("Thank you \u{1F44D} The moment it reflects, those dates are locked for you.", id);
+    await wait(280); guard(id);
+
+    await askAction("Last thing \u2014 please send a photo of your ID. It's held for the hire and returned with your deposit.",
+                    "\u{1F4CE} Upload ID", id);
+    photoSent("national-id.jpg");
+    await wait(320); guard(id);
+    await says("Received \u2705 Thank you.", id);
+    await wait(240); guard(id);
+
+    const name = await askText("And what name is the hire under?", "Your name", id);
+    const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
+
+    await says(`\u2705 You're all set, ${name}.\n\nOur team will confirm the deposit and have your equipment ready for collection.`, id);
+    await wait(220); guard(id);
+
+    receipt("\u{1F4E6} Hire Confirmed", "Sent to the Divine Budget team",
+      [...brief, ["Deposit", "Awaiting confirmation"], ["ID", "Received"],
+       ["Name", name], ["Phone", phone]]);
+    toBottom();
+  }
+
+  async function finish(id, brief, end) {
+    const name = await askText(end.ask, "Your name", id);
+    const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
+
+    await says(`\u2705 Thank you, ${name}.\n\nYour details have been captured.\n\nOur team would now confirm availability and come back to you with a quote.`, id);
+    await wait(220); guard(id);
+
+    receipt(end.title, end.note,
+      [...brief, ["Request", end.label], ["Name", name], ["Phone", phone]]);
+    toBottom();
+  }
 
   async function close(id, brief, prompt, options) {
     const next = await askButtons(prompt, options, id);
