@@ -1,0 +1,481 @@
+<title>Azure Dental Hospital WhatsApp</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+    background: #f5f5f5;
+    padding: 0;
+  }
+
+  .phone-frame {
+    width: 100%;
+    max-width: 400px;
+    height: 100vh;
+    margin: 0 auto;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    border-radius: 40px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+  }
+
+  .status-bar {
+    background: #f8f8f8;
+    padding: 8px 16px;
+    font-size: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .chat-header {
+    background: white;
+    padding: 12px 16px;
+    border-bottom: 1px solid #e5e5e5;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .header-info {
+    flex: 1;
+  }
+
+  .header-name {
+    font-weight: 600;
+    font-size: 15px;
+    color: #000;
+  }
+
+  .header-status {
+    font-size: 12px;
+    color: #999;
+    margin-top: 2px;
+  }
+
+  .chat-container {
+    flex: 1;
+    overflow-y: auto;
+    padding: 16px;
+    background: white;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .message {
+    display: flex;
+    margin-bottom: 8px;
+    animation: slideUp 0.3s ease;
+  }
+
+  @keyframes slideUp {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .message.received {
+    justify-content: flex-start;
+  }
+
+  .message.sent {
+    justify-content: flex-end;
+  }
+
+  .bubble {
+    max-width: 85%;
+    padding: 8px 12px;
+    border-radius: 18px;
+    font-size: 14px;
+    line-height: 1.4;
+    word-wrap: break-word;
+  }
+
+  .message.received .bubble {
+    background: #e5e5ea;
+    color: #000;
+  }
+
+  .message.sent .bubble {
+    background: #dcf8c6;
+    color: #000;
+  }
+
+  .bubble.info {
+    background: #f0f0f0;
+    font-size: 13px;
+  }
+
+  .card {
+    max-width: 85%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .card-title {
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: #000;
+  }
+
+  .card-content {
+    color: #555;
+    line-height: 1.5;
+  }
+
+  .payment-card {
+    max-width: 85%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 12px;
+    padding: 16px;
+    font-size: 13px;
+  }
+
+  .payment-amount {
+    font-size: 18px;
+    font-weight: 600;
+    margin: 8px 0;
+  }
+
+  .payment-method {
+    font-size: 12px;
+    opacity: 0.9;
+    margin-top: 8px;
+  }
+
+  .photo-message {
+    max-width: 85%;
+    background: #e5e5ea;
+    border-radius: 12px;
+    padding: 2px;
+    position: relative;
+  }
+
+  .photo-placeholder {
+    width: 200px;
+    height: 160px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 40px;
+  }
+
+  .tick {
+    font-size: 12px;
+    color: #31a24c;
+    margin-left: 4px;
+  }
+
+  .double-tick {
+    font-size: 12px;
+    color: #31a24c;
+    margin-left: 2px;
+  }
+
+  .buttons {
+    max-width: 85%;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 20px;
+    background: #25d366;
+    color: white;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn:hover {
+    background: #22c55e;
+  }
+
+  .btn.secondary {
+    background: #f0f0f0;
+    color: #000;
+  }
+
+  .btn.secondary:hover {
+    background: #e5e5e5;
+  }
+
+  .input-area {
+    padding: 12px;
+    border-top: 1px solid #e5e5e5;
+    display: flex;
+    gap: 8px;
+  }
+
+  .input-field {
+    flex: 1;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 13px;
+    font-family: inherit;
+  }
+
+  .input-field:focus {
+    outline: none;
+    border-color: #25d366;
+  }
+
+  .send-btn {
+    background: none;
+    border: none;
+    color: #25d366;
+    font-size: 18px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .timestamp {
+    font-size: 12px;
+    color: #999;
+    margin-top: 4px;
+  }
+
+  .read-receipt {
+    font-size: 11px;
+    color: #31a24c;
+    margin-top: 2px;
+  }
+
+  .summary-card {
+    max-width: 85%;
+    background: #f9f9f9;
+    border-left: 4px solid #25d366;
+    border-radius: 8px;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .summary-card-title {
+    font-weight: 600;
+    color: #000;
+    margin-bottom: 8px;
+  }
+
+  .summary-item {
+    color: #555;
+    margin-bottom: 6px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid #e5e5e5;
+  }
+
+  .summary-item:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+  }
+
+  .summary-status {
+    margin-top: 8px;
+    font-size: 12px;
+    font-weight: 600;
+    color: #25d366;
+  }
+</style>
+
+<div class="phone-frame">
+  <div class="status-bar">
+    <span>9:41</span>
+    <span>●●●●●</span>
+  </div>
+
+  <div class="chat-header">
+    <div class="avatar">🦷</div>
+    <div class="header-info">
+      <div class="header-name">Azure Dental Hospital</div>
+      <div class="header-status">Online</div>
+    </div>
+  </div>
+
+  <div class="chat-container" id="chatContainer">
+    <div class="message received">
+      <div class="bubble">
+        Welcome to Azure Dental Hospital! 🦷 We're here to help you schedule an appointment with our specialist team. How can we assist you today?
+      </div>
+    </div>
+
+    <div class="message received">
+      <div class="bubble">What service are you interested in?</div>
+    </div>
+
+    <div class="message received">
+      <div class="buttons">
+        <button class="btn" onclick="selectService('General Dentistry')">General Dentistry</button>
+        <button class="btn" onclick="selectService('Orthodontics')">Orthodontics</button>
+        <button class="btn" onclick="selectService('Oral Surgery')">Oral Surgery</button>
+        <button class="btn" onclick="selectService('Endodontics')">Endodontics</button>
+        <button class="btn" onclick="selectService('Periodontics')">Periodontics</button>
+        <button class="btn" onclick="selectService('Restorative & Cosmetic')">Restorative & Cosmetic</button>
+        <button class="btn" onclick="selectService('Pediatric Dentistry')">Pediatric Dentistry</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" class="input-field" id="inputField" placeholder="Type a message..." readonly>
+    <button class="send-btn" onclick="sendMessage()">➤</button>
+  </div>
+</div>
+
+<script>
+  let currentStep = 'service';
+  let selectedData = {};
+
+  const stepsConfig = {
+    service: {
+      prompt: "What service are you interested in?",
+      options: [
+        'General Dentistry',
+        'Orthodontics',
+        'Oral Surgery',
+        'Endodontics',
+        'Periodontics',
+        'Restorative & Cosmetic',
+        'Pediatric Dentistry'
+      ]
+    },
+    date: {
+      prompt: "What date would work best for you? (e.g., Tomorrow, Next Monday, 15th Sep)"
+    },
+    time: {
+      prompt: "What time? (e.g., Morning, 2:00 PM, 4:30 PM)"
+    },
+    name: {
+      prompt: "What's your name?"
+    },
+    phone: {
+      prompt: "What's your phone number?"
+    }
+  };
+
+  function selectService(service) {
+    selectedData.service = service;
+    addUserMessage(service);
+    addBotMessage(`Great! You've selected ${service}. Let me help you book an appointment.`);
+    setTimeout(() => {
+      currentStep = 'date';
+      addBotMessage(stepsConfig.date.prompt);
+    }, 500);
+  }
+
+  function addUserMessage(text) {
+    const chatContainer = document.getElementById('chatContainer');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message sent';
+    messageDiv.innerHTML = `
+      <div class="bubble">${text}</div>
+    `;
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function addBotMessage(text, isCard = false) {
+    const chatContainer = document.getElementById('chatContainer');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'message received';
+
+    if (isCard) {
+      messageDiv.innerHTML = `
+        <div class="card">
+          <div class="card-title">Appointment Summary</div>
+          <div class="card-content">
+            <strong>Service:</strong> ${selectedData.service}<br><br>
+            <strong>Preferred Date:</strong> ${selectedData.date}<br><br>
+            <strong>Preferred Time:</strong> ${selectedData.time}<br><br>
+            <strong>Name:</strong> ${selectedData.name}<br><br>
+            <strong>Phone:</strong> ${selectedData.phone}<br><br>
+            <strong>Status:</strong> Awaiting confirmation
+          </div>
+        </div>
+      `;
+    } else {
+      messageDiv.innerHTML = `<div class="bubble">${text}</div>`;
+    }
+
+    chatContainer.appendChild(messageDiv);
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
+
+  function handleInput(input) {
+    addUserMessage(input);
+
+    if (currentStep === 'date') {
+      selectedData.date = input;
+      addBotMessage("Perfect! And what time works best for you?");
+      currentStep = 'time';
+    } else if (currentStep === 'time') {
+      selectedData.time = input;
+      addBotMessage("Thank you! What's your full name?");
+      currentStep = 'name';
+    } else if (currentStep === 'name') {
+      selectedData.name = input;
+      addBotMessage("What's your phone number so we can confirm?");
+      currentStep = 'phone';
+    } else if (currentStep === 'phone') {
+      selectedData.phone = input;
+      addBotMessage("Processing your appointment request...");
+      setTimeout(() => {
+        addBotMessage("Appointment Summary", true);
+        setTimeout(() => {
+          addBotMessage("We'll confirm your appointment shortly. Our team will call you within 2 hours. Thank you for choosing Azure Dental Hospital!");
+          document.getElementById('inputField').disabled = true;
+        }, 500);
+      }, 500);
+      currentStep = 'complete';
+    }
+  }
+
+  function sendMessage() {
+    const input = document.getElementById('inputField');
+    if (input.value.trim() && currentStep !== 'service' && currentStep !== 'complete') {
+      handleInput(input.value.trim());
+      input.value = '';
+    }
+  }
+
+  document.getElementById('inputField').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter' && currentStep !== 'service' && currentStep !== 'complete') {
+      sendMessage();
+    }
+  });
+</script>
