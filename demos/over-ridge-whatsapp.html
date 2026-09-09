@@ -1,0 +1,674 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Over Ridge Woodproducts WhatsApp Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  /* WhatsApp's default look, deliberately fixed: the demo shows the client the
+     standard chat theme, not whatever light/dark mode their phone happens to be in. */
+  :root{
+    color-scheme:light;
+    --stage-bg-1:#f6efe6;
+    --stage-bg-2:#e8dccd;
+    --stage-ink:#5c3a21;
+    --stage-ink-soft:#9b8571;
+    --frame:#d8c8b4;
+
+    --chrome:#f0f2f5;
+    --chrome-ink:#111b21;
+    --chrome-ink-soft:#667781;
+    --chat-bg:#e5ddd5;
+    --bubble-in:#ffffff;
+    --bubble-in-ink:#111b21;
+    --bubble-out:#d9fdd3;
+    --bubble-out-ink:#111b21;
+    --meta:#667781;
+    --tick:#8696a0;
+    --tick-read:#53bdeb;
+    --reply-card:#ffffff;
+    --reply-ink:#0091ea;
+    --reply-line:rgba(17,27,33,.10);
+    --composer:#ffffff;
+    --composer-bg:#f0f2f5;
+    --send:#00a884;
+    --divider:rgba(17,27,33,.10);
+    --sun:#a9713f;
+    --brand:#5c3a21;
+    --card:#ffffff;
+    --card-ink:#111b21;
+    --shadow:0 1px .5px rgba(11,20,26,.13);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--stage-bg-2);
+    color:var(--stage-ink);
+    font-family:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding:20px;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--stage-bg-1) 0%, var(--stage-bg-2) 70%);
+  }
+
+  .phone{
+    position:relative;
+    width:min(100%, 412px);
+    height:min(100%, 880px);
+    display:flex; flex-direction:column;
+    background:var(--chat-bg);
+    border-radius:30px;
+    overflow:hidden;
+    border:1px solid var(--frame);
+    box-shadow:0 30px 60px -24px rgba(28,20,8,.45), 0 2px 6px rgba(28,20,8,.10);
+  }
+
+  /* ---------- header ---------- */
+  .bar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:var(--chrome);
+    color:var(--chrome-ink);
+    border-bottom:1px solid var(--divider);
+    flex:0 0 auto;
+    z-index:3;
+  }
+  .back{display:flex; color:var(--chrome-ink-soft);}
+  .avatar{
+    width:41px; height:41px; border-radius:50%; flex:0 0 auto;
+    background:#fff; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
+  }
+  .avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .who{display:flex; flex-direction:column; min-width:0; flex:1; overflow:hidden;}
+  .who b{font-size:16px; font-weight:600; letter-spacing:-.015em; line-height:1.2;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .who span{font-size:12.5px; color:var(--chrome-ink-soft); line-height:1.4; height:18px;}
+  .who span.typing{color:var(--send); font-weight:500;}
+  .bar-actions{display:flex; align-items:center; gap:0;}
+  .icon-btn{
+    appearance:none; border:0; background:transparent; cursor:pointer;
+    width:34px; height:34px; border-radius:50%;
+    display:grid; place-items:center; color:var(--chrome-ink-soft);
+    transition:background .15s ease, color .15s ease, transform .3s ease;
+  }
+  .icon-btn:hover{background:rgba(128,128,128,.14); color:var(--chrome-ink);}
+  .icon-btn:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .icon-btn.spin{transform:rotate(-360deg);}
+  .icon-btn.ghost{pointer-events:none;}
+
+  /* ---------- chat ---------- */
+  .chat{
+    flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain;
+    padding:14px 10px 8px;
+    display:flex; flex-direction:column; gap:3px;
+    background-color:var(--chat-bg);
+    background-image:var(--doodle-img);
+    background-size:315px;
+    scrollbar-width:thin;
+  }
+  .day{
+    align-self:center; margin:2px 0 10px;
+    font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--meta); background:var(--card);
+    padding:5px 12px; border-radius:8px; box-shadow:var(--shadow);
+  }
+  .row{display:flex; width:100%;}
+  .row.out{justify-content:flex-end;}
+  .msg{
+    position:relative;
+    max-width:82%;
+    padding:6px 9px 8px 10px;
+    border-radius:8px;
+    font-size:14.6px; line-height:1.38;
+    white-space:pre-wrap; word-wrap:break-word;
+    box-shadow:var(--shadow);
+    animation:pop .18s ease-out both;
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(7px) scale(.99);} to{opacity:1; transform:none;}}
+  .row.in .msg{background:var(--bubble-in); color:var(--bubble-in-ink); border-top-left-radius:2px;}
+  .row.out .msg{background:var(--bubble-out); color:var(--bubble-out-ink); border-top-right-radius:2px;}
+  .row + .row{margin-top:3px;}
+  .row.in + .row.out, .row.out + .row.in{margin-top:9px;}
+  .meta{
+    float:right; margin:8px -2px -4px 8px;
+    font-size:11px; color:var(--meta);
+    display:flex; align-items:center; gap:3px; line-height:1;
+  }
+  .tick{width:15px; height:15px; color:var(--tick); transition:color .2s ease;}
+  .tick.read{color:var(--tick-read);}
+
+  .typingBubble{display:flex; gap:4px; align-items:center; padding:11px 13px;}
+  .typingBubble i{
+    width:7px; height:7px; border-radius:50%; background:var(--meta); display:block;
+    animation:blink 1.25s infinite ease-in-out;
+  }
+  .typingBubble i:nth-child(2){animation-delay:.18s;}
+  .typingBubble i:nth-child(3){animation-delay:.36s;}
+  @keyframes blink{0%,60%,100%{opacity:.32; transform:translateY(0);} 30%{opacity:1; transform:translateY(-2px);}}
+
+  /* ---------- quick replies ---------- */
+  .replies{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin:7px 0 4px; padding:0 2px;
+    animation:pop .2s ease-out both;
+  }
+  .replies.stack{flex-direction:column;}
+  .reply{
+    appearance:none; cursor:pointer;
+    font:inherit; font-size:14.2px; font-weight:500;
+    color:var(--reply-ink); background:var(--reply-card);
+    border:1px solid var(--reply-line); border-radius:18px;
+    padding:9px 15px; box-shadow:var(--shadow);
+    transition:transform .12s ease, filter .12s ease;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .replies.stack .reply{justify-content:center; width:100%;}
+  .reply:hover{filter:brightness(1.03); transform:translateY(-1px);}
+  .reply:active{transform:translateY(0) scale(.985);}
+  .reply:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .reply.picked{background:var(--send); color:#fff; border-color:transparent;}
+  .reply .box{
+    width:16px; height:16px; border-radius:5px; flex:0 0 auto;
+    border:1.6px solid currentColor; opacity:.55;
+    display:grid; place-items:center;
+  }
+  .reply.picked .box{opacity:1; background:#fff; color:var(--send); border-color:#fff;}
+  .reply .box svg{opacity:0;}
+  .reply.picked .box svg{opacity:1;}
+  .reply.go{
+    background:var(--send); color:#fff; border-color:transparent; font-weight:600;
+    align-self:flex-end; padding:9px 20px;
+  }
+  .reply.go[disabled]{opacity:.45; cursor:not-allowed; transform:none;}
+
+  /* ---------- receipt card ---------- */
+  .receipt{
+    align-self:center; width:min(100%, 320px);
+    margin:12px 0 6px; padding:16px 16px 14px;
+    background:var(--card); color:var(--card-ink);
+    border-radius:14px; box-shadow:var(--shadow), 0 8px 24px -16px rgba(0,0,0,.5);
+    border-top:3px solid var(--sun);
+    animation:pop .25s ease-out both;
+  }
+  .receipt h3{margin:0 0 2px; font-size:15.5px; font-weight:600; letter-spacing:-.01em;}
+  .receipt p{margin:0 0 10px; font-size:12.5px; color:var(--meta);}
+  .receipt dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:12.8px;}
+  .receipt dt{color:var(--meta);}
+  .receipt dd{margin:0; text-align:right; font-weight:500; overflow-wrap:anywhere;}
+
+  /* ---------- composer ---------- */
+  .composer{
+    flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:var(--composer-bg);
+    border-top:1px solid var(--divider);
+  }
+  .field{
+    flex:1; display:flex; align-items:center; gap:8px;
+    background:var(--composer); border-radius:22px; padding:9px 14px;
+    color:var(--chrome-ink); box-shadow:var(--shadow);
+  }
+  .field input{
+    flex:1; border:0; background:transparent; outline:none;
+    font:inherit; font-size:15px; color:var(--chrome-ink); min-width:0;
+  }
+  .field input::placeholder{color:var(--chrome-ink-soft);}
+  .field .tool{flex:0 0 auto; color:var(--chrome-ink-soft); opacity:.75;}
+  /* WhatsApp shows a mic until there is something to send; so does the demo. */
+  .composer.locked .sendBtn .icon-send{display:none;}
+  .composer:not(.locked) .sendBtn .icon-mic{display:none;}
+  .sendBtn{
+    width:44px; height:44px; border-radius:50%; border:0; cursor:pointer;
+    background:var(--send); color:#fff; display:grid; place-items:center; flex:0 0 auto;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .sendBtn:active{transform:scale(.94);}
+  .sendBtn[disabled]{cursor:default;}
+  .sendBtn:focus-visible{outline:2px solid var(--chrome-ink); outline-offset:2px;}
+
+  .caption{
+    font-size:12.5px; color:var(--stage-ink-soft); letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px; text-align:center;
+  }
+  .caption b{font-weight:600; color:var(--stage-ink);}
+
+  @media (max-width:520px){
+    .stage{padding:0; gap:0;}
+    .phone{width:100%; height:100%; border-radius:0; border:0; box-shadow:none;}
+    .caption{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+</style>
+
+<div class="stage">
+  <div class="phone">
+    <header class="bar">
+      <span class="back" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="avatar"><img src="data:image/jpeg;base64,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" alt="Over Ridge Woodproducts"></span>
+      <span class="who">
+        <b>Over Ridge</b>
+        <span id="presence">online</span>
+      </span>
+      <span class="bar-actions">
+        <span class="icon-btn ghost" aria-hidden="true">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.4" y="6" width="13.2" height="12" rx="2.4"/><path d="M15.6 10.6 21.6 7v10l-6-3.6z"/></svg>
+        </span>
+        <span class="icon-btn ghost" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 3.4 4.1 4.5A2.4 2.4 0 0 0 2.7 7.3 18.6 18.6 0 0 0 16.9 21.5a2.4 2.4 0 0 0 2.8-1.4l1.1-2.6a1.7 1.7 0 0 0-.85-2.15l-3-1.3a1.7 1.7 0 0 0-2 .5l-1 1.25A14.6 14.6 0 0 1 8.2 10.1l1.25-1a1.7 1.7 0 0 0 .5-2l-1.3-3a1.7 1.7 0 0 0-1.95-.7z"/></svg>
+        </span>
+        <button class="icon-btn" id="restart" title="Restart the demo" aria-label="Restart the demo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.2" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="18.8" r="1.75"/></svg>
+        </button>
+      </span>
+    </header>
+
+    <main class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation with Over Ridge Woodproducts"></main>
+
+    <form class="composer locked" id="composer" autocomplete="off">
+      <label class="field">
+        <svg class="tool" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8" stroke-linecap="round"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <input id="input" placeholder="Message" aria-label="Message" readonly>
+        <svg class="tool" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.6 8.3 9.9 16a2.7 2.7 0 0 0 3.8 3.8l7.7-7.7a4.6 4.6 0 0 0-6.5-6.5l-7.7 7.7a6.5 6.5 0 0 0 9.2 9.2l4.4-4.4"/></svg>
+        <svg class="tool" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 8h2.9l1.6-2.2h6.6L16.9 8h2.9a1.7 1.7 0 0 1 1.7 1.7v7.9a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7V9.7A1.7 1.7 0 0 1 4.2 8z"/><circle cx="12" cy="13.4" r="3.5"/></svg>
+      </label>
+      <button class="sendBtn" id="send" type="submit" disabled aria-label="Send">
+        <svg class="icon-mic" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2a2.9 2.9 0 0 1 2.9 2.9v5.8a2.9 2.9 0 0 1-5.8 0V6.1A2.9 2.9 0 0 1 12 3.2z"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.8v3"/></svg>
+        <svg class="icon-send" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.3 20.7 21 12 3.3 3.3 3.3 10l12 2-12 2z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <p class="caption"><b>Over Ridge</b> · WhatsApp enquiry demo · tap ⋮ in the header to restart</p>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* WhatsApp's own wallpaper is a field of faint outline doodles. This redraws that
+     pattern as one tiling SVG so the page stays a single file with no image requests. */
+  const ring = (cx, cy, r) =>
+    `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`;
+
+  const ICONS = {
+    heart: ["M0 9c-3-3-8-5.4-8-9a4.2 4.2 0 0 1 8-1.6A4.2 4.2 0 0 1 8 0c0 3.6-5 6-8 9z"],
+    smiley: [ring(0, 0, 9), "M-3.4-2.4v1.7", "M3.4-2.4v1.7", "M-4.6 2.8c1.2 1.8 2.8 2.7 4.6 2.7s3.4-.9 4.6-2.7"],
+    camera: ["M-10-4.5h20v11h-20z", "M-3.4-4.5 -2-7h4l1.4 2.5", ring(0, 1, 3.4)],
+    cup: ["M-7-6h12v7a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z", "M5-3.6h2.4a2.6 2.6 0 0 1 0 5.2H5",
+          "M-3.4-9.4c0-1.4 1.6-1.4 1.6-2.8", "M.6-9.4c0-1.4 1.6-1.4 1.6-2.8"],
+    music: ["M-3 5.4V-8l10-2v13.4", ring(-5.6, 5.4, 2.6), ring(4.4, 3.4, 2.6)],
+    plane: ["M-10-4 10-9 3 9-.6 1.2z", "M-.6 1.2 10-9"],
+    gift: ["M-8.6-3h17.2v11h-17.2z", "M-10-8h20v5h-20z", "M0-8v16",
+           "M0-8c-3.2-4.2-8-2-5.8 0M0-8c3.2-4.2 8-2 5.8 0"],
+    star: ["M0-10 2.9-3.3 10-2.6 4.6 2.2 6.2 9.2 0 5.6-6.2 9.2-4.6 2.2-10-2.6-2.9-3.3z"],
+    envelope: ["M-10-6h20v12h-20z", "M-10-6 0 2 10-6"],
+    cloud: ["M-7.6 6a4.6 4.6 0 0 1 .8-9 6.4 6.4 0 0 1 12-1.6A4.4 4.4 0 0 1 8 6z"],
+    sun: [ring(0, 0, 4.4), "M0-10v3", "M0 7v3", "M-10 0h3", "M7 0h3",
+          "M-7.1-7.1 -5-5", "M5 5 7.1 7.1", "M7.1-7.1 5-5", "M-5 5-7.1 7.1"],
+    umbrella: ["M-10 0a10 10 0 0 1 20 0z", "M0 0v7.6a3.2 3.2 0 0 1-6.4 0"],
+    bicycle: [ring(-7, 4, 5), ring(7, 4, 5), "M-7 4 0-4.4h4.8", "M0-4.4-3.2 4", "M-4-4.4h4.6", "M0-4.4 7 4"],
+    bell: ["M-6.6 4c0-6 1.6-9.4 6.6-9.4S6.6-2 6.6 4l1.6 2.4h-16.4z", "M-2.2 8.4a2.4 2.4 0 0 0 4.4 0", "M0-5.4v-2.6"],
+    clock: [ring(0, 0, 9), "M0-5v5l3.6 2.6"],
+    balloon: ["M0 6.4c4 0 7-4.2 7-8.4a7 7 0 1 0-14 0c0 4.2 3 8.4 7 8.4z", "M0 6.4v2", "M0 8.4c2.2 1.2-2.2 2.4 0 4"],
+    key: [ring(-5, 0, 4), "M-1 0h10.4", "M6.4 0v3.4", "M9.4 0v3"],
+    book: ["M-9-6c3.6-2 7-2 9 0 2-2 5.4-2 9 0v12c-3.6-2-7-2-9 0-2-2-5.4-2-9 0z", "M0-6v12"],
+    bolt: ["M2.4-10-6 1.4h5.2l-2 8.6 8.8-11.6H3.4z"],
+    phone: ["M-8.4-7.6a2.6 2.6 0 0 1 3.8-.6l2 2.4-2.4 3c1.6 2.6 3.6 4.6 6.2 6.2l3-2.4 2.4 2a2.6 2.6 0 0 1-.6 3.8C1 9.6-8.4-.2-8.4-7.6z"],
+    pin: ["M0 10s7-7.6 7-12A7 7 0 1 0-7-2c0 4.4 7 12 7 12z", ring(0, -2, 2.6)],
+    ball: [ring(0, 0, 9), "M0-9 3.6-4 0 0-3.6-4z", "M0 0 3.6-4 8.2-2.2", "M0 0-3.6-4-8.2-2.2", "M0 0v6.4"],
+    bubble: ["M-9-8h18v11.6h-10.6l-5 4v-4h-2.4z"]
+  };
+
+  /* Jittered placements, so the tile reads as scattered rather than gridded. */
+  const SPOTS = [
+    ["heart", 34, 30, -12, .9], ["camera", 118, 22, 8, .82], ["cup", 205, 38, -6, .86],
+    ["music", 272, 26, 14, .9], ["plane", 62, 96, -18, .88], ["smiley", 152, 88, 0, .8],
+    ["clock", 236, 104, 6, .82], ["bolt", 296, 92, -8, .9], ["book", 26, 152, 10, .84],
+    ["gift", 100, 166, -9, .8], ["balloon", 178, 158, 12, .86], ["bicycle", 258, 172, 0, .78],
+    ["sun", 46, 224, 0, .9], ["envelope", 124, 236, -7, .82], ["umbrella", 200, 228, 9, .84],
+    ["pin", 282, 242, -4, .86], ["cloud", 14, 288, 6, .86], ["bell", 88, 292, -10, .82],
+    ["key", 166, 296, 14, .84], ["ball", 244, 292, 0, .8], ["bubble", 300, 200, -6, .8],
+    ["phone", 6, 76, 8, .84]
+  ];
+
+  const doodle = (ink, alpha) => `<svg xmlns="http://www.w3.org/2000/svg" width="315" height="315" viewBox="0 0 315 315">
+    <g fill="none" stroke="${ink}" stroke-opacity="${alpha}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      ${SPOTS.map(([name, x, y, rot, sc]) =>
+        `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})">` +
+        ICONS[name].map(d => `<path d="${d}"/>`).join("") + `</g>`).join("")}
+    </g></svg>`;
+
+  const paper = (ink, alpha) => `url("data:image/svg+xml,${encodeURIComponent(doodle(ink, alpha))}")`;
+  document.documentElement.style.setProperty("--doodle-img", paper("rgb(84,66,45)", 0.13));
+
+  const chat = document.getElementById("chat");
+  const presence = document.getElementById("presence");
+  const composer = document.getElementById("composer");
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const restartBtn = document.getElementById("restart");
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ABORT = Symbol("restart");
+  let runId = 0;
+
+  const wait = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 120) : ms));
+  const guard = id => { if (id !== runId) throw ABORT; };
+  const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const toBottom = () => { chat.scrollTop = chat.scrollHeight; };
+
+  const TICK = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.6l3 3 5.6-6.8"/></svg>`;
+  const TICKS = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.4 9.6l3 3 5.6-6.8"/><path d="M7.2 12.6l5.6-6.8"/></svg>`;
+  const CHECK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.5L20 6.5"/></svg>`;
+
+  /* ---------------- primitives ---------------- */
+
+  function dayStamp() {
+    const el = document.createElement("div");
+    el.className = "day";
+    el.textContent = "Today";
+    chat.append(el);
+  }
+
+  function bubble(side, text) {
+    const row = document.createElement("div");
+    row.className = `row ${side}`;
+    const msg = document.createElement("div");
+    msg.className = "msg";
+    msg.textContent = text;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.innerHTML = `<span>${clock()}</span>`;
+    msg.append(meta);
+    row.append(msg);
+    chat.append(row);
+    toBottom();
+    return { row, msg, meta };
+  }
+
+  /* A sent message earns its ticks the way a real one does: sent, delivered, read. */
+  async function sent(text, id) {
+    const { meta } = bubble("out", text);
+    const mark = document.createElement("span");
+    mark.innerHTML = TICK;
+    meta.append(mark);
+    await wait(260); guard(id);
+    mark.innerHTML = TICKS;
+    await wait(420); guard(id);
+    mark.firstElementChild.classList.add("read");
+  }
+
+  async function typing(ms, id) {
+    presence.textContent = "typing…";
+    presence.classList.add("typing");
+    const row = document.createElement("div");
+    row.className = "row in";
+    row.innerHTML = `<div class="msg typingBubble"><i></i><i></i><i></i></div>`;
+    chat.append(row);
+    toBottom();
+    try { await wait(ms); guard(id); }
+    finally {
+      row.remove();
+      presence.textContent = "online";
+      presence.classList.remove("typing");
+    }
+  }
+
+  /* Reading time scales with the message, so long replies feel written, not pasted. */
+  const think = text => Math.min(1500, 480 + text.length * 11);
+
+  async function says(text, id) {
+    await wait(340); guard(id);
+    await typing(think(text), id);
+    bubble("in", text);
+    await wait(160); guard(id);
+  }
+
+  function replyBlock(stack) {
+    const box = document.createElement("div");
+    box.className = "replies" + (stack ? " stack" : "");
+    chat.append(box);
+    toBottom();
+    return box;
+  }
+
+  /* ---------------- asks ---------------- */
+
+  async function askButtons(text, options, id) {
+    await says(text, id);
+    const stack = options.some(o => o.label.length > 22) || options.length <= 3;
+    const box = replyBlock(stack);
+    const choice = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.textContent = opt.label;
+        b.addEventListener("click", () => resolve(opt), { once: true });
+        box.append(b);
+      });
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(choice.label, id);
+    return choice;
+  }
+
+  async function askMulti(text, options, id) {
+    await says(text, id);
+    const box = replyBlock(false);
+    const picked = new Set();
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "reply go";
+    go.textContent = "Continue →";
+    go.disabled = true;
+
+    const chosen = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.innerHTML = `<span class="box">${CHECK}</span><span></span>`;
+        b.lastElementChild.textContent = opt.label;
+        b.addEventListener("click", () => {
+          if (picked.has(opt.label)) picked.delete(opt.label);
+          else picked.add(opt.label);
+          b.classList.toggle("picked", picked.has(opt.label));
+          go.disabled = picked.size === 0;
+        });
+        box.append(b);
+      });
+      go.addEventListener("click", () => resolve([...picked]), { once: true });
+      box.append(go);
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(chosen.join(", "), id);
+    return chosen;
+  }
+
+  async function askText(text, placeholder, id) {
+    await says(text, id);
+    input.readOnly = false;
+    input.value = "";
+    input.placeholder = placeholder;
+    send.disabled = false;
+    composer.classList.remove("locked");
+    if (window.matchMedia("(min-width: 521px)").matches) input.focus();
+
+    const answer = await new Promise(resolve => {
+      composer.onsubmit = e => {
+        e.preventDefault();
+        const v = input.value.trim();
+        if (v) { composer.onsubmit = null; resolve(v); }
+      };
+    });
+    guard(id);
+    lockComposer();
+    await sent(answer, id);
+    return answer;
+  }
+
+  function lockComposer() {
+    composer.onsubmit = e => e.preventDefault();
+    input.value = "";
+    input.readOnly = true;
+    input.placeholder = "Choose an option above";
+    send.disabled = true;
+    composer.classList.add("locked");
+    input.blur();
+  }
+
+  function receipt(title, note, rows) {
+    const el = document.createElement("div");
+    el.className = "receipt";
+    const dl = rows.map(([k, v]) =>
+      `<dt>${k}</dt><dd>${String(v).replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]))}</dd>`).join("");
+    el.innerHTML = `<h3>${title}</h3><p>${note}</p><dl>${dl}</dl>`;
+    chat.append(el);
+    toBottom();
+  }
+
+  /* ---------------- the conversation ---------------- */
+
+  const opt = (label, value) => ({ label, value: value ?? label });
+
+  async function conversation(id) {
+    dayStamp();
+    const brief = [];
+    const note = (k, v) => brief.push([k, v]);
+
+    /* Opens on the message their "Start a project" link already writes for the customer. */
+    await sent("Hello Over Ridge, I would like to discuss a woodwork project.", id);
+    await wait(420); guard(id);
+
+    const what = await askButtons(
+      "Hello \u{1F44B} Welcome to Over Ridge Woodproducts.\nTimeless woodwork, crafted in Kenya.\n\nWhat's the project?",
+      [opt("\u{1F6AA} Doors", "doors"), opt("\u{1FA9C} Staircase", "stairs"),
+       opt("\u{1FAB5} Wooden flooring", "floor"), opt("\u{1F3E0} Ceilings & cladding", "ceiling"),
+       opt("\u{1FA91} Bespoke joinery", "joinery"), opt("\u2753 Not sure yet", "unsure")],
+      id);
+    note("Project", what.label.replace(/^[^\p{L}]+/u, ""));
+
+    if (what.value === "doors") {
+      const style = await askButtons("Which kind of doors are you after?", [
+        opt("Solid hardwood"), opt("Flush"), opt("French"),
+        opt("Custom design"), opt("Advise me")], id);
+      note("Door type", style.label);
+
+      const qty = await askButtons("Roughly how many?",
+        [opt("Just one"), opt("2\u20134"), opt("5\u201310"), opt("More than 10")], id);
+      note("Quantity", qty.label);
+
+    } else if (what.value === "stairs") {
+      const scope = await askButtons("What does the staircase need?", [
+        opt("A full build"), opt("Treads only"),
+        opt("Handrails & balustrades"), opt("Refinish an existing one")], id);
+      note("Scope", scope.label);
+
+    } else if (what.value === "floor") {
+      const kind = await askButtons("Which flooring are you considering?", [
+        opt("Woodblocks"), opt("Parquet"), opt("Herringbone"),
+        opt("SPC"), opt("Advise me")], id);
+      note("Flooring", kind.label);
+
+      const area = await askButtons("Roughly what area?",
+        [opt("Under 20 sqm"), opt("20\u201350 sqm"), opt("50\u2013100 sqm"),
+         opt("Over 100 sqm"), opt("Not measured yet")], id);
+      note("Area", area.label);
+
+    } else if (what.value === "ceiling") {
+      const kind = await askButtons("Which are you looking at?", [
+        opt("T&G boards"), opt("Exposed beams"),
+        opt("Wall cladding"), opt("Finishes only")], id);
+      note("Type", kind.label);
+
+    } else if (what.value === "joinery") {
+      const piece = await askText("Tell us what you have in mind.", "e.g. fitted wardrobes and a kitchen island", id);
+      note("Brief", piece);
+
+    } else {
+      await says("No problem \u2014 that's what the consultation is for. We'll go through materials and options with you.", id);
+      await wait(280); guard(id);
+    }
+
+    const stage = await askButtons("Where is the project at right now?", [
+      opt("\u{1F3D7}\uFE0F Under construction"), opt("\u{1F528} Renovating"),
+      opt("\u{1F4D0} Drawings ready"), opt("\u{1F4A1} Still planning")], id);
+    note("Stage", stage.label.slice(2).trim());
+
+    const when = await askButtons("When would you like it done?", [
+      opt("Within a month"), opt("1\u20133 months"),
+      opt("More than 3 months"), opt("Flexible")], id);
+    note("Timeline", when.label);
+
+    const where = await askText("And where is the site?", "e.g. Runda, Nairobi", id);
+    note("Site", where);
+
+    await close(id, brief,
+      "Thank you \u{1F44D} That gives our team what they need to price it properly.\n\nWhat would suit you next?",
+      [opt("\u{1F4CB} Request a quotation", "quote"),
+       opt("\u{1F3EC} Visit the Ruaka showroom", "showroom"),
+       opt("\u{1F4CF} Book a site measurement", "measure")]);
+  }
+
+  const ENDINGS = {
+    quote: { ask: "Certainly \u{1F44D} What name should we use?", title: "\u{1F4CB} Quotation Requested",
+             note: "Sent to the Over Ridge workshop", label: "Quotation" },
+    showroom: { ask: "Certainly \u{1F44D} What name should we use for the visit?", title: "\u{1F3EC} Showroom Visit",
+                note: "Sent to the Over Ridge workshop", label: "Showroom visit" },
+    measure: { ask: "Certainly \u{1F44D} What name should we use?", title: "\u{1F4CF} Site Measurement Requested",
+               note: "Sent to the Over Ridge workshop", label: "Site measurement" }
+  };
+
+  async function close(id, brief, prompt, options) {
+    const next = await askButtons(prompt, options, id);
+    const end = ENDINGS[next.value];
+
+    const name = await askText(end.ask, "Your name", id);
+    const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
+
+    await says(`✅ Thank you, ${name}.\n\nYour project details have been captured.\n\nOur team would now come back to you on materials, timelines and a quotation.`, id);
+    await wait(220); guard(id);
+
+    receipt(end.title, end.note,
+      [...brief, ["Request", end.label], ["Name", name], ["Phone", phone]]);
+    toBottom();
+  }
+
+  /* ---------------- lifecycle ---------------- */
+
+  async function start() {
+    const id = ++runId;
+    chat.innerHTML = "";
+    lockComposer();
+    try { await conversation(id); }
+    catch (e) { if (e !== ABORT) throw e; }
+  }
+
+  restartBtn.addEventListener("click", () => {
+    restartBtn.classList.add("spin");
+    setTimeout(() => restartBtn.classList.remove("spin"), 320);
+    start();
+  });
+
+  start();
+})();
+</script>
+</html>

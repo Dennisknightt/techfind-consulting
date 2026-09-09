@@ -1,0 +1,404 @@
+<title>Azure Dental Hospital</title>
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #000;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+  }
+
+  .phone {
+    width: 390px;
+    height: 844px;
+    background: #fff;
+    border-radius: 60px;
+    border: 12px solid #000;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 20px 80px rgba(0,0,0,0.5);
+    overflow: hidden;
+  }
+
+  .notch {
+    height: 30px;
+    background: #000;
+    border-radius: 0 0 30px 30px;
+  }
+
+  .header {
+    background: #fff;
+    padding: 8px 16px;
+    border-bottom: 1px solid #e5e5ea;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+  }
+
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+    min-width: 0;
+  }
+
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #1e88e5 0%, #1565c0 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .header-info {
+    min-width: 0;
+    flex: 1;
+  }
+
+  .header-name {
+    font-size: 15px;
+    font-weight: 600;
+    color: #000;
+  }
+
+  .header-status {
+    font-size: 12px;
+    color: #999;
+  }
+
+  .header-icons {
+    display: flex;
+    gap: 20px;
+    font-size: 20px;
+    color: #54656f;
+  }
+
+  .chat {
+    flex: 1;
+    overflow-y: auto;
+    background: #fff;
+    padding: 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .chat::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  .chat::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+  }
+
+  .msg-group {
+    display: flex;
+    margin-bottom: 8px;
+  }
+
+  .msg-group.sent {
+    justify-content: flex-end;
+  }
+
+  .msg-group.received {
+    justify-content: flex-start;
+  }
+
+  .bubble {
+    max-width: 80%;
+    padding: 8px 12px;
+    border-radius: 18px;
+    font-size: 15px;
+    line-height: 1.3;
+    word-wrap: break-word;
+  }
+
+  .msg-group.received .bubble {
+    background: #e5e5ea;
+    color: #000;
+  }
+
+  .msg-group.sent .bubble {
+    background: #dcf8c6;
+    color: #000;
+  }
+
+  .time {
+    font-size: 12px;
+    color: #999;
+    margin-top: 2px;
+    padding: 0 8px;
+  }
+
+  .msg-group.sent .time {
+    text-align: right;
+  }
+
+  .options {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    max-width: 80%;
+  }
+
+  .btn {
+    padding: 10px 16px;
+    border: 1.5px solid #dcf8c6;
+    border-radius: 20px;
+    background: transparent;
+    color: #075e54;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+
+  .btn:active {
+    background: rgba(220, 248, 198, 0.3);
+  }
+
+  .input-area {
+    background: #fff;
+    border-top: 1px solid #e5e5ea;
+    padding: 12px 16px 20px;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+  }
+
+  .input-field {
+    flex: 1;
+    border: 1px solid #e5e5ea;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 15px;
+    font-family: inherit;
+    background: #f5f5f5;
+    color: #000;
+  }
+
+  .input-field:focus {
+    outline: none;
+    background: #f5f5f5;
+  }
+
+  .input-field::placeholder {
+    color: #999;
+  }
+
+  .send-btn {
+    background: none;
+    border: none;
+    color: #075e54;
+    font-size: 20px;
+    cursor: pointer;
+    padding: 4px 8px;
+  }
+
+  .card {
+    max-width: 85%;
+    background: #f5f5f5;
+    border-radius: 12px;
+    padding: 12px;
+    font-size: 13px;
+  }
+
+  .card-row {
+    display: flex;
+    margin-bottom: 10px;
+  }
+
+  .card-row:last-child {
+    margin-bottom: 0;
+  }
+
+  .card-label {
+    font-weight: 600;
+    color: #000;
+    min-width: 100px;
+  }
+
+  .card-value {
+    color: #555;
+    flex: 1;
+  }
+</style>
+
+<div class="phone">
+  <div class="notch"></div>
+
+  <div class="header">
+    <div class="header-left">
+      <div class="avatar">🦷</div>
+      <div class="header-info">
+        <div class="header-name">Azure Dental Hospital</div>
+        <div class="header-status">Online</div>
+      </div>
+    </div>
+    <div class="header-icons">
+      <span>🔍</span>
+      <span>⋮</span>
+    </div>
+  </div>
+
+  <div class="chat" id="chat">
+    <div class="msg-group received">
+      <div>
+        <div class="bubble">Welcome to Azure Dental Hospital! 🦷</div>
+        <div class="time">9:32 AM</div>
+      </div>
+    </div>
+
+    <div class="msg-group received">
+      <div>
+        <div class="bubble">What service are you interested in?</div>
+        <div class="time">9:33 AM</div>
+      </div>
+    </div>
+
+    <div class="msg-group received" style="margin-top: 8px;">
+      <div class="options">
+        <button class="btn" onclick="select('General Dentistry')">General Dentistry</button>
+        <button class="btn" onclick="select('Orthodontics')">Orthodontics</button>
+        <button class="btn" onclick="select('Oral Surgery')">Oral Surgery</button>
+        <button class="btn" onclick="select('Endodontics')">Endodontics</button>
+        <button class="btn" onclick="select('Periodontics')">Periodontics</button>
+        <button class="btn" onclick="select('Restorative & Cosmetic')">Restorative & Cosmetic</button>
+        <button class="btn" onclick="select('Pediatric Dentistry')">Pediatric Dentistry</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="input-area">
+    <input type="text" class="input-field" id="input" placeholder="Message" readonly>
+    <button class="send-btn" onclick="send()">📎</button>
+  </div>
+</div>
+
+<script>
+  let step = 'service';
+  let data = {};
+
+  function getTime() {
+    const now = new Date();
+    let h = now.getHours();
+    let m = now.getMinutes();
+    const am = h < 12 ? 'AM' : 'PM';
+    h = h % 12 || 12;
+    m = m < 10 ? '0' + m : m;
+    return `${h}:${m} ${am}`;
+  }
+
+  function addMsg(text, from) {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = `msg-group ${from}`;
+    div.innerHTML = `
+      <div>
+        <div class="bubble">${text}</div>
+        <div class="time">${getTime()}</div>
+      </div>
+    `;
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function select(service) {
+    data.service = service;
+    addMsg(service, 'sent');
+    setTimeout(() => {
+      addMsg(`Great! You selected ${service}. What date works for you?`, 'received');
+      step = 'date';
+    }, 300);
+  }
+
+  function send() {
+    const input = document.getElementById('input');
+    if (!input.value || step === 'service') return;
+
+    const val = input.value;
+    addMsg(val, 'sent');
+    input.value = '';
+
+    if (step === 'date') {
+      data.date = val;
+      setTimeout(() => {
+        addMsg('What time? (e.g. 2:00 PM, Morning)', 'received');
+        step = 'time';
+      }, 300);
+    } else if (step === 'time') {
+      data.time = val;
+      setTimeout(() => {
+        addMsg('Your name?', 'received');
+        step = 'name';
+      }, 300);
+    } else if (step === 'name') {
+      data.name = val;
+      setTimeout(() => {
+        addMsg('Phone number?', 'received');
+        step = 'phone';
+      }, 300);
+    } else if (step === 'phone') {
+      data.phone = val;
+      setTimeout(() => {
+        const chat = document.getElementById('chat');
+        const div = document.createElement('div');
+        div.className = 'msg-group received';
+        div.innerHTML = `
+          <div>
+            <div class="card">
+              <div class="card-row">
+                <div class="card-label">Service</div>
+                <div class="card-value">${data.service}</div>
+              </div>
+              <div class="card-row">
+                <div class="card-label">Date</div>
+                <div class="card-value">${data.date}</div>
+              </div>
+              <div class="card-row">
+                <div class="card-label">Time</div>
+                <div class="card-value">${data.time}</div>
+              </div>
+              <div class="card-row">
+                <div class="card-label">Name</div>
+                <div class="card-value">${data.name}</div>
+              </div>
+              <div class="card-row">
+                <div class="card-label">Phone</div>
+                <div class="card-value">${data.phone}</div>
+              </div>
+            </div>
+            <div class="time">${getTime()}</div>
+          </div>
+        `;
+        chat.appendChild(div);
+        chat.scrollTop = chat.scrollHeight;
+
+        setTimeout(() => {
+          addMsg('✓ We\'ll confirm shortly!', 'received');
+          step = 'done';
+          document.getElementById('input').disabled = true;
+        }, 300);
+      }, 300);
+    }
+  }
+
+  document.getElementById('input').addEventListener('keypress', (e) => {
+    if (e.key === 'Enter') send();
+  });
+</script>

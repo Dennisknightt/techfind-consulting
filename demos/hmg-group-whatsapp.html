@@ -1,0 +1,664 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HMG Group Africa WhatsApp Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  /* WhatsApp's default look, deliberately fixed: the demo shows the client the
+     standard chat theme, not whatever light/dark mode their phone happens to be in. */
+  :root{
+    color-scheme:light;
+    --stage-bg-1:#eef1f5;
+    --stage-bg-2:#dfe4ea;
+    --stage-ink:#082f50;
+    --stage-ink-soft:#7d8a99;
+    --frame:#c9d1da;
+
+    --chrome:#f0f2f5;
+    --chrome-ink:#111b21;
+    --chrome-ink-soft:#667781;
+    --chat-bg:#e5ddd5;
+    --bubble-in:#ffffff;
+    --bubble-in-ink:#111b21;
+    --bubble-out:#d9fdd3;
+    --bubble-out-ink:#111b21;
+    --meta:#667781;
+    --tick:#8696a0;
+    --tick-read:#53bdeb;
+    --reply-card:#ffffff;
+    --reply-ink:#0091ea;
+    --reply-line:rgba(17,27,33,.10);
+    --composer:#ffffff;
+    --composer-bg:#f0f2f5;
+    --send:#00a884;
+    --divider:rgba(17,27,33,.10);
+    --sun:#082f50;
+    --brand:#082f50;
+    --card:#ffffff;
+    --card-ink:#111b21;
+    --shadow:0 1px .5px rgba(11,20,26,.13);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--stage-bg-2);
+    color:var(--stage-ink);
+    font-family:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding:20px;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--stage-bg-1) 0%, var(--stage-bg-2) 70%);
+  }
+
+  .phone{
+    position:relative;
+    width:min(100%, 412px);
+    height:min(100%, 880px);
+    display:flex; flex-direction:column;
+    background:var(--chat-bg);
+    border-radius:30px;
+    overflow:hidden;
+    border:1px solid var(--frame);
+    box-shadow:0 30px 60px -24px rgba(28,20,8,.45), 0 2px 6px rgba(28,20,8,.10);
+  }
+
+  /* ---------- header ---------- */
+  .bar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:var(--chrome);
+    color:var(--chrome-ink);
+    border-bottom:1px solid var(--divider);
+    flex:0 0 auto;
+    z-index:3;
+  }
+  .back{display:flex; color:var(--chrome-ink-soft);}
+  .avatar{
+    width:41px; height:41px; border-radius:50%; flex:0 0 auto;
+    background:#fff; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
+  }
+  .avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .who{display:flex; flex-direction:column; min-width:0; flex:1; overflow:hidden;}
+  .who b{font-size:16px; font-weight:600; letter-spacing:-.015em; line-height:1.2;
+    white-space:nowrap; overflow:hidden; text-overflow:ellipsis;}
+  .who span{font-size:12.5px; color:var(--chrome-ink-soft); line-height:1.4; height:18px;}
+  .who span.typing{color:var(--send); font-weight:500;}
+  .bar-actions{display:flex; align-items:center; gap:0;}
+  .icon-btn{
+    appearance:none; border:0; background:transparent; cursor:pointer;
+    width:34px; height:34px; border-radius:50%;
+    display:grid; place-items:center; color:var(--chrome-ink-soft);
+    transition:background .15s ease, color .15s ease, transform .3s ease;
+  }
+  .icon-btn:hover{background:rgba(128,128,128,.14); color:var(--chrome-ink);}
+  .icon-btn:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .icon-btn.spin{transform:rotate(-360deg);}
+  .icon-btn.ghost{pointer-events:none;}
+
+  /* ---------- chat ---------- */
+  .chat{
+    flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain;
+    padding:14px 10px 8px;
+    display:flex; flex-direction:column; gap:3px;
+    background-color:var(--chat-bg);
+    background-image:var(--doodle-img);
+    background-size:315px;
+    scrollbar-width:thin;
+  }
+  .day{
+    align-self:center; margin:2px 0 10px;
+    font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--meta); background:var(--card);
+    padding:5px 12px; border-radius:8px; box-shadow:var(--shadow);
+  }
+  .row{display:flex; width:100%;}
+  .row.out{justify-content:flex-end;}
+  .msg{
+    position:relative;
+    max-width:82%;
+    padding:6px 9px 8px 10px;
+    border-radius:8px;
+    font-size:14.6px; line-height:1.38;
+    white-space:pre-wrap; word-wrap:break-word;
+    box-shadow:var(--shadow);
+    animation:pop .18s ease-out both;
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(7px) scale(.99);} to{opacity:1; transform:none;}}
+  .row.in .msg{background:var(--bubble-in); color:var(--bubble-in-ink); border-top-left-radius:2px;}
+  .row.out .msg{background:var(--bubble-out); color:var(--bubble-out-ink); border-top-right-radius:2px;}
+  .row + .row{margin-top:3px;}
+  .row.in + .row.out, .row.out + .row.in{margin-top:9px;}
+  .meta{
+    float:right; margin:8px -2px -4px 8px;
+    font-size:11px; color:var(--meta);
+    display:flex; align-items:center; gap:3px; line-height:1;
+  }
+  .tick{width:15px; height:15px; color:var(--tick); transition:color .2s ease;}
+  .tick.read{color:var(--tick-read);}
+
+  .typingBubble{display:flex; gap:4px; align-items:center; padding:11px 13px;}
+  .typingBubble i{
+    width:7px; height:7px; border-radius:50%; background:var(--meta); display:block;
+    animation:blink 1.25s infinite ease-in-out;
+  }
+  .typingBubble i:nth-child(2){animation-delay:.18s;}
+  .typingBubble i:nth-child(3){animation-delay:.36s;}
+  @keyframes blink{0%,60%,100%{opacity:.32; transform:translateY(0);} 30%{opacity:1; transform:translateY(-2px);}}
+
+  /* ---------- quick replies ---------- */
+  .replies{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin:7px 0 4px; padding:0 2px;
+    animation:pop .2s ease-out both;
+  }
+  .replies.stack{flex-direction:column;}
+  .reply{
+    appearance:none; cursor:pointer;
+    font:inherit; font-size:14.2px; font-weight:500;
+    color:var(--reply-ink); background:var(--reply-card);
+    border:1px solid var(--reply-line); border-radius:18px;
+    padding:9px 15px; box-shadow:var(--shadow);
+    transition:transform .12s ease, filter .12s ease;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .replies.stack .reply{justify-content:center; width:100%;}
+  .reply:hover{filter:brightness(1.03); transform:translateY(-1px);}
+  .reply:active{transform:translateY(0) scale(.985);}
+  .reply:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .reply.picked{background:var(--send); color:#fff; border-color:transparent;}
+  .reply .box{
+    width:16px; height:16px; border-radius:5px; flex:0 0 auto;
+    border:1.6px solid currentColor; opacity:.55;
+    display:grid; place-items:center;
+  }
+  .reply.picked .box{opacity:1; background:#fff; color:var(--send); border-color:#fff;}
+  .reply .box svg{opacity:0;}
+  .reply.picked .box svg{opacity:1;}
+  .reply.go{
+    background:var(--send); color:#fff; border-color:transparent; font-weight:600;
+    align-self:flex-end; padding:9px 20px;
+  }
+  .reply.go[disabled]{opacity:.45; cursor:not-allowed; transform:none;}
+
+  /* ---------- receipt card ---------- */
+  .receipt{
+    align-self:center; width:min(100%, 320px);
+    margin:12px 0 6px; padding:16px 16px 14px;
+    background:var(--card); color:var(--card-ink);
+    border-radius:14px; box-shadow:var(--shadow), 0 8px 24px -16px rgba(0,0,0,.5);
+    border-top:3px solid var(--sun);
+    animation:pop .25s ease-out both;
+  }
+  .receipt h3{margin:0 0 2px; font-size:15.5px; font-weight:600; letter-spacing:-.01em;}
+  .receipt p{margin:0 0 10px; font-size:12.5px; color:var(--meta);}
+  .receipt dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:12.8px;}
+  .receipt dt{color:var(--meta);}
+  .receipt dd{margin:0; text-align:right; font-weight:500; overflow-wrap:anywhere;}
+
+  /* ---------- composer ---------- */
+  .composer{
+    flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:var(--composer-bg);
+    border-top:1px solid var(--divider);
+  }
+  .field{
+    flex:1; display:flex; align-items:center; gap:8px;
+    background:var(--composer); border-radius:22px; padding:9px 14px;
+    color:var(--chrome-ink); box-shadow:var(--shadow);
+  }
+  .field input{
+    flex:1; border:0; background:transparent; outline:none;
+    font:inherit; font-size:15px; color:var(--chrome-ink); min-width:0;
+  }
+  .field input::placeholder{color:var(--chrome-ink-soft);}
+  .field .tool{flex:0 0 auto; color:var(--chrome-ink-soft); opacity:.75;}
+  /* WhatsApp shows a mic until there is something to send; so does the demo. */
+  .composer.locked .sendBtn .icon-send{display:none;}
+  .composer:not(.locked) .sendBtn .icon-mic{display:none;}
+  .sendBtn{
+    width:44px; height:44px; border-radius:50%; border:0; cursor:pointer;
+    background:var(--send); color:#fff; display:grid; place-items:center; flex:0 0 auto;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .sendBtn:active{transform:scale(.94);}
+  .sendBtn[disabled]{cursor:default;}
+  .sendBtn:focus-visible{outline:2px solid var(--chrome-ink); outline-offset:2px;}
+
+  .caption{
+    font-size:12.5px; color:var(--stage-ink-soft); letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px; text-align:center;
+  }
+  .caption b{font-weight:600; color:var(--stage-ink);}
+
+  @media (max-width:520px){
+    .stage{padding:0; gap:0;}
+    .phone{width:100%; height:100%; border-radius:0; border:0; box-shadow:none;}
+    .caption{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+</style>
+
+<div class="stage">
+  <div class="phone">
+    <header class="bar">
+      <span class="back" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="avatar"><img src="data:image/png;base64,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" alt="HMG Group Africa logo"></span>
+      <span class="who">
+        <b>HMG Group Africa</b>
+        <span id="presence">online</span>
+      </span>
+      <span class="bar-actions">
+        <span class="icon-btn ghost" aria-hidden="true">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.4" y="6" width="13.2" height="12" rx="2.4"/><path d="M15.6 10.6 21.6 7v10l-6-3.6z"/></svg>
+        </span>
+        <span class="icon-btn ghost" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 3.4 4.1 4.5A2.4 2.4 0 0 0 2.7 7.3 18.6 18.6 0 0 0 16.9 21.5a2.4 2.4 0 0 0 2.8-1.4l1.1-2.6a1.7 1.7 0 0 0-.85-2.15l-3-1.3a1.7 1.7 0 0 0-2 .5l-1 1.25A14.6 14.6 0 0 1 8.2 10.1l1.25-1a1.7 1.7 0 0 0 .5-2l-1.3-3a1.7 1.7 0 0 0-1.95-.7z"/></svg>
+        </span>
+        <button class="icon-btn" id="restart" title="Restart the demo" aria-label="Restart the demo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.2" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="18.8" r="1.75"/></svg>
+        </button>
+      </span>
+    </header>
+
+    <main class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation with HMG Group Africa"></main>
+
+    <form class="composer locked" id="composer" autocomplete="off">
+      <label class="field">
+        <svg class="tool" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8" stroke-linecap="round"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <input id="input" placeholder="Message" aria-label="Message" readonly>
+        <svg class="tool" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.6 8.3 9.9 16a2.7 2.7 0 0 0 3.8 3.8l7.7-7.7a4.6 4.6 0 0 0-6.5-6.5l-7.7 7.7a6.5 6.5 0 0 0 9.2 9.2l4.4-4.4"/></svg>
+        <svg class="tool" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 8h2.9l1.6-2.2h6.6L16.9 8h2.9a1.7 1.7 0 0 1 1.7 1.7v7.9a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7V9.7A1.7 1.7 0 0 1 4.2 8z"/><circle cx="12" cy="13.4" r="3.5"/></svg>
+      </label>
+      <button class="sendBtn" id="send" type="submit" disabled aria-label="Send">
+        <svg class="icon-mic" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2a2.9 2.9 0 0 1 2.9 2.9v5.8a2.9 2.9 0 0 1-5.8 0V6.1A2.9 2.9 0 0 1 12 3.2z"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.8v3"/></svg>
+        <svg class="icon-send" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.3 20.7 21 12 3.3 3.3 3.3 10l12 2-12 2z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <p class="caption"><b>HMG Group Africa</b> · WhatsApp enquiry demo · tap ⋮ in the header to restart</p>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* WhatsApp's own wallpaper is a field of faint outline doodles. This redraws that
+     pattern as one tiling SVG so the page stays a single file with no image requests. */
+  const ring = (cx, cy, r) =>
+    `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`;
+
+  const ICONS = {
+    heart: ["M0 9c-3-3-8-5.4-8-9a4.2 4.2 0 0 1 8-1.6A4.2 4.2 0 0 1 8 0c0 3.6-5 6-8 9z"],
+    smiley: [ring(0, 0, 9), "M-3.4-2.4v1.7", "M3.4-2.4v1.7", "M-4.6 2.8c1.2 1.8 2.8 2.7 4.6 2.7s3.4-.9 4.6-2.7"],
+    camera: ["M-10-4.5h20v11h-20z", "M-3.4-4.5 -2-7h4l1.4 2.5", ring(0, 1, 3.4)],
+    cup: ["M-7-6h12v7a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z", "M5-3.6h2.4a2.6 2.6 0 0 1 0 5.2H5",
+          "M-3.4-9.4c0-1.4 1.6-1.4 1.6-2.8", "M.6-9.4c0-1.4 1.6-1.4 1.6-2.8"],
+    music: ["M-3 5.4V-8l10-2v13.4", ring(-5.6, 5.4, 2.6), ring(4.4, 3.4, 2.6)],
+    plane: ["M-10-4 10-9 3 9-.6 1.2z", "M-.6 1.2 10-9"],
+    gift: ["M-8.6-3h17.2v11h-17.2z", "M-10-8h20v5h-20z", "M0-8v16",
+           "M0-8c-3.2-4.2-8-2-5.8 0M0-8c3.2-4.2 8-2 5.8 0"],
+    star: ["M0-10 2.9-3.3 10-2.6 4.6 2.2 6.2 9.2 0 5.6-6.2 9.2-4.6 2.2-10-2.6-2.9-3.3z"],
+    envelope: ["M-10-6h20v12h-20z", "M-10-6 0 2 10-6"],
+    cloud: ["M-7.6 6a4.6 4.6 0 0 1 .8-9 6.4 6.4 0 0 1 12-1.6A4.4 4.4 0 0 1 8 6z"],
+    sun: [ring(0, 0, 4.4), "M0-10v3", "M0 7v3", "M-10 0h3", "M7 0h3",
+          "M-7.1-7.1 -5-5", "M5 5 7.1 7.1", "M7.1-7.1 5-5", "M-5 5-7.1 7.1"],
+    umbrella: ["M-10 0a10 10 0 0 1 20 0z", "M0 0v7.6a3.2 3.2 0 0 1-6.4 0"],
+    bicycle: [ring(-7, 4, 5), ring(7, 4, 5), "M-7 4 0-4.4h4.8", "M0-4.4-3.2 4", "M-4-4.4h4.6", "M0-4.4 7 4"],
+    bell: ["M-6.6 4c0-6 1.6-9.4 6.6-9.4S6.6-2 6.6 4l1.6 2.4h-16.4z", "M-2.2 8.4a2.4 2.4 0 0 0 4.4 0", "M0-5.4v-2.6"],
+    clock: [ring(0, 0, 9), "M0-5v5l3.6 2.6"],
+    balloon: ["M0 6.4c4 0 7-4.2 7-8.4a7 7 0 1 0-14 0c0 4.2 3 8.4 7 8.4z", "M0 6.4v2", "M0 8.4c2.2 1.2-2.2 2.4 0 4"],
+    key: [ring(-5, 0, 4), "M-1 0h10.4", "M6.4 0v3.4", "M9.4 0v3"],
+    book: ["M-9-6c3.6-2 7-2 9 0 2-2 5.4-2 9 0v12c-3.6-2-7-2-9 0-2-2-5.4-2-9 0z", "M0-6v12"],
+    bolt: ["M2.4-10-6 1.4h5.2l-2 8.6 8.8-11.6H3.4z"],
+    phone: ["M-8.4-7.6a2.6 2.6 0 0 1 3.8-.6l2 2.4-2.4 3c1.6 2.6 3.6 4.6 6.2 6.2l3-2.4 2.4 2a2.6 2.6 0 0 1-.6 3.8C1 9.6-8.4-.2-8.4-7.6z"],
+    pin: ["M0 10s7-7.6 7-12A7 7 0 1 0-7-2c0 4.4 7 12 7 12z", ring(0, -2, 2.6)],
+    ball: [ring(0, 0, 9), "M0-9 3.6-4 0 0-3.6-4z", "M0 0 3.6-4 8.2-2.2", "M0 0-3.6-4-8.2-2.2", "M0 0v6.4"],
+    bubble: ["M-9-8h18v11.6h-10.6l-5 4v-4h-2.4z"]
+  };
+
+  /* Jittered placements, so the tile reads as scattered rather than gridded. */
+  const SPOTS = [
+    ["heart", 34, 30, -12, .9], ["camera", 118, 22, 8, .82], ["cup", 205, 38, -6, .86],
+    ["music", 272, 26, 14, .9], ["plane", 62, 96, -18, .88], ["smiley", 152, 88, 0, .8],
+    ["clock", 236, 104, 6, .82], ["bolt", 296, 92, -8, .9], ["book", 26, 152, 10, .84],
+    ["gift", 100, 166, -9, .8], ["balloon", 178, 158, 12, .86], ["bicycle", 258, 172, 0, .78],
+    ["sun", 46, 224, 0, .9], ["envelope", 124, 236, -7, .82], ["umbrella", 200, 228, 9, .84],
+    ["pin", 282, 242, -4, .86], ["cloud", 14, 288, 6, .86], ["bell", 88, 292, -10, .82],
+    ["key", 166, 296, 14, .84], ["ball", 244, 292, 0, .8], ["bubble", 300, 200, -6, .8],
+    ["phone", 6, 76, 8, .84]
+  ];
+
+  const doodle = (ink, alpha) => `<svg xmlns="http://www.w3.org/2000/svg" width="315" height="315" viewBox="0 0 315 315">
+    <g fill="none" stroke="${ink}" stroke-opacity="${alpha}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      ${SPOTS.map(([name, x, y, rot, sc]) =>
+        `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})">` +
+        ICONS[name].map(d => `<path d="${d}"/>`).join("") + `</g>`).join("")}
+    </g></svg>`;
+
+  const paper = (ink, alpha) => `url("data:image/svg+xml,${encodeURIComponent(doodle(ink, alpha))}")`;
+  document.documentElement.style.setProperty("--doodle-img", paper("rgb(84,66,45)", 0.13));
+
+  const chat = document.getElementById("chat");
+  const presence = document.getElementById("presence");
+  const composer = document.getElementById("composer");
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const restartBtn = document.getElementById("restart");
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ABORT = Symbol("restart");
+  let runId = 0;
+
+  const wait = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 120) : ms));
+  const guard = id => { if (id !== runId) throw ABORT; };
+  const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const toBottom = () => { chat.scrollTop = chat.scrollHeight; };
+
+  const TICK = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.6l3 3 5.6-6.8"/></svg>`;
+  const TICKS = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.4 9.6l3 3 5.6-6.8"/><path d="M7.2 12.6l5.6-6.8"/></svg>`;
+  const CHECK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.5L20 6.5"/></svg>`;
+
+  /* ---------------- primitives ---------------- */
+
+  function dayStamp() {
+    const el = document.createElement("div");
+    el.className = "day";
+    el.textContent = "Today";
+    chat.append(el);
+  }
+
+  function bubble(side, text) {
+    const row = document.createElement("div");
+    row.className = `row ${side}`;
+    const msg = document.createElement("div");
+    msg.className = "msg";
+    msg.textContent = text;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.innerHTML = `<span>${clock()}</span>`;
+    msg.append(meta);
+    row.append(msg);
+    chat.append(row);
+    toBottom();
+    return { row, msg, meta };
+  }
+
+  /* A sent message earns its ticks the way a real one does: sent, delivered, read. */
+  async function sent(text, id) {
+    const { meta } = bubble("out", text);
+    const mark = document.createElement("span");
+    mark.innerHTML = TICK;
+    meta.append(mark);
+    await wait(260); guard(id);
+    mark.innerHTML = TICKS;
+    await wait(420); guard(id);
+    mark.firstElementChild.classList.add("read");
+  }
+
+  async function typing(ms, id) {
+    presence.textContent = "typing…";
+    presence.classList.add("typing");
+    const row = document.createElement("div");
+    row.className = "row in";
+    row.innerHTML = `<div class="msg typingBubble"><i></i><i></i><i></i></div>`;
+    chat.append(row);
+    toBottom();
+    try { await wait(ms); guard(id); }
+    finally {
+      row.remove();
+      presence.textContent = "online";
+      presence.classList.remove("typing");
+    }
+  }
+
+  /* Reading time scales with the message, so long replies feel written, not pasted. */
+  const think = text => Math.min(1500, 480 + text.length * 11);
+
+  async function says(text, id) {
+    await wait(340); guard(id);
+    await typing(think(text), id);
+    bubble("in", text);
+    await wait(160); guard(id);
+  }
+
+  function replyBlock(stack) {
+    const box = document.createElement("div");
+    box.className = "replies" + (stack ? " stack" : "");
+    chat.append(box);
+    toBottom();
+    return box;
+  }
+
+  /* ---------------- asks ---------------- */
+
+  async function askButtons(text, options, id) {
+    await says(text, id);
+    const stack = options.some(o => o.label.length > 22) || options.length <= 3;
+    const box = replyBlock(stack);
+    const choice = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.textContent = opt.label;
+        b.addEventListener("click", () => resolve(opt), { once: true });
+        box.append(b);
+      });
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(choice.label, id);
+    return choice;
+  }
+
+  async function askMulti(text, options, id) {
+    await says(text, id);
+    const box = replyBlock(false);
+    const picked = new Set();
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "reply go";
+    go.textContent = "Continue →";
+    go.disabled = true;
+
+    const chosen = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.innerHTML = `<span class="box">${CHECK}</span><span></span>`;
+        b.lastElementChild.textContent = opt.label;
+        b.addEventListener("click", () => {
+          if (picked.has(opt.label)) picked.delete(opt.label);
+          else picked.add(opt.label);
+          b.classList.toggle("picked", picked.has(opt.label));
+          go.disabled = picked.size === 0;
+        });
+        box.append(b);
+      });
+      go.addEventListener("click", () => resolve([...picked]), { once: true });
+      box.append(go);
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(chosen.join(", "), id);
+    return chosen;
+  }
+
+  async function askText(text, placeholder, id) {
+    await says(text, id);
+    input.readOnly = false;
+    input.value = "";
+    input.placeholder = placeholder;
+    send.disabled = false;
+    composer.classList.remove("locked");
+    if (window.matchMedia("(min-width: 521px)").matches) input.focus();
+
+    const answer = await new Promise(resolve => {
+      composer.onsubmit = e => {
+        e.preventDefault();
+        const v = input.value.trim();
+        if (v) { composer.onsubmit = null; resolve(v); }
+      };
+    });
+    guard(id);
+    lockComposer();
+    await sent(answer, id);
+    return answer;
+  }
+
+  function lockComposer() {
+    composer.onsubmit = e => e.preventDefault();
+    input.value = "";
+    input.readOnly = true;
+    input.placeholder = "Choose an option above";
+    send.disabled = true;
+    composer.classList.add("locked");
+    input.blur();
+  }
+
+  function receipt(title, note, rows) {
+    const el = document.createElement("div");
+    el.className = "receipt";
+    const dl = rows.map(([k, v]) =>
+      `<dt>${k}</dt><dd>${String(v).replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]))}</dd>`).join("");
+    el.innerHTML = `<h3>${title}</h3><p>${note}</p><dl>${dl}</dl>`;
+    chat.append(el);
+    toBottom();
+  }
+
+  /* ---------------- the conversation ---------------- */
+
+  const opt = (label, value) => ({ label, value: value ?? label });
+
+  async function conversation(id) {
+    dayStamp();
+    const brief = [];
+    const note = (k, v) => brief.push([k, v]);
+
+    /* The conversation opens the way it does in real life: the customer taps a
+       "Book a consultation" link and their message is already written for them. */
+    await sent("Hello HMG Group Africa, I'd like to book a consultation.", id);
+    await wait(420); guard(id);
+
+    const topic = await askButtons(
+      "Hello \u{1F44B} Thank you for contacting HMG Group Africa.\n\nWhat would you like to discuss?",
+      [opt("\u{1F4CB} Tax & KRA advisory", "tax"), opt("\u{1F4D2} Accounting & bookkeeping", "books"),
+       opt("\u{1F50D} Audit & assurance", "audit"), opt("\u{1F465} Payroll", "payroll"),
+       opt("\u{1FA7A} Tax health check", "health"), opt("\u{1F4AC} Something else", "other")],
+      id);
+    note("Enquiry", topic.label.replace(/^[^\p{L}]+/u, ""));
+
+    const entity = await askButtons("Is this for a business or for you personally?", [
+      opt("\u{1F3E2} Limited company", "co"), opt("\u{1F4BC} Sole proprietor", "sole"),
+      opt("\u{1F91D} NGO / SACCO / Trust", "ngo"), opt("\u{1F464} Personal", "personal")], id);
+    note("Client type", entity.label.slice(2).trim());
+
+    if (entity.value !== "personal") {
+      const biz = await askText("And the name of the business?", "e.g. Acme Supplies Ltd", id);
+      note("Business", biz);
+    }
+
+    if (topic.value === "tax" || topic.value === "health") {
+      const kra = await askButtons("Where do things stand with KRA at the moment?", [
+        opt("\u2705 All filings up to date"), opt("\u23F3 Behind on some filings"),
+        opt("\u26A0\uFE0F We've received a KRA notice"), opt("\u2753 Honestly not sure")], id);
+      note("KRA status", kra.label.replace(/^[^\p{L}]+/u, ""));
+
+    } else if (topic.value === "books") {
+      const now = await askButtons("How are the books handled right now?", [
+        opt("In-house accountant"), opt("External accountant"),
+        opt("Spreadsheets / manually"), opt("Not really handled yet")], id);
+      note("Current bookkeeping", now.label);
+
+    } else if (topic.value === "audit") {
+      const why = await askButtons("What is the audit for?", [
+        opt("Statutory audit"), opt("A bank or lender"),
+        opt("A donor or grant"), opt("Internal assurance")], id);
+      note("Audit purpose", why.label);
+
+    } else if (topic.value === "payroll") {
+      const staff = await askButtons("How many people are on the payroll?",
+        [opt("1\u20135"), opt("6\u201320"), opt("21\u201350"), opt("Over 50")], id);
+      note("Payroll size", staff.label);
+
+    } else {
+      const what = await askText("Of course \u2014 what would you like to go through?", "Type your question", id);
+      note("Topic", what);
+    }
+
+    const when = await askButtons("How soon would you like to speak with an advisor?", [
+      opt("\u{1F525} It's urgent \u2014 there's a deadline", "urgent"),
+      opt("This week", "week"), opt("Next week", "next"), opt("Just exploring for now", "explore")], id);
+    note("Timing", when.label.replace(/^[^\p{L}]+/u, ""));
+
+    const how = await askButtons("And how would you prefer to meet?", [
+      opt("\u{1F3E2} At your offices, Akai Plaza"), opt("\u{1F4DE} Phone call"),
+      opt("\u{1F4BB} Online meeting")], id);
+    note("Consultation", how.label.slice(2).trim());
+
+    await close(id, brief,
+      "Thank you \u{1F44D} Our advisors are available Monday to Friday, 8:00 AM \u2013 5:00 PM.\n\nShall I put this through?",
+      [opt("\u{1F4C5} Book the consultation", "book"), opt("\u{1F4DE} Have an advisor call me", "call")]);
+  }
+
+  const ENDINGS = {
+    book: { ask: "Certainly \u{1F44D} What name should we put on the booking?", title: "\u{1F4C5} Consultation Requested",
+            note: "Sent to the HMG Group Africa advisory team", label: "Consultation" },
+    call: { ask: "Certainly \u{1F44D} What name should we use?", title: "\u{1F4DE} Callback Requested",
+            note: "Sent to the HMG Group Africa advisory team", label: "Callback" }
+  };
+
+  async function close(id, brief, prompt, options) {
+    const next = await askButtons(prompt, options, id);
+    const end = ENDINGS[next.value];
+
+    const name = await askText(end.ask, "Your name", id);
+    const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
+
+    await says(`✅ Thank you, ${name}.\n\nYour consultation request has been captured.\n\nAn advisor would now confirm a time with you and let you know what to have ready.`, id);
+    await wait(220); guard(id);
+
+    receipt(end.title, end.note,
+      [...brief, ["Request", end.label], ["Name", name], ["Phone", phone]]);
+    toBottom();
+  }
+
+  /* ---------------- lifecycle ---------------- */
+
+  async function start() {
+    const id = ++runId;
+    chat.innerHTML = "";
+    lockComposer();
+    try { await conversation(id); }
+    catch (e) { if (e !== ABORT) throw e; }
+  }
+
+  restartBtn.addEventListener("click", () => {
+    restartBtn.classList.add("spin");
+    setTimeout(() => restartBtn.classList.remove("spin"), 320);
+    start();
+  });
+
+  start();
+})();
+</script>
+</html>

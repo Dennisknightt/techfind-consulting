@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Transford Solutions WhatsApp Demo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600&display=swap">
+<style>
+  /* WhatsApp's default look, deliberately fixed: the demo shows the client the
+     standard chat theme, not whatever light/dark mode their phone happens to be in. */
+  :root{
+    color-scheme:light;
+    --stage-bg-1:#eef1f8;
+    --stage-bg-2:#dfe4ef;
+    --stage-ink:#32529f;
+    --stage-ink-soft:#7b86a5;
+    --frame:#c8cfe0;
+
+    --chrome:#f0f2f5;
+    --chrome-ink:#111b21;
+    --chrome-ink-soft:#667781;
+    --chat-bg:#e5ddd5;
+    --bubble-in:#ffffff;
+    --bubble-in-ink:#111b21;
+    --bubble-out:#d9fdd3;
+    --bubble-out-ink:#111b21;
+    --meta:#667781;
+    --tick:#8696a0;
+    --tick-read:#53bdeb;
+    --reply-card:#ffffff;
+    --reply-ink:#0091ea;
+    --reply-line:rgba(17,27,33,.10);
+    --composer:#ffffff;
+    --composer-bg:#f0f2f5;
+    --send:#00a884;
+    --divider:rgba(17,27,33,.10);
+    --sun:#e7b715;
+    --brand:#32529f;
+    --card:#ffffff;
+    --card-ink:#111b21;
+    --shadow:0 1px .5px rgba(11,20,26,.13);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--stage-bg-2);
+    color:var(--stage-ink);
+    font-family:"Instrument Sans", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-font-smoothing:antialiased;
+  }
+
+  .stage{
+    position:fixed; inset:0;
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    gap:14px; padding:20px;
+    background:
+      radial-gradient(120% 90% at 50% -10%, var(--stage-bg-1) 0%, var(--stage-bg-2) 70%);
+  }
+
+  .phone{
+    position:relative;
+    width:min(100%, 412px);
+    height:min(100%, 880px);
+    display:flex; flex-direction:column;
+    background:var(--chat-bg);
+    border-radius:30px;
+    overflow:hidden;
+    border:1px solid var(--frame);
+    box-shadow:0 30px 60px -24px rgba(28,20,8,.45), 0 2px 6px rgba(28,20,8,.10);
+  }
+
+  /* ---------- header ---------- */
+  .bar{
+    display:flex; align-items:center; gap:10px;
+    padding:10px 12px;
+    background:var(--chrome);
+    color:var(--chrome-ink);
+    border-bottom:1px solid var(--divider);
+    flex:0 0 auto;
+    z-index:3;
+  }
+  .back{display:flex; color:var(--chrome-ink-soft);}
+  .avatar{
+    width:41px; height:41px; border-radius:50%; flex:0 0 auto;
+    background:#fff; overflow:hidden;
+    box-shadow:inset 0 0 0 1px rgba(0,0,0,.10);
+  }
+  .avatar img{width:100%; height:100%; object-fit:cover; display:block;}
+  .who{display:flex; flex-direction:column; min-width:0; flex:1;}
+  .who b{font-size:16px; font-weight:600; letter-spacing:-.01em; line-height:1.2;}
+  .who span{font-size:12.5px; color:var(--chrome-ink-soft); line-height:1.4; height:18px;}
+  .who span.typing{color:var(--send); font-weight:500;}
+  .bar-actions{display:flex; align-items:center; gap:2px;}
+  .icon-btn{
+    appearance:none; border:0; background:transparent; cursor:pointer;
+    width:38px; height:38px; border-radius:50%;
+    display:grid; place-items:center; color:var(--chrome-ink-soft);
+    transition:background .15s ease, color .15s ease, transform .3s ease;
+  }
+  .icon-btn:hover{background:rgba(128,128,128,.14); color:var(--chrome-ink);}
+  .icon-btn:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .icon-btn.spin{transform:rotate(-360deg);}
+  .icon-btn.ghost{pointer-events:none;}
+
+  /* ---------- chat ---------- */
+  .chat{
+    flex:1 1 auto; overflow-y:auto; overscroll-behavior:contain;
+    padding:14px 10px 8px;
+    display:flex; flex-direction:column; gap:3px;
+    background-color:var(--chat-bg);
+    background-image:var(--doodle-img);
+    background-size:315px;
+    scrollbar-width:thin;
+  }
+  .day{
+    align-self:center; margin:2px 0 10px;
+    font-size:11.5px; letter-spacing:.03em; text-transform:uppercase;
+    color:var(--meta); background:var(--card);
+    padding:5px 12px; border-radius:8px; box-shadow:var(--shadow);
+  }
+  .row{display:flex; width:100%;}
+  .row.out{justify-content:flex-end;}
+  .msg{
+    position:relative;
+    max-width:82%;
+    padding:6px 9px 8px 10px;
+    border-radius:8px;
+    font-size:14.6px; line-height:1.38;
+    white-space:pre-wrap; word-wrap:break-word;
+    box-shadow:var(--shadow);
+    animation:pop .18s ease-out both;
+  }
+  @keyframes pop{from{opacity:0; transform:translateY(7px) scale(.99);} to{opacity:1; transform:none;}}
+  .row.in .msg{background:var(--bubble-in); color:var(--bubble-in-ink); border-top-left-radius:2px;}
+  .row.out .msg{background:var(--bubble-out); color:var(--bubble-out-ink); border-top-right-radius:2px;}
+  .row + .row{margin-top:3px;}
+  .row.in + .row.out, .row.out + .row.in{margin-top:9px;}
+  .meta{
+    float:right; margin:8px -2px -4px 8px;
+    font-size:11px; color:var(--meta);
+    display:flex; align-items:center; gap:3px; line-height:1;
+  }
+  .tick{width:15px; height:15px; color:var(--tick); transition:color .2s ease;}
+  .tick.read{color:var(--tick-read);}
+
+  .typingBubble{display:flex; gap:4px; align-items:center; padding:11px 13px;}
+  .typingBubble i{
+    width:7px; height:7px; border-radius:50%; background:var(--meta); display:block;
+    animation:blink 1.25s infinite ease-in-out;
+  }
+  .typingBubble i:nth-child(2){animation-delay:.18s;}
+  .typingBubble i:nth-child(3){animation-delay:.36s;}
+  @keyframes blink{0%,60%,100%{opacity:.32; transform:translateY(0);} 30%{opacity:1; transform:translateY(-2px);}}
+
+  /* ---------- quick replies ---------- */
+  .replies{
+    display:flex; flex-wrap:wrap; gap:6px;
+    margin:7px 0 4px; padding:0 2px;
+    animation:pop .2s ease-out both;
+  }
+  .replies.stack{flex-direction:column;}
+  .reply{
+    appearance:none; cursor:pointer;
+    font:inherit; font-size:14.2px; font-weight:500;
+    color:var(--reply-ink); background:var(--reply-card);
+    border:1px solid var(--reply-line); border-radius:18px;
+    padding:9px 15px; box-shadow:var(--shadow);
+    transition:transform .12s ease, filter .12s ease;
+    display:inline-flex; align-items:center; gap:7px;
+  }
+  .replies.stack .reply{justify-content:center; width:100%;}
+  .reply:hover{filter:brightness(1.03); transform:translateY(-1px);}
+  .reply:active{transform:translateY(0) scale(.985);}
+  .reply:focus-visible{outline:2px solid var(--send); outline-offset:2px;}
+  .reply.picked{background:var(--send); color:#fff; border-color:transparent;}
+  .reply .box{
+    width:16px; height:16px; border-radius:5px; flex:0 0 auto;
+    border:1.6px solid currentColor; opacity:.55;
+    display:grid; place-items:center;
+  }
+  .reply.picked .box{opacity:1; background:#fff; color:var(--send); border-color:#fff;}
+  .reply .box svg{opacity:0;}
+  .reply.picked .box svg{opacity:1;}
+  .reply.go{
+    background:var(--send); color:#fff; border-color:transparent; font-weight:600;
+    align-self:flex-end; padding:9px 20px;
+  }
+  .reply.go[disabled]{opacity:.45; cursor:not-allowed; transform:none;}
+
+  /* ---------- receipt card ---------- */
+  .receipt{
+    align-self:center; width:min(100%, 320px);
+    margin:12px 0 6px; padding:16px 16px 14px;
+    background:var(--card); color:var(--card-ink);
+    border-radius:14px; box-shadow:var(--shadow), 0 8px 24px -16px rgba(0,0,0,.5);
+    border-top:3px solid var(--sun);
+    animation:pop .25s ease-out both;
+  }
+  .receipt h3{margin:0 0 2px; font-size:15.5px; font-weight:600; letter-spacing:-.01em;}
+  .receipt p{margin:0 0 10px; font-size:12.5px; color:var(--meta);}
+  .receipt dl{margin:0; display:grid; grid-template-columns:auto 1fr; gap:6px 12px; font-size:12.8px;}
+  .receipt dt{color:var(--meta);}
+  .receipt dd{margin:0; text-align:right; font-weight:500; overflow-wrap:anywhere;}
+
+  /* ---------- composer ---------- */
+  .composer{
+    flex:0 0 auto; display:flex; align-items:flex-end; gap:8px;
+    padding:8px 10px calc(8px + env(safe-area-inset-bottom));
+    background:var(--composer-bg);
+    border-top:1px solid var(--divider);
+  }
+  .field{
+    flex:1; display:flex; align-items:center; gap:8px;
+    background:var(--composer); border-radius:22px; padding:9px 14px;
+    color:var(--chrome-ink); box-shadow:var(--shadow);
+  }
+  .field input{
+    flex:1; border:0; background:transparent; outline:none;
+    font:inherit; font-size:15px; color:var(--chrome-ink); min-width:0;
+  }
+  .field input::placeholder{color:var(--chrome-ink-soft);}
+  .field .tool{flex:0 0 auto; color:var(--chrome-ink-soft); opacity:.75;}
+  /* WhatsApp shows a mic until there is something to send; so does the demo. */
+  .composer.locked .sendBtn .icon-send{display:none;}
+  .composer:not(.locked) .sendBtn .icon-mic{display:none;}
+  .sendBtn{
+    width:44px; height:44px; border-radius:50%; border:0; cursor:pointer;
+    background:var(--send); color:#fff; display:grid; place-items:center; flex:0 0 auto;
+    transition:transform .12s ease, opacity .12s ease;
+  }
+  .sendBtn:active{transform:scale(.94);}
+  .sendBtn[disabled]{cursor:default;}
+  .sendBtn:focus-visible{outline:2px solid var(--chrome-ink); outline-offset:2px;}
+
+  .caption{
+    font-size:12.5px; color:var(--stage-ink-soft); letter-spacing:.02em;
+    display:flex; align-items:center; gap:8px; text-align:center;
+  }
+  .caption b{font-weight:600; color:var(--stage-ink);}
+
+  @media (max-width:520px){
+    .stage{padding:0; gap:0;}
+    .phone{width:100%; height:100%; border-radius:0; border:0; box-shadow:none;}
+    .caption{display:none;}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{animation-duration:.01ms !important; transition-duration:.01ms !important;}
+  }
+</style>
+
+<div class="stage">
+  <div class="phone">
+    <header class="bar">
+      <span class="back" aria-hidden="true">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+      </span>
+      <span class="avatar"><img src="data:image/png;base64,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" alt="Transford Solutions Ltd logo"></span>
+      <span class="who">
+        <b>Transford Solutions</b>
+        <span id="presence">online</span>
+      </span>
+      <span class="bar-actions">
+        <span class="icon-btn ghost" aria-hidden="true">
+          <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"><rect x="2.4" y="6" width="13.2" height="12" rx="2.4"/><path d="M15.6 10.6 21.6 7v10l-6-3.6z"/></svg>
+        </span>
+        <span class="icon-btn ghost" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M6.7 3.4 4.1 4.5A2.4 2.4 0 0 0 2.7 7.3 18.6 18.6 0 0 0 16.9 21.5a2.4 2.4 0 0 0 2.8-1.4l1.1-2.6a1.7 1.7 0 0 0-.85-2.15l-3-1.3a1.7 1.7 0 0 0-2 .5l-1 1.25A14.6 14.6 0 0 1 8.2 10.1l1.25-1a1.7 1.7 0 0 0 .5-2l-1.3-3a1.7 1.7 0 0 0-1.95-.7z"/></svg>
+        </span>
+        <button class="icon-btn" id="restart" title="Restart the demo" aria-label="Restart the demo">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5.2" r="1.75"/><circle cx="12" cy="12" r="1.75"/><circle cx="12" cy="18.8" r="1.75"/></svg>
+        </button>
+      </span>
+    </header>
+
+    <main class="chat" id="chat" role="log" aria-live="polite" aria-label="Conversation with Transford Solutions"></main>
+
+    <form class="composer locked" id="composer" autocomplete="off">
+      <label class="field">
+        <svg class="tool" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M8.5 14.5c1 1.2 2.1 1.8 3.5 1.8s2.5-.6 3.5-1.8" stroke-linecap="round"/><circle cx="9" cy="10" r="1.1" fill="currentColor" stroke="none"/><circle cx="15" cy="10" r="1.1" fill="currentColor" stroke="none"/></svg>
+        <input id="input" placeholder="Message" aria-label="Message" readonly>
+        <svg class="tool" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M17.6 8.3 9.9 16a2.7 2.7 0 0 0 3.8 3.8l7.7-7.7a4.6 4.6 0 0 0-6.5-6.5l-7.7 7.7a6.5 6.5 0 0 0 9.2 9.2l4.4-4.4"/></svg>
+        <svg class="tool" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" aria-hidden="true"><path d="M4.2 8h2.9l1.6-2.2h6.6L16.9 8h2.9a1.7 1.7 0 0 1 1.7 1.7v7.9a1.7 1.7 0 0 1-1.7 1.7H4.2a1.7 1.7 0 0 1-1.7-1.7V9.7A1.7 1.7 0 0 1 4.2 8z"/><circle cx="12" cy="13.4" r="3.5"/></svg>
+      </label>
+      <button class="sendBtn" id="send" type="submit" disabled aria-label="Send">
+        <svg class="icon-mic" width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3.2a2.9 2.9 0 0 1 2.9 2.9v5.8a2.9 2.9 0 0 1-5.8 0V6.1A2.9 2.9 0 0 1 12 3.2z"/><path d="M5.6 11.4a6.4 6.4 0 0 0 12.8 0"/><path d="M12 17.8v3"/></svg>
+        <svg class="icon-send" width="20" height="20" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M3.3 20.7 21 12 3.3 3.3 3.3 10l12 2-12 2z"/></svg>
+      </button>
+    </form>
+  </div>
+
+  <p class="caption"><b>Transford Solutions</b> · WhatsApp enquiry demo · tap ⋮ in the header to restart</p>
+</div>
+
+<script>
+(() => {
+  "use strict";
+
+  /* WhatsApp's own wallpaper is a field of faint outline doodles. This redraws that
+     pattern as one tiling SVG so the page stays a single file with no image requests. */
+  const ring = (cx, cy, r) =>
+    `M${cx - r} ${cy}a${r} ${r} 0 1 0 ${r * 2} 0a${r} ${r} 0 1 0 ${-r * 2} 0`;
+
+  const ICONS = {
+    heart: ["M0 9c-3-3-8-5.4-8-9a4.2 4.2 0 0 1 8-1.6A4.2 4.2 0 0 1 8 0c0 3.6-5 6-8 9z"],
+    smiley: [ring(0, 0, 9), "M-3.4-2.4v1.7", "M3.4-2.4v1.7", "M-4.6 2.8c1.2 1.8 2.8 2.7 4.6 2.7s3.4-.9 4.6-2.7"],
+    camera: ["M-10-4.5h20v11h-20z", "M-3.4-4.5 -2-7h4l1.4 2.5", ring(0, 1, 3.4)],
+    cup: ["M-7-6h12v7a5 5 0 0 1-5 5h-2a5 5 0 0 1-5-5z", "M5-3.6h2.4a2.6 2.6 0 0 1 0 5.2H5",
+          "M-3.4-9.4c0-1.4 1.6-1.4 1.6-2.8", "M.6-9.4c0-1.4 1.6-1.4 1.6-2.8"],
+    music: ["M-3 5.4V-8l10-2v13.4", ring(-5.6, 5.4, 2.6), ring(4.4, 3.4, 2.6)],
+    plane: ["M-10-4 10-9 3 9-.6 1.2z", "M-.6 1.2 10-9"],
+    gift: ["M-8.6-3h17.2v11h-17.2z", "M-10-8h20v5h-20z", "M0-8v16",
+           "M0-8c-3.2-4.2-8-2-5.8 0M0-8c3.2-4.2 8-2 5.8 0"],
+    star: ["M0-10 2.9-3.3 10-2.6 4.6 2.2 6.2 9.2 0 5.6-6.2 9.2-4.6 2.2-10-2.6-2.9-3.3z"],
+    envelope: ["M-10-6h20v12h-20z", "M-10-6 0 2 10-6"],
+    cloud: ["M-7.6 6a4.6 4.6 0 0 1 .8-9 6.4 6.4 0 0 1 12-1.6A4.4 4.4 0 0 1 8 6z"],
+    sun: [ring(0, 0, 4.4), "M0-10v3", "M0 7v3", "M-10 0h3", "M7 0h3",
+          "M-7.1-7.1 -5-5", "M5 5 7.1 7.1", "M7.1-7.1 5-5", "M-5 5-7.1 7.1"],
+    umbrella: ["M-10 0a10 10 0 0 1 20 0z", "M0 0v7.6a3.2 3.2 0 0 1-6.4 0"],
+    bicycle: [ring(-7, 4, 5), ring(7, 4, 5), "M-7 4 0-4.4h4.8", "M0-4.4-3.2 4", "M-4-4.4h4.6", "M0-4.4 7 4"],
+    bell: ["M-6.6 4c0-6 1.6-9.4 6.6-9.4S6.6-2 6.6 4l1.6 2.4h-16.4z", "M-2.2 8.4a2.4 2.4 0 0 0 4.4 0", "M0-5.4v-2.6"],
+    clock: [ring(0, 0, 9), "M0-5v5l3.6 2.6"],
+    balloon: ["M0 6.4c4 0 7-4.2 7-8.4a7 7 0 1 0-14 0c0 4.2 3 8.4 7 8.4z", "M0 6.4v2", "M0 8.4c2.2 1.2-2.2 2.4 0 4"],
+    key: [ring(-5, 0, 4), "M-1 0h10.4", "M6.4 0v3.4", "M9.4 0v3"],
+    book: ["M-9-6c3.6-2 7-2 9 0 2-2 5.4-2 9 0v12c-3.6-2-7-2-9 0-2-2-5.4-2-9 0z", "M0-6v12"],
+    bolt: ["M2.4-10-6 1.4h5.2l-2 8.6 8.8-11.6H3.4z"],
+    phone: ["M-8.4-7.6a2.6 2.6 0 0 1 3.8-.6l2 2.4-2.4 3c1.6 2.6 3.6 4.6 6.2 6.2l3-2.4 2.4 2a2.6 2.6 0 0 1-.6 3.8C1 9.6-8.4-.2-8.4-7.6z"],
+    pin: ["M0 10s7-7.6 7-12A7 7 0 1 0-7-2c0 4.4 7 12 7 12z", ring(0, -2, 2.6)],
+    ball: [ring(0, 0, 9), "M0-9 3.6-4 0 0-3.6-4z", "M0 0 3.6-4 8.2-2.2", "M0 0-3.6-4-8.2-2.2", "M0 0v6.4"],
+    bubble: ["M-9-8h18v11.6h-10.6l-5 4v-4h-2.4z"]
+  };
+
+  /* Jittered placements, so the tile reads as scattered rather than gridded. */
+  const SPOTS = [
+    ["heart", 34, 30, -12, .9], ["camera", 118, 22, 8, .82], ["cup", 205, 38, -6, .86],
+    ["music", 272, 26, 14, .9], ["plane", 62, 96, -18, .88], ["smiley", 152, 88, 0, .8],
+    ["clock", 236, 104, 6, .82], ["bolt", 296, 92, -8, .9], ["book", 26, 152, 10, .84],
+    ["gift", 100, 166, -9, .8], ["balloon", 178, 158, 12, .86], ["bicycle", 258, 172, 0, .78],
+    ["sun", 46, 224, 0, .9], ["envelope", 124, 236, -7, .82], ["umbrella", 200, 228, 9, .84],
+    ["pin", 282, 242, -4, .86], ["cloud", 14, 288, 6, .86], ["bell", 88, 292, -10, .82],
+    ["key", 166, 296, 14, .84], ["ball", 244, 292, 0, .8], ["bubble", 300, 200, -6, .8],
+    ["phone", 6, 76, 8, .84]
+  ];
+
+  const doodle = (ink, alpha) => `<svg xmlns="http://www.w3.org/2000/svg" width="315" height="315" viewBox="0 0 315 315">
+    <g fill="none" stroke="${ink}" stroke-opacity="${alpha}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+      ${SPOTS.map(([name, x, y, rot, sc]) =>
+        `<g transform="translate(${x} ${y}) rotate(${rot}) scale(${sc})">` +
+        ICONS[name].map(d => `<path d="${d}"/>`).join("") + `</g>`).join("")}
+    </g></svg>`;
+
+  const paper = (ink, alpha) => `url("data:image/svg+xml,${encodeURIComponent(doodle(ink, alpha))}")`;
+  document.documentElement.style.setProperty("--doodle-img", paper("rgb(84,66,45)", 0.13));
+
+  const chat = document.getElementById("chat");
+  const presence = document.getElementById("presence");
+  const composer = document.getElementById("composer");
+  const input = document.getElementById("input");
+  const send = document.getElementById("send");
+  const restartBtn = document.getElementById("restart");
+
+  const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const ABORT = Symbol("restart");
+  let runId = 0;
+
+  const wait = ms => new Promise(r => setTimeout(r, reduced ? Math.min(ms, 120) : ms));
+  const guard = id => { if (id !== runId) throw ABORT; };
+  const clock = () => new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const toBottom = () => { chat.scrollTop = chat.scrollHeight; };
+
+  const TICK = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M2.5 9.6l3 3 5.6-6.8"/></svg>`;
+  const TICKS = `<svg class="tick" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M1.4 9.6l3 3 5.6-6.8"/><path d="M7.2 12.6l5.6-6.8"/></svg>`;
+  const CHECK = `<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.4" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5.2 5.5L20 6.5"/></svg>`;
+
+  /* ---------------- primitives ---------------- */
+
+  function dayStamp() {
+    const el = document.createElement("div");
+    el.className = "day";
+    el.textContent = "Today";
+    chat.append(el);
+  }
+
+  function bubble(side, text) {
+    const row = document.createElement("div");
+    row.className = `row ${side}`;
+    const msg = document.createElement("div");
+    msg.className = "msg";
+    msg.textContent = text;
+    const meta = document.createElement("span");
+    meta.className = "meta";
+    meta.innerHTML = `<span>${clock()}</span>`;
+    msg.append(meta);
+    row.append(msg);
+    chat.append(row);
+    toBottom();
+    return { row, msg, meta };
+  }
+
+  /* A sent message earns its ticks the way a real one does: sent, delivered, read. */
+  async function sent(text, id) {
+    const { meta } = bubble("out", text);
+    const mark = document.createElement("span");
+    mark.innerHTML = TICK;
+    meta.append(mark);
+    await wait(260); guard(id);
+    mark.innerHTML = TICKS;
+    await wait(420); guard(id);
+    mark.firstElementChild.classList.add("read");
+  }
+
+  async function typing(ms, id) {
+    presence.textContent = "typing…";
+    presence.classList.add("typing");
+    const row = document.createElement("div");
+    row.className = "row in";
+    row.innerHTML = `<div class="msg typingBubble"><i></i><i></i><i></i></div>`;
+    chat.append(row);
+    toBottom();
+    try { await wait(ms); guard(id); }
+    finally {
+      row.remove();
+      presence.textContent = "online";
+      presence.classList.remove("typing");
+    }
+  }
+
+  /* Reading time scales with the message, so long replies feel written, not pasted. */
+  const think = text => Math.min(1500, 480 + text.length * 11);
+
+  async function says(text, id) {
+    await wait(340); guard(id);
+    await typing(think(text), id);
+    bubble("in", text);
+    await wait(160); guard(id);
+  }
+
+  function replyBlock(stack) {
+    const box = document.createElement("div");
+    box.className = "replies" + (stack ? " stack" : "");
+    chat.append(box);
+    toBottom();
+    return box;
+  }
+
+  /* ---------------- asks ---------------- */
+
+  async function askButtons(text, options, id) {
+    await says(text, id);
+    const stack = options.some(o => o.label.length > 22) || options.length <= 3;
+    const box = replyBlock(stack);
+    const choice = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.textContent = opt.label;
+        b.addEventListener("click", () => resolve(opt), { once: true });
+        box.append(b);
+      });
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(choice.label, id);
+    return choice;
+  }
+
+  async function askMulti(text, options, id) {
+    await says(text, id);
+    const box = replyBlock(false);
+    const picked = new Set();
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "reply go";
+    go.textContent = "Continue →";
+    go.disabled = true;
+
+    const chosen = await new Promise(resolve => {
+      options.forEach(opt => {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "reply";
+        b.innerHTML = `<span class="box">${CHECK}</span><span></span>`;
+        b.lastElementChild.textContent = opt.label;
+        b.addEventListener("click", () => {
+          if (picked.has(opt.label)) picked.delete(opt.label);
+          else picked.add(opt.label);
+          b.classList.toggle("picked", picked.has(opt.label));
+          go.disabled = picked.size === 0;
+        });
+        box.append(b);
+      });
+      go.addEventListener("click", () => resolve([...picked]), { once: true });
+      box.append(go);
+      toBottom();
+    });
+    guard(id);
+    box.remove();
+    await sent(chosen.join(", "), id);
+    return chosen;
+  }
+
+  async function askText(text, placeholder, id) {
+    await says(text, id);
+    input.readOnly = false;
+    input.value = "";
+    input.placeholder = placeholder;
+    send.disabled = false;
+    composer.classList.remove("locked");
+    if (window.matchMedia("(min-width: 521px)").matches) input.focus();
+
+    const answer = await new Promise(resolve => {
+      composer.onsubmit = e => {
+        e.preventDefault();
+        const v = input.value.trim();
+        if (v) { composer.onsubmit = null; resolve(v); }
+      };
+    });
+    guard(id);
+    lockComposer();
+    await sent(answer, id);
+    return answer;
+  }
+
+  function lockComposer() {
+    composer.onsubmit = e => e.preventDefault();
+    input.value = "";
+    input.readOnly = true;
+    input.placeholder = "Choose an option above";
+    send.disabled = true;
+    composer.classList.add("locked");
+    input.blur();
+  }
+
+  function receipt(title, note, rows) {
+    const el = document.createElement("div");
+    el.className = "receipt";
+    const dl = rows.map(([k, v]) =>
+      `<dt>${k}</dt><dd>${String(v).replace(/[<>&]/g, c => ({ "<": "&lt;", ">": "&gt;", "&": "&amp;" }[c]))}</dd>`).join("");
+    el.innerHTML = `<h3>${title}</h3><p>${note}</p><dl>${dl}</dl>`;
+    chat.append(el);
+    toBottom();
+  }
+
+  /* ---------------- the conversation ---------------- */
+
+  const opt = (label, value) => ({ label, value: value ?? label });
+
+  async function conversation(id) {
+    dayStamp();
+    const brief = [];
+    const note = (k, v) => brief.push([k, v]);
+
+    const route = await askButtons(
+      "Hi 👋 Welcome to Transford Solutions ☀️\nHow can we help you today?",
+      [opt("🏠 Home Solar", "home"), opt("🏢 Business Solar", "business"), opt("🔧 Existing Solar System", "existing")],
+      id);
+
+    if (route.value === "home") {
+      note("Enquiry", "Home solar");
+
+      const goal = await askButtons("Great ☀️ What's most important to you?", [
+        opt("💰 Reduce my electricity bill"), opt("⚡ Backup during blackouts"),
+        opt("☀️ Run mostly on solar"), opt("🤔 Help me choose")], id);
+      note("Priority", goal.label.slice(2).trim());
+
+      const size = await askButtons("What size is your home?",
+        [opt("1–2 Bedroom"), opt("3 Bedroom"), opt("4+ Bedroom")], id);
+      note("Home size", size.label);
+
+      const bill = await askButtons("Roughly how much is your monthly electricity bill?",
+        [opt("Below KSh 5K"), opt("KSh 5K–15K"), opt("KSh 15K–30K"), opt("KSh 30K+")], id);
+      note("Monthly bill", bill.label);
+
+      const loads = await askMulti("Which major appliances would you like to keep running?", [
+        opt("💡 Lights"), opt("📺 TV + WiFi"), opt("🧊 Fridge"), opt("🧺 Washing Machine"),
+        opt("🚿 Instant Shower"), opt("💧 Water Pump"), opt("🍳 Electric Cooker"), opt("➕ Other")], id);
+      note("Appliances", loads.map(l => l.replace(/^[^\p{L}]+/u, "")).join(", "));
+
+      const where = await askText("Great. Where would the installation be?", "e.g. Ruiru, Kiambu", id);
+      note("Location", where);
+
+      await close(id, brief,
+        "Perfect 👍 Based on what you've told us, we have enough information to start assessing your solar requirements.\n\nA Transford solar specialist can review this and recommend the right system and pricing for you.\n\nWhat would you like to do next?",
+        [opt("💰 Get a Quote", "quote"), opt("📅 Book a Site Visit", "visit"), opt("📞 Talk to an Expert", "expert")]);
+      return;
+    }
+
+    if (route.value === "business") {
+      note("Enquiry", "Business solar");
+
+      const kind = await askButtons("What type of business/property is this?", [
+        opt("🏢 Office"), opt("🏪 Shop"), opt("🏨 Hotel"),
+        opt("🏭 Factory/Workshop"), opt("🏫 School"), opt("🌾 Farm"), opt("Other")], id);
+      note("Property", kind.label);
+
+      const bill = await askButtons("Roughly how much is your monthly electricity bill?",
+        [opt("Below KSh 20K"), opt("KSh 20K–50K"), opt("KSh 50K–100K"), opt("KSh 100K+")], id);
+      note("Monthly bill", bill.label);
+
+      const goal = await askButtons("What's your main goal?", [
+        opt("💰 Reduce electricity costs"), opt("⚡ Backup during outages"),
+        opt("⛽ Reduce generator use"), opt("☀️ Move mostly to solar")], id);
+      note("Main goal", goal.label.slice(2).trim());
+
+      const where = await askText("And where is the property located?", "e.g. Industrial Area, Nairobi", id);
+      note("Location", where);
+
+      await close(id, brief,
+        "Perfect 👍 We have enough information for a preliminary commercial solar assessment.\n\nWhat would you like to do next?",
+        [opt("💰 Get a Quote", "quote"), opt("📅 Book Site Visit", "visit"), opt("📞 Talk to an Expert", "expert")]);
+      return;
+    }
+
+    note("Enquiry", "Existing system");
+    const issue = await askButtons("What can we help with?", [
+      opt("🔋 Battery problem"), opt("⚠️ Inverter problem"), opt("☀️ Low solar production"),
+      opt("➕ Upgrade my system"), opt("🛠 Maintenance"), opt("❓ Other")], id);
+    note("Issue", issue.label.slice(2).trim());
+
+    const where = await askText("Where is the system located?", "e.g. Karen, Nairobi", id);
+    note("Location", where);
+
+    await close(id, brief, "Got it 👍 The Transford team can help you with this.",
+      [opt("📅 Request Technician", "technician"), opt("📞 Talk to an Expert", "expert")]);
+  }
+
+  const ENDINGS = {
+    quote: { ask: "Great 👍 What name should we use?", title: "☀️ Quote Request Received",
+             note: "Sent to the Transford team", label: "Quote request" },
+    visit: { ask: "Great 👍 What name should we use for the visit?", title: "📅 Site Visit Requested",
+             note: "Sent to the Transford team", label: "Site visit" },
+    expert: { ask: "Sure 👍 What name should we use?", title: "📞 Callback Requested",
+              note: "Sent to the Transford team", label: "Callback" },
+    technician: { ask: "Sure 👍 What name should we use?", title: "🛠 Technician Request Received",
+                  note: "Sent to the Transford team", label: "Technician visit" }
+  };
+
+  async function close(id, brief, prompt, options) {
+    const next = await askButtons(prompt, options, id);
+    const end = ENDINGS[next.value];
+
+    const name = await askText(end.ask, "Your name", id);
+    const phone = await askText("And what's the best phone number to reach you?", "07xx xxx xxx", id);
+
+    await says(`✅ Thank you, ${name}.\n\nYour solar requirements have been captured.\n\nA Transford specialist would now be able to review your requirements and continue with you from here.`, id);
+    await wait(220); guard(id);
+
+    receipt(end.title, end.note,
+      [...brief, ["Request", end.label], ["Name", name], ["Phone", phone]]);
+    toBottom();
+  }
+
+  /* ---------------- lifecycle ---------------- */
+
+  async function start() {
+    const id = ++runId;
+    chat.innerHTML = "";
+    lockComposer();
+    try { await conversation(id); }
+    catch (e) { if (e !== ABORT) throw e; }
+  }
+
+  restartBtn.addEventListener("click", () => {
+    restartBtn.classList.add("spin");
+    setTimeout(() => restartBtn.classList.remove("spin"), 320);
+    start();
+  });
+
+  start();
+})();
+</script>
+</html>
