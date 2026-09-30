@@ -1,12 +1,46 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+
+const SIGNALS = [
+  { t: "Cash position: clear", c: "#45C1AD" },
+  { t: "PAYE due in 6 days", c: "#E0A63B" },
+  { t: "eTIMS: 2 supplier gaps", c: "#E0A63B" },
+  { t: "VAT filed on time", c: "#45C1AD" },
+];
+
 /**
  * Hero composition: an arched "window" onto business progress, a ledger sheet
  * and ascending planes. Purely geometric; illustrative figures only.
  */
 export function HeroArt() {
   const rows = Array.from({ length: 7 });
+  const ref = useRef<SVGSVGElement>(null);
+  const [live, setLive] = useState(false);
+  const [i, setI] = useState(0);
+
+  // Only animate while on screen, the tab is visible and motion is allowed.
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    let onScreen = false;
+    const sync = () => setLive(onScreen && !document.hidden);
+    const io = new IntersectionObserver(([e]) => { onScreen = e.isIntersecting; sync(); });
+    io.observe(el);
+    document.addEventListener("visibilitychange", sync);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", sync); };
+  }, []);
+  useEffect(() => {
+    if (!live) return;
+    const id = window.setInterval(() => setI((n) => (n + 1) % SIGNALS.length), 3800);
+    return () => window.clearInterval(id);
+  }, [live]);
+  const sig = SIGNALS[i];
+
   return (
     <svg
-      className="hero-art"
+      ref={ref}
+      className={`hero-art${live ? " is-live" : ""}`}
       viewBox="0 0 560 640"
       role="img"
       aria-label="Illustration: an arched window with a rising teal line chart, a ledger sheet showing reconciled entries and three ascending bars"
@@ -53,10 +87,11 @@ export function HeroArt() {
             <circle cx={x} cy={y} r="5.5" fill="#FBFAF7" stroke="#45C1AD" strokeWidth="3" />
           </g>
         ))}
+        <circle className="ha-pulse" cx="450" cy="190" r="11" fill="none" stroke="#45C1AD" strokeWidth="2" />
         <g className="ha-fade" style={{ ["--d" as string]: "2.1s" }}>
           <rect x="262" y="150" width="172" height="34" rx="17" fill="#FBFAF7" />
-          <circle cx="280" cy="167" r="5" fill="#45C1AD" />
-          <text x="292" y="171.5" fontSize="12" fontWeight="600" fill="#092B46">Cash position: clear</text>
+          <circle cx="280" cy="167" r="5" fill={sig.c} style={{ transition: "fill .4s" }} />
+          <text key={i} className="ha-sig" x="292" y="171.5" fontSize="12" fontWeight="600" fill="#092B46">{sig.t}</text>
         </g>
       </g>
 
@@ -74,7 +109,7 @@ export function HeroArt() {
                 <line x1="30" x2="260" y1={y + 8} y2={y + 8} stroke="#092B46" strokeOpacity=".12" strokeDasharray="1 3" />
                 <rect x="30" y={y - 4} width={[70, 54, 86, 62, 76, 48, 66][i]} height="6" rx="3" fill="#092B46" fillOpacity=".55" />
                 <rect x={200 - (i % 3) * 8} y={y - 4} width={44 + (i % 3) * 8} height="6" rx="3" fill="#092B46" fillOpacity=".3" />
-                {i % 2 === 0 && <path d={`M${252} ${y - 2} l3 3 l6 -7`} fill="none" stroke="#0E7C6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+                {i % 2 === 0 && <path className="ha-draw" pathLength={1} style={{ ["--d" as string]: `${1.3 + i * 0.22}s` }} d={`M${252} ${y - 2} l3 3 l6 -7`} fill="none" stroke="#0E7C6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
               </g>
             );
           })}

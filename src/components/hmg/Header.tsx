@@ -4,10 +4,16 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { CONSULT_HREF, NAV } from "@/lib/hmg/site";
 import { Logo } from "./Logo";
+import { SECTION_IDS, SECTION_TO_NAV, useActiveSection } from "./useActiveSection";
+import { usePathname } from "next/navigation";
 
 export function Header() {
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const onHome = usePathname() === "/hmg";
+  const section = useActiveSection(SECTION_IDS);
+  const current = onHome ? (section ? SECTION_TO_NAV[section] : "home") : null;
+  const navKey = (label: string) => label.toLowerCase();
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 12);
@@ -39,7 +45,7 @@ export function Header() {
         </Link>
         <nav className="hdr__nav" aria-label="Primary">
           {NAV.map((n) => (
-            <Link key={n.label} href={n.href} className="hdr__link">
+            <Link key={n.label} href={n.href} className="hdr__link" aria-current={current === navKey(n.label) ? "true" : undefined}>
               {n.label}
             </Link>
           ))}
@@ -65,7 +71,7 @@ export function Header() {
       <div id="mobile-menu" className="mnav" aria-hidden={!open} inert={!open}>
         <nav className="mnav__inner" aria-label="Mobile">
           {NAV.map((n, i) => (
-            <Link key={n.label} href={n.href} className="mnav__link" style={{ ["--i" as string]: i }} onClick={() => setOpen(false)}>
+            <Link key={n.label} href={n.href} className="mnav__link" aria-current={current === navKey(n.label) ? "true" : undefined} style={{ ["--i" as string]: i }} onClick={() => setOpen(false)}>
               <span className="mnav__n">0{i + 1}</span>
               {n.label}
             </Link>

@@ -9,6 +9,8 @@ import { useEffect } from "react";
  *   [data-count]        counts up (data-from → data-to) when visible
  *   [data-scroll-path]  sets --p (0..1) and toggles .is-active on [data-step]
  *   [data-magnetic]     nudges toward the pointer on fine-pointer devices
+ *   [data-loop]         gets .is-live only while on screen, so looping CSS animations pause off-screen
+ *   --sp                page scroll progress (0..1) for the header hairline
  * With prefers-reduced-motion, everything resolves to its final state.
  */
 export function Motion() {
@@ -34,6 +36,30 @@ export function Motion() {
       );
       reveals.forEach((el) => io.observe(el));
       cleanups.push(() => io.disconnect());
+    }
+
+    // --- looping animations: live only while visible ---
+    const loops = document.querySelectorAll<HTMLElement>("[data-loop]");
+    if (!reduced && "IntersectionObserver" in window) {
+      const lio = new IntersectionObserver((entries) => {
+        for (const e of entries) e.target.classList.toggle("is-live", e.isIntersecting);
+      });
+      loops.forEach((el) => lio.observe(el));
+      cleanups.push(() => lio.disconnect());
+    }
+
+    // --- scroll progress hairline ---
+    {
+      let raf = 0;
+      const set = () => {
+        raf = 0;
+        const max = document.documentElement.scrollHeight - window.innerHeight;
+        document.documentElement.style.setProperty("--sp", max > 0 ? Math.min(1, window.scrollY / max).toFixed(4) : "0");
+      };
+      const on = () => { if (!raf) raf = requestAnimationFrame(set); };
+      set();
+      window.addEventListener("scroll", on, { passive: true });
+      cleanups.push(() => { window.removeEventListener("scroll", on); if (raf) cancelAnimationFrame(raf); });
     }
 
     // --- counters ---

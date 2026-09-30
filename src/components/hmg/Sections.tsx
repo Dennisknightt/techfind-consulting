@@ -137,7 +137,8 @@ export function Journey() {
           <Eyebrow>Getting started</Eyebrow>
           <Lines id="journey-h" lines={["From first message", "to a clear conversation."]} />
         </div>
-        <ol className="flow" data-reveal>
+        <ol className="flow" data-reveal data-loop>
+          <li className="flow__rail" aria-hidden="true"><i /></li>
           {JOURNEY.map((j, i) => (
             <li key={j.title} className="flow__step" style={{ ["--i" as string]: i }}>
               <span className="flow__dot" aria-hidden="true">{i + 1}</span>

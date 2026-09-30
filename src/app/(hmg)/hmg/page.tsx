@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { DecisionInsights } from "@/components/hmg/DecisionInsights";
+import { InsightLab } from "@/components/hmg/InsightLab";
 import { InsightsSection } from "@/components/hmg/InsightsSection";
 import { Services } from "@/components/hmg/Services";
 import { Approach, FinalCta, Hero, Journey, Trust, Why } from "@/components/hmg/Sections";
@@ -55,7 +55,7 @@ export default function HmgHome() {
       <Hero />
       <Trust />
       <Services />
-      <DecisionInsights />
+      <InsightLab />
       <Approach />
       <Why />
       <InsightsSection />

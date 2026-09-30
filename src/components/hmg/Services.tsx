@@ -48,8 +48,8 @@ export function Services() {
                   <div className="svc__more" id={`svc-${s.id}`} role="region" aria-label={`${s.title} details`}>
                     <div>
                       <ul className="svc__list">
-                        {s.includes.map((x) => (
-                          <li key={x}>{x}</li>
+                        {s.includes.map((x, k) => (
+                          <li key={x} style={{ ["--k" as string]: k }}>{x}</li>
                         ))}
                       </ul>
                       <Link href={CONSULT_HREF} className="svc__link">

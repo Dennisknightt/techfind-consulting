@@ -14,6 +14,7 @@ export function ContactForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Errors>({});
   const [serverError, setServerError] = useState("");
+  const [ok, setOk] = useState<Record<string, boolean>>({});
 
   const id = (f: string) => `${uid}-${f}`;
 
@@ -46,6 +47,8 @@ export function ContactForm() {
     const errs = validate(data);
     setErrors(errs);
     if (Object.keys(errs).length) {
+      const f = formRef.current;
+      if (f) { f.classList.remove("form--shake"); void f.offsetWidth; f.classList.add("form--shake"); }
       setStatus("idle");
       const first = Object.keys(errs)[0];
       formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
@@ -76,6 +79,8 @@ export function ContactForm() {
     if (!name || name === "website") return;
     const errs = validate(read());
     setErrors((prev) => ({ ...prev, [name]: errs[name] }));
+    const val = read()[name];
+    setOk((o) => ({ ...o, [name]: !errs[name] && !!val }));
   }
 
   if (status === "success") {
@@ -113,17 +118,17 @@ export function ContactForm() {
       <p className="form__lead">Tell us what you need. A consultant will come back to you personally.</p>
 
       <div className="form__grid">
-        <div className="form__f">
+        <div className={`form__f${ok.name ? " form__f--ok" : ""}`}>
           <label htmlFor={id("name")}>Full name</label>
           <input type="text" autoComplete="name" {...field("name")} />
           {err("name")}
         </div>
-        <div className="form__f">
+        <div className={`form__f${ok.email ? " form__f--ok" : ""}`}>
           <label htmlFor={id("email")}>Email</label>
           <input type="email" autoComplete="email" inputMode="email" {...field("email")} />
           {err("email")}
         </div>
-        <div className="form__f">
+        <div className={`form__f${ok.phone ? " form__f--ok" : ""}`}>
           <label htmlFor={id("phone")}>Phone / WhatsApp</label>
           <input type="tel" autoComplete="tel" inputMode="tel" placeholder="+254 7XX XXX XXX" {...field("phone")} />
           {err("phone")}
@@ -134,7 +139,7 @@ export function ContactForm() {
           </label>
           <input type="text" autoComplete="organization" {...field("company")} />
         </div>
-        <div className="form__f form__f--wide">
+        <div className={`form__f form__f--wide${ok.service ? " form__f--ok" : ""}`}>
           <label htmlFor={id("service")}>What do you need help with?</label>
           <select defaultValue="" {...field("service")}>
             <option value="" disabled>
@@ -148,7 +153,7 @@ export function ContactForm() {
           </select>
           {err("service")}
         </div>
-        <div className="form__f form__f--wide">
+        <div className={`form__f form__f--wide${ok.message ? " form__f--ok" : ""}`}>
           <label htmlFor={id("message")}>Your situation</label>
           <textarea rows={4} placeholder="e.g. We are preparing for our first audit and need our books cleaned up." {...field("message")} />
           {err("message")}

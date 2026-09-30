@@ -10,3 +10,9 @@ A standalone corporate site for HMG Group Africa living in its own route group s
 - `NEXT_PUBLIC_HMG_URL` sets the canonical origin used in metadata, sitemap and JSON-LD.
 - `src/app/robots.ts` is deployment-wide: it blocks `/app`, `/admin`, `/api`, `/login`, `/pay` and points to the HMG sitemap.
 - Decision-insight figures are fictional and labelled "Illustrative"; LinkedIn/Facebook URLs in `site.ts` should be confirmed.
+
+## Motion and interaction layer
+- `InsightLab.tsx`: six interactive illustrative widgets (compliance status, cash-flow trend with scenario + week slider, obligations timeline, tax-readiness checklist, health overview, concern-driven attention panel). Everything works without animation; values snap under reduced motion.
+- `Motion.tsx`: reveals, counters, scroll-linked process path, magnetic buttons, scroll-progress hairline, and `[data-loop]` which pauses looping animations when off-screen. `HeroArt.tsx` cycles its live signal chip only while on screen and the tab is visible.
+- `FloatActions.tsx`: WhatsApp button (desktop) / contextual action bar (phones); hides over the contact section and the open menu.
+- `useActiveSection.ts`: drives the active nav item. `(hmg)/template.tsx`: page-enter transition.

@@ -4,6 +4,7 @@ import "./hmg.css";
 import { Header } from "@/components/hmg/Header";
 import { Footer } from "@/components/hmg/Footer";
 import { Motion } from "@/components/hmg/Motion";
+import { FloatActions } from "@/components/hmg/FloatActions";
 import { SITE } from "@/lib/hmg/site";
 
 const serif = Fraunces({ subsets: ["latin"], variable: "--font-serif", display: "swap", axes: ["opsz"] });
@@ -40,6 +41,7 @@ export default function HmgRootLayout({ children }: { children: React.ReactNode 
         <Header />
         <main id="main">{children}</main>
         <Footer />
+        <FloatActions />
         <Motion />
       </body>
     </html>
