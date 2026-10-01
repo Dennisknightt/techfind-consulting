@@ -5,6 +5,7 @@ import { ClarityDemo } from "@/components/hmg/ClarityDemo";
 import { HeroArt } from "@/components/hmg/HeroArt";
 import { WhatsAppIcon } from "@/components/hmg/Logo";
 import { OutcomeArt } from "@/components/hmg/OutcomeArt";
+import { TypeInk } from "@/components/hmg/TypeInk";
 import { WhyArt } from "@/components/hmg/WhyArt";
 import { TrustFacts } from "@/components/hmg/Trust";
 import { InsightCard, JsonLd, orgLd, SectionHead, ServiceCard } from "@/components/hmg/ui";
@@ -31,7 +32,8 @@ export default function HmgHome() {
           <div className="hero__copy enter">
             <p className="eyebrow">Tax · Accounting · Audit · Advisory</p>
             <h1 id="hero-h" className="hero__h">
-              Financial clarity. <span className="hero__em">Confident growth.</span>
+              <span className="sr-only">Financial clarity. Confident growth.</span>
+              <span aria-hidden="true">Financial clarity. <span className="hero__em"><TypeInk text="Confident growth." /></span></span>
             </h1>
             <p className="hero__p">
               Stay compliant, understand your numbers and make better financial decisions with one trusted tax, accounting, audit and advisory team.

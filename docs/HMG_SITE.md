@@ -22,6 +22,12 @@ A multi-page corporate site in its own route group (`src/app/(hmg)`), separate f
 ## Motion rules
 Content never depends on JavaScript or IntersectionObserver to be visible. The only entrance is one CSS group animation (320 ms, never below 35% opacity), enabled by a `js` class set inline in `<head>`. Without JS, or with reduced motion, everything renders static. There is no route-level fade. Looping decoration pauses off-screen.
 
+## Ink motion language
+- Hero: "Confident growth." (`TypeInk.tsx`) is typed behind a pen caret while ink rises into outlined letters; an ink underline follows and the illustration's growth line draws in step. Screen readers get one sr-only copy of the headline.
+- Inner page titles ink in on arrival; section headings ink in, eyebrow rules draw and cards rise as they scroll into view (CSS scroll-driven animations — no JS, tied to scroll position, never below 35% opacity).
+- Primary buttons fill with ink on hover.
+- All of it is disabled without JS (`.js` class), under prefers-reduced-motion, and in browsers without scroll-timeline support.
+
 ## Enquiry form — destinations
 `POST /api/hmg/enquiry` validates (zod; Kenyan and international phone numbers), rate-limits per IP, and checks a honeypot and minimum fill time. It delivers to every configured destination and succeeds if at least one accepts:
 - `HMG_ENQUIRY_WEBHOOK` — JSON POST to HMG's CRM inbound webhook or Zapier/Make/n8n

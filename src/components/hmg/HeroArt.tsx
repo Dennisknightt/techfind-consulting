@@ -56,7 +56,7 @@ export function HeroArt() {
       </defs>
 
       {/* sun disc */}
-      <circle className="f-mint ha" style={{ ["--d" as string]: "0.35s" }} cx="448" cy="112" r="74" />
+      <circle className="f-mint ha ha-sun" cx="448" cy="112" r="74" />
       <circle className="s-teal ha ha-ring" style={{ ["--d" as string]: "0.6s" }} cx="448" cy="112" r="96" fill="none" strokeWidth="1" strokeDasharray="2 7" />
 
       {/* arch */}
@@ -67,7 +67,7 @@ export function HeroArt() {
         ))}
         <path className="ha-fade" style={{ ["--d" as string]: "1.5s" }} d="M70 500 L150 452 L225 470 L300 360 L375 300 L450 190 L490 150 V640 H70Z" fill="url(#ha-area)" />
         <path
-          className="ha-draw"
+          className="ha-growth"
           style={{ ["--d" as string]: "0.9s" }}
           pathLength={1}
           d="M70 500 L150 452 L225 470 L300 360 L375 300 L450 190 L490 150"
