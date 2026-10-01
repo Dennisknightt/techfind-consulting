@@ -14,7 +14,7 @@ export function Logo({ light = false }: { light?: boolean }) {
     <span className={`logo${light ? " logo--light" : ""}`}>
       <LogoMark />
       <span className="logo__text">
-        <span className="logo__name">HMG</span>
+        <span className="logo__name">HMG</span>{" "}
         <span className="logo__sub">Group Africa</span>
       </span>
     </span>

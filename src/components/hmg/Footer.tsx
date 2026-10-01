@@ -8,7 +8,7 @@ export function Footer() {
     <footer className="ftr" id="site-footer">
       <div className="wrap ftr__grid">
         <div className="ftr__brand">
-          <Link href={ROUTES.home} aria-label="HMG Group Africa — home">
+          <Link href={ROUTES.home}>
             <Logo light />
           </Link>
           <p className="ftr__pos">{SITE.positioning}</p>

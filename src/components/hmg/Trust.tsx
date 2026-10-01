@@ -18,7 +18,7 @@ export function TrustFacts({ heading = "The facts behind HMG" }: { heading?: str
         <h2 id="trust-h" className="trust__h">{heading}</h2>
         <dl className="trust__grid">
           {facts.map((f) => (
-            <div key={f.k} className="trust__item"><dt>{f.k}</dt><dd>{f.v}</dd>{f.d && <p>{f.d}</p>}</div>
+            <div key={f.k} className="trust__item"><dt>{f.k}</dt><dd>{f.v}</dd>{f.d && <dd className="trust__note">{f.d}</dd>}</div>
           ))}
         </dl>
         <p className="trust__who">Working with individuals, startups, SMEs, corporations and NGOs.</p>

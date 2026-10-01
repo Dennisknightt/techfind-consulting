@@ -91,7 +91,7 @@ export function Header() {
   return (
     <header className={`hdr${scrolled ? " hdr--scrolled" : ""}${open ? " hdr--open" : ""}`}>
       <div className="wrap hdr__bar">
-        <Link href={ROUTES.home} className="hdr__logo" aria-label="HMG Group Africa — home">
+        <Link href={ROUTES.home} className="hdr__logo">
           <Logo />
         </Link>
 
