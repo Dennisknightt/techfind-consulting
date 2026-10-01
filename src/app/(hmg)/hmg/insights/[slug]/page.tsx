@@ -82,7 +82,7 @@ export default async function ArticlePage({ params }: Props) {
           <div className="post__cta">
             <h2>Talk this through with HMG</h2>
             <p>Bring your own numbers. We will show you what they mean and what to do next.</p>
-            <Link href={CONSULT_HREF} className="btn btn--primary btn--block">Book a Consultation</Link>
+            <Link href={CONSULT_HREF} className="btn btn--primary btn--block">Request a Consultation</Link>
             <a href={whatsappLink(`Hello HMG, I read "${a.title}" and would like to talk.`)} className="btn btn--ghost-light btn--block" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp HMG</a>
             {svc && <Link href={ROUTES.service(svc.slug)} className="post__svc">Related service: {svc.title} →</Link>}
           </div>

@@ -31,7 +31,7 @@ export function ServiceSelector() {
             <p className="sel__d">{s.lead}</p>
             <p className="sel__o"><span>Outcome</span>{s.outcome}</p>
             <div className="sel__actions">
-              <Link href={CONSULT_HREF} className="btn btn--primary">Book a Consultation</Link>
+              <Link href={CONSULT_HREF} className="btn btn--primary">Request a Consultation</Link>
               <Link href={ROUTES.service(s.slug)} className="btn btn--ghost">About this service</Link>
             </div>
             <a className="sel__wa" href={whatsappLink(`Hello HMG, I'd like help with ${s.title}.`)} target="_blank" rel="noopener noreferrer">Or ask on WhatsApp →</a>
@@ -39,7 +39,7 @@ export function ServiceSelector() {
         ) : (
           <div className="sel__empty">
             <p>Choose an option to see the service that fits best.</p>
-            <p className="sel__empty-s">Not sure? Book a consultation and we will work it out with you.</p>
+            <p className="sel__empty-s">Not sure? Request a consultation and we will work it out with you.</p>
           </div>
         )}
       </div>

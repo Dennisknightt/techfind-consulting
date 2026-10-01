@@ -6,7 +6,7 @@ import { JsonLd, orgLd, PageHero } from "@/components/hmg/ui";
 import { ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
 
 export const metadata: Metadata = pageMeta({
-  title: "Contact HMG — Book a Consultation in Nairobi",
+  title: "Contact HMG — Request a Consultation in Nairobi",
   description: "Call +254 703 126 677, WhatsApp or email HMG Group Africa, or request a callback. Akai Plaza, Garden Estate Road, Nairobi. Monday–Friday, 8:00 AM–5:00 PM.",
   path: ROUTES.contact,
 });

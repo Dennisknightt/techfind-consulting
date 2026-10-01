@@ -152,8 +152,8 @@ export function Header() {
           </ul>
         </nav>
 
-        <Link href={CONSULT_HREF} className="btn btn--primary hdr__cta" data-magnetic>
-          Book a Consultation
+        <Link href={CONSULT_HREF} className="btn btn--primary hdr__cta">
+          Request a Consultation
         </Link>
         <button
           type="button"
@@ -206,7 +206,7 @@ export function Header() {
             )}
           </ul>
           <div className="mnav__actions" style={{ ["--i" as string]: NAV.length }}>
-            <Link href={CONSULT_HREF} className="btn btn--primary btn--block">Book a Consultation</Link>
+            <Link href={CONSULT_HREF} className="btn btn--primary btn--block">Request a Consultation</Link>
             <a href={whatsappLink()} className="btn btn--ghost-light btn--block" target="_blank" rel="noopener noreferrer">
               <WhatsAppIcon /> WhatsApp HMG
             </a>

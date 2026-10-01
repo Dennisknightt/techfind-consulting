@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState } from "react";
 import { contactFormSchema, ENQUIRY_SERVICES, enquirySchema } from "@/lib/hmg/enquiry";
 import { ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
+import { track } from "./Analytics";
 import { WhatsAppIcon } from "./Logo";
 
 type Status = "idle" | "loading" | "success" | "error";
@@ -101,6 +102,7 @@ export function ContactForm({ variant = "full", defaultService = "" }: { variant
         setStatus("error");
         return;
       }
+      track("form_submit_success");
       setStatus("success");
     } catch {
       setErrCode("network");
@@ -108,17 +110,10 @@ export function ContactForm({ variant = "full", defaultService = "" }: { variant
     }
   }
 
+  // WhatsApp fallback: mentions the service only — personal details never go into a URL.
   const waFromForm = () => {
-    const d = snapshot;
-    const parts = [
-      "Hello HMG, I'd like a callback.",
-      d.name && `Name: ${d.name}`,
-      d.phone && `Phone: ${d.phone}`,
-      d.company && `Company: ${d.company}`,
-      d.service && `Service: ${d.service}`,
-      d.message && `Details: ${d.message}`,
-    ].filter(Boolean);
-    return whatsappLink(parts.join("\n"));
+    const svc = typeof snapshot.service === "string" && snapshot.service ? ` about ${snapshot.service}` : "";
+    return whatsappLink(`Hello HMG, I'd like a callback${svc}.`);
   };
 
   if (status === "success") {
@@ -159,7 +154,7 @@ export function ContactForm({ variant = "full", defaultService = "" }: { variant
         </div>
         <div className={fcls("phone")}>
           <label htmlFor={id("phone")}>Phone or WhatsApp</label>
-          <input type="tel" autoComplete="tel" inputMode="tel" placeholder="07XX XXX XXX" {...field("phone")} />
+          <input type="tel" autoComplete="tel" inputMode="tel" placeholder="0712 345 678 or +254…" {...field("phone")} />
           {err("phone")}
         </div>
         {full && (
@@ -207,7 +202,7 @@ export function ContactForm({ variant = "full", defaultService = "" }: { variant
         <div className="form__alert" role="alert">
           {errCode === "not_configured" ? (
             <>
-              <strong>Online requests are not connected yet.</strong> Your details have not been sent. Please reach us directly — it only takes a moment:
+              <strong>Your request could not be sent online right now.</strong> Nothing was submitted, and your answers are still in the form. Please reach us directly:
             </>
           ) : errCode === "invalid" ? (
             <><strong>Please check the highlighted fields.</strong></>
@@ -218,7 +213,7 @@ export function ContactForm({ variant = "full", defaultService = "" }: { variant
           )}
           {errCode !== "invalid" && (
             <div className="form__alt">
-              <a className="btn btn--sm btn--wa" href={waFromForm()} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={16} /> Send these details on WhatsApp</a>
+              <a className="btn btn--sm btn--wa" href={waFromForm()} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={16} /> Message HMG on WhatsApp</a>
               <a className="btn btn--sm btn--ghost" href={SITE.phoneHref}>Call {SITE.phone}</a>
             </div>
           )}

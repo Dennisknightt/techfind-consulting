@@ -1,4 +1,4 @@
-import { PENDING } from "./credentials";
+import { AUTHORISATIONS } from "./credentials";
 
 export type ServiceMotif = "tax" | "accounting" | "audit" | "advisory" | "payroll" | "health";
 
@@ -17,15 +17,26 @@ export interface Service {
   handles: { t: string; d: string }[];
   outcomes: string[];
   faqs: { q: string; a: string }[];
+  /** Short checklist of records to have ready. */
+  prepare: string[];
   related: string[];
   selector: string;
   seoTitle: string;
   seoDescription: string;
 }
 
-const statutoryAudit = PENDING.signsStatutoryAudits
+const AUDIT = AUTHORISATIONS.licensedAuditPractice;
+const AGENT = AUTHORISATIONS.licensedTaxAgent;
+
+const statutoryAudit = AUDIT
   ? { t: "Statutory audits", d: "Annual statutory audits carried out in line with applicable auditing standards." }
-  : { t: "Statutory audit support", d: "Your records, schedules and reconciliations prepared for your statutory auditor, with HMG as your point of contact." };
+  : { t: "Statutory audit support", d: "Records, schedules and reconciliations prepared for your appointed statutory auditor, with HMG as your point of contact." };
+const assurance = AUDIT
+  ? { t: "Assurance engagements", d: "Agreed-upon procedures and review engagements scoped to a specific need." }
+  : { t: "Management assurance reviews", d: "Agreed checks on records and controls, reported to management or the board." };
+const disputes = AGENT
+  ? { t: "Tax disputes", d: "Objections and representation before KRA, within the scope of our tax agent licence." }
+  : { t: "Tax dispute support", d: "Records and explanations organised for a disputed assessment, working with your appointed tax agent or advocate where formal representation is required." };
 
 export const SERVICES: Service[] = [
   {
@@ -45,22 +56,23 @@ export const SERVICES: Service[] = [
     ],
     handles: [
       { t: "Tax registrations", d: "PIN, VAT, PAYE and other obligations registered correctly on iTax." },
-      { t: "Return filing", d: "Income tax, VAT, PAYE, withholding and instalment tax prepared and filed on time." },
+      { t: "Return filing", d: "Income tax, VAT, PAYE, withholding and instalment tax prepared and filed to agreed deadlines." },
       { t: "KRA notices", d: "Notices and assessments reviewed, with clear, documented responses prepared." },
       { t: "Tax planning", d: "Timing and structure reviewed before year-end, within the law." },
-      { t: "Compliance support", d: "A compliance calendar and reminders so no statutory date is missed." },
-      { t: "Tax disputes", d: "Support with objections and supporting evidence where a dispute arises." },
+      { t: "Compliance support", d: "A compliance calendar with reminders ahead of each statutory date." },
+      disputes,
     ],
-    outcomes: ["Every return filed on time", "Clear, documented responses to KRA", "Tax planned rather than discovered", "A current Tax Compliance Certificate"],
+    outcomes: ["Returns prepared and filed to agreed deadlines once records are received", "Clear, documented responses to KRA correspondence", "Tax considered before year-end, not after", "Support keeping your Tax Compliance Certificate current"],
     faqs: [
-      { q: "Can you help if we have already received a KRA notice?", a: "Yes. Share the notice with us as early as possible. We review what KRA is asking for, gather the supporting records and prepare a response. Notices carry deadlines, so it is best not to wait." },
+      { q: "Can you help if we have already received a KRA notice?", a: "Yes. Share the notice with us as early as possible. We review what KRA is asking for, help gather the supporting records and prepare a response for your review. Notices carry deadlines, so it is best not to wait." },
       { q: "Do you file returns on our behalf?", a: "We can prepare and file returns on iTax for you, or prepare them for your team to review and submit — whichever suits how you work." },
       { q: "Is tax planning the same as avoiding tax?", a: "No. Tax planning means timing and structuring legitimate business decisions so you pay the correct amount of tax, and no more. It stays within the law." },
     ],
+    prepare: ["KRA PIN and iTax access details", "Recent returns and payment receipts", "Any KRA notices or letters received", "Sales and purchase records for the period"],
     related: ["kra-compliance-calendar", "etims-invoicing-what-to-check", "tax-planning-before-year-end"],
     selector: "I’m dealing with a KRA issue",
     seoTitle: "Tax and KRA Advisory in Nairobi",
-    seoDescription: "Tax registrations, iTax return filing, KRA notices, tax planning and dispute support for Kenyan businesses. Stay compliant with HMG Group Africa in Nairobi.",
+    seoDescription: "Tax registrations, iTax return filing, responses to KRA notices, tax planning and dispute support for Kenyan businesses. Stay compliant with HMG Group Africa in Nairobi.",
   },
   {
     slug: "accounting-bookkeeping",
@@ -78,19 +90,20 @@ export const SERVICES: Service[] = [
       "Reports that show figures but not what they mean",
     ],
     handles: [
-      { t: "Monthly bookkeeping", d: "Sales, purchases and expenses recorded every month, not at year-end." },
+      { t: "Monthly bookkeeping", d: "Sales, purchases and expenses recorded monthly, not left to year-end." },
       { t: "Reconciliations", d: "Bank, M-Pesa, customer and supplier balances matched to the books." },
       { t: "Management accounts", d: "A monthly profit, cash and balance-sheet view in plain language." },
       { t: "Financial reporting", d: "Year-end financial statements prepared for tax, lenders and audit." },
       { t: "Record organisation", d: "A simple system so every invoice and receipt has a place." },
       { t: "Decision-ready numbers", d: "A short commentary on what changed and what to look at next." },
     ],
-    outcomes: ["Books current every month", "Accounts that reconcile", "Records organised and easy to find", "A monthly view you can act on"],
+    outcomes: ["Books kept up to date on an agreed monthly cycle", "Bank, M-Pesa and ledger balances reconciled", "Records organised and easy to find", "A monthly view you can act on"],
     faqs: [
       { q: "Can you catch up on books that are months behind?", a: "Yes. We start with a catch-up plan that brings records up to date in order of priority, then move you to a regular monthly routine." },
       { q: "Which accounting software do you work with?", a: "We work with the accounting systems commonly used by Kenyan businesses, and can help you choose and set one up if you do not have one yet." },
       { q: "How often will we receive reports?", a: "Most clients receive management accounts monthly with a short commentary. The frequency can be agreed to fit your business." },
     ],
+    prepare: ["Bank and M-Pesa statements", "Sales invoices and receipts", "Supplier bills and expense receipts", "Access to your accounting system, if you use one"],
     related: ["cash-flow-thirteen-week-view", "financial-controls-for-growing-businesses", "preparing-for-an-audit"],
     selector: "My books are behind",
     seoTitle: "Accounting and Bookkeeping Services in Nairobi",
@@ -104,7 +117,7 @@ export const SERVICES: Service[] = [
     problem: "An audit or lender request approaching, with records not ready for scrutiny.",
     outcome: "Face audits prepared and reduce financial risk.",
     whoFor: "Companies preparing for a statutory audit, and organisations that need comfort over their controls and records for boards, lenders or donors.",
-    lead: "Audit preparation, control reviews and assurance work that make your records credible to auditors, lenders, boards and donors.",
+    lead: "Audit preparation and control reviews that make your records credible to auditors, lenders, boards and donors.",
     problems: [
       "An audit approaching with schedules and reconciliations incomplete",
       "Lenders, investors or donors asking for assurance you cannot yet provide",
@@ -115,22 +128,23 @@ export const SERVICES: Service[] = [
       { t: "Audit preparation", d: "A clear audit timetable and a checklist of everything auditors will ask for." },
       statutoryAudit,
       { t: "Internal control reviews", d: "How money is approved, paid and recorded — reviewed for gaps and risks." },
-      { t: "Assurance engagements", d: "Agreed-upon procedures and reviews scoped to a specific need." },
+      assurance,
       { t: "Supporting schedules", d: "Fixed assets, debtors, creditors and accruals prepared and reconciled." },
       { t: "Risk identification", d: "Financial and compliance risks ranked, with practical fixes." },
     ],
-    outcomes: ["A calmer, shorter audit", "Fewer adjustments and findings", "Controls that do not rely on one person", "Records lenders and boards can rely on"],
+    outcomes: ["Better-prepared audits with fewer surprises", "Schedules ready when auditors ask for them", "Control gaps identified with practical fixes", "Records that lenders and boards can review with confidence"],
     faqs: [
       { q: "How early should we start preparing for an audit?", a: "Preparation works best throughout the year through monthly reconciliations. If your year-end is close, start well before audit fieldwork is scheduled so schedules can be completed calmly." },
       { q: "What is an internal control review?", a: "A structured look at how money moves through your business — who approves, who pays, who records — to find gaps that could lead to errors or losses, with practical recommendations." },
-      PENDING.signsStatutoryAudits
+      AUDIT
         ? { q: "Do you carry out statutory audits?", a: "Yes. Tell us about your company and year-end and we will confirm the audit timetable and scope." }
-        : { q: "Can you help with our statutory audit?", a: "Yes. Tell us about your audit requirement and year-end. We will confirm the scope of support we provide and work alongside your appointed auditor where needed." },
+        : { q: "Can you help with our statutory audit?", a: "Yes — we prepare your records, schedules and reconciliations and work alongside your appointed statutory auditor. Tell us your year-end and we will confirm the scope." },
     ],
+    prepare: ["Last audited financial statements", "Trial balance and general ledger", "Bank reconciliations and statements", "Fixed-asset, debtor and creditor listings"],
     related: ["preparing-for-an-audit", "financial-controls-for-growing-businesses", "kra-compliance-calendar"],
     selector: "I need an audit",
     seoTitle: "Audit and Assurance Support in Nairobi",
-    seoDescription: "Audit preparation, internal control reviews, assurance engagements and supporting schedules for Kenyan companies and NGOs. Face your audit prepared with HMG Group Africa.",
+    seoDescription: "Audit preparation, statutory audit support, internal control reviews and supporting schedules for Kenyan companies and NGOs. Face your audit prepared with HMG Group Africa.",
   },
   {
     slug: "financial-advisory",
@@ -155,12 +169,13 @@ export const SERVICES: Service[] = [
       { t: "Management reporting", d: "A concise monthly pack focused on the few numbers that matter." },
       { t: "Growth decisions", d: "Hiring, pricing, expansion and financing choices tested before you commit." },
     ],
-    outcomes: ["Cash shortfalls seen weeks ahead", "A budget the team actually uses", "Decisions tested before they are made", "Numbers ready for lenders and investors"],
+    outcomes: ["Earlier sight of likely cash shortfalls", "A budget the team can work with", "Key decisions tested against scenarios", "Forecasts prepared for lender and investor discussions"],
     faqs: [
       { q: "What is a 13-week cash-flow forecast?", a: "A week-by-week view of the cash you expect to receive and pay over the next quarter. It shows pressure points early, while there are still options." },
       { q: "Can you help us prepare for a loan or investment?", a: "Yes. We prepare forecasts, budgets and supporting schedules, and help you explain the numbers clearly to lenders or investors." },
       { q: "Is financial advisory only for large companies?", a: "No. Smaller businesses often benefit most, because a single cash squeeze has a bigger impact." },
     ],
+    prepare: ["Recent management accounts or bank statements", "Current budget, if any", "Known upcoming payments and receipts", "The decision or plan you are weighing up"],
     related: ["cash-flow-thirteen-week-view", "growth-planning-for-smes", "tax-planning-before-year-end"],
     selector: "I need better cash-flow visibility",
     seoTitle: "Financial Advisory, Budgeting and Cash-Flow Planning in Nairobi",
@@ -172,9 +187,9 @@ export const SERVICES: Service[] = [
     title: "Payroll Management",
     short: "Payroll",
     problem: "Payroll errors and late statutory remittances that take up management time.",
-    outcome: "Accurate pay, on time, with every deduction filed.",
+    outcome: "Accurate payroll with statutory deductions handled.",
     whoFor: "Employers of any size who want payroll and statutory deductions handled accurately every month.",
-    lead: "Monthly payroll, statutory deductions and reconciliations handled accurately, so your team is paid right and every remittance is on time.",
+    lead: "Monthly payroll, statutory deductions and reconciliations, prepared from the data you approve so your team is paid correctly and remittances are ready ahead of each deadline.",
     problems: [
       "Payroll calculated manually and prone to error",
       "Late or incorrect statutory remittances attracting penalties",
@@ -184,17 +199,18 @@ export const SERVICES: Service[] = [
     handles: [
       { t: "Payroll processing", d: "Monthly payroll run, payslips and payment schedules." },
       { t: "Statutory deductions", d: "PAYE, NSSF, SHIF and the Affordable Housing Levy calculated and prepared for remittance." },
-      { t: "Payroll reconciliation", d: "Every return reconciled to the payroll report each month." },
-      { t: "Compliance calendars", d: "Each statutory deadline tracked, with reminders before it falls due." },
+      { t: "Payroll reconciliation", d: "Statutory returns reconciled to the payroll report each month." },
+      { t: "Compliance calendars", d: "Statutory deadlines tracked, with reminders before they fall due." },
       { t: "Staff records", d: "Joiners, leavers and changes documented consistently." },
       { t: "Monthly reporting", d: "Payroll cost by team and month, with variances explained." },
     ],
-    outcomes: ["Staff paid accurately and on time", "Statutory remittances on schedule", "Clean, reconciled payroll records", "Payroll cost visible every month"],
+    outcomes: ["Payroll calculated accurately from the data you approve", "Statutory deductions prepared ahead of each deadline", "Reconciled payroll records", "Payroll cost visible every month"],
     faqs: [
       { q: "Which statutory deductions do you handle?", a: "We calculate and prepare remittances for PAYE and the statutory contributions that apply to your employees, such as NSSF, SHIF and the Affordable Housing Levy, in line with current rules." },
       { q: "Is our payroll data kept confidential?", a: "Yes. Payroll information is restricted to the consultants working on your account and handled in line with Kenya’s Data Protection Act, 2019." },
       { q: "Can you take over payroll mid-year?", a: "Yes. We review year-to-date records first so that cumulative figures and remittances carry over correctly." },
     ],
+    prepare: ["Employee list with salaries and allowances", "Recent payslips and payroll reports", "Statutory registration numbers (KRA, NSSF, SHIF)", "Joiners, leavers and changes this month"],
     related: ["payroll-compliance-checklist", "kra-compliance-calendar", "financial-controls-for-growing-businesses"],
     selector: "I need payroll support",
     seoTitle: "Payroll Management Services in Nairobi",
@@ -223,12 +239,13 @@ export const SERVICES: Service[] = [
       { t: "Prioritised corrective action", d: "A ranked fix list with owners and dates." },
       { t: "Compliance roadmap", d: "A calendar and routine to keep you compliant afterwards." },
     ],
-    outcomes: ["A clear view of your tax position", "Exposure quantified and ranked", "Gaps corrected in the right order", "A roadmap to stay compliant"],
+    outcomes: ["A clearer view of your tax position", "Likely exposure estimated and ranked", "A prioritised plan to address gaps", "A routine to help you stay compliant"],
     faqs: [
       { q: "How long does a tax health check take?", a: "It depends on the size of the business and the period reviewed. We agree the scope and timeline with you before starting." },
       { q: "Will a health check trigger a KRA audit?", a: "No. A health check is a private review for your business. It helps you find and fix issues on your own terms." },
       { q: "What do we receive at the end?", a: "A short report ranking what needs attention and the likely exposure, with a practical plan of owners and dates." },
     ],
+    prepare: ["Returns filed for the period under review", "iTax ledger or payment history", "Sales and supplier invoices, including eTIMS", "Any previous KRA correspondence"],
     related: ["etims-invoicing-what-to-check", "kra-compliance-calendar", "tax-planning-before-year-end"],
     selector: "I’m unsure of my compliance position",
     seoTitle: "Tax Health Checks and Compliance Reviews in Kenya",
@@ -239,7 +256,7 @@ export const SERVICES: Service[] = [
 export const getService = (slug: string) => SERVICES.find((s) => s.slug === slug);
 
 export const OUTCOMES = [
-  { id: "comply", title: "Stay compliant", body: "Every KRA and statutory date owned, prepared and filed on time — without last-minute scrambles." },
+  { id: "comply", title: "Stay compliant", body: "KRA and statutory dates tracked and prepared ahead of time, so filing is not a last-minute scramble." },
   { id: "understand", title: "Understand your finances", body: "Current, reconciled books and a monthly view in plain language, not just a stack of reports." },
   { id: "decide", title: "Make confident decisions", body: "Clear recommendations on cash, tax and growth, with the next step and who owns it." },
 ] as const;
@@ -247,16 +264,16 @@ export const OUTCOMES = [
 export const WHY = [
   { t: "Kenyan regulatory knowledge", d: "Daily work with KRA, iTax, eTIMS and Kenyan statutory requirements." },
   { t: "One integrated view", d: "Tax, accounting, audit and advisory seen together, so nothing falls between specialists." },
-  { t: "A personal consultant", d: "A named person who knows your business and answers your calls." },
+  { t: "A personal consultant", d: "A named consultant who gets to know your business." },
   { t: "Practical recommendations", d: "Advice framed as decisions you can act on this month." },
-  { t: "Clear next steps", d: "Every conversation ends with what happens next, who owns it and by when." },
+  { t: "Clear next steps", d: "Consultations end with agreed actions, owners and dates." },
 ] as const;
 
 export const PROCESS = [
   { n: "01", title: "Send an enquiry", body: "Tell us briefly what you need — by form, phone or WhatsApp." },
   { n: "02", title: "HMG reviews your needs", body: "We look at your situation and any urgent deadlines before we call." },
   { n: "03", title: "Speak with a consultant", body: "A focused conversation with an HMG consultant about your business." },
-  { n: "04", title: "Receive clear next steps", body: "What to do, who does it and by when — agreed before you leave the call." },
+  { n: "04", title: "Receive clear next steps", body: "What to do, who does it and by when, agreed with you." },
 ] as const;
 
 export type InsightKind = "kra" | "etims" | "planning" | "cashflow" | "payroll" | "controls" | "audit" | "growth";

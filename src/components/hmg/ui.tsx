@@ -53,20 +53,20 @@ export function PageHero({ eyebrow, title, lead, crumbs, children, art }: { eyeb
       <div className="wrap phero__grid">
         <div className="phero__copy">
           {crumbs && <Breadcrumbs items={crumbs} />}
-          <p className="eyebrow hero__in" style={{ ["--d" as string]: "0s" }}>{eyebrow}</p>
-          <h1 id="page-h" className="phero__h">
-            <span className="hero__mask"><span className="hero__line" style={{ ["--d" as string]: ".05s" }}>{title}</span></span>
-          </h1>
-          <p className="phero__lead hero__in" style={{ ["--d" as string]: ".2s" }}>{lead}</p>
-          {children && <div className="hero__in" style={{ ["--d" as string]: ".3s" }}>{children}</div>}
+          <div className="enter">
+            <p className="eyebrow">{eyebrow}</p>
+            <h1 id="page-h" className="phero__h">{title}</h1>
+            <p className="phero__lead">{lead}</p>
+            {children}
+          </div>
         </div>
-        {art && <div className="phero__art hero__in" style={{ ["--d" as string]: ".25s" }}>{art}</div>}
+        {art && <div className="phero__art enter">{art}</div>}
       </div>
     </section>
   );
 }
 
-export function CtaBand({ title = "Your next smart move starts with clarity.", lead = "Tell us what you are dealing with. An HMG consultant will call you back and agree the next step with you.", service }: { title?: string; lead?: string; service?: string }) {
+export function CtaBand({ title = "Your next smart move starts with clarity.", lead = "Tell us what you are dealing with. An HMG consultant will get back to you during working hours to agree the next step.", service }: { title?: string; lead?: string; service?: string }) {
   const msg = service ? `Hello HMG, I would like to discuss ${service}.` : undefined;
   return (
     <section className="ctab" aria-labelledby="ctab-h">
@@ -76,24 +76,26 @@ export function CtaBand({ title = "Your next smart move starts with clarity.", l
           <p className="ctab__lead">{lead}</p>
         </div>
         <div className="ctab__actions">
-          <Link href={CONSULT_HREF} className="btn btn--primary" data-magnetic>Book a Consultation</Link>
-          <a href={whatsappLink(msg)} className="btn btn--ghost-light" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> Chat on WhatsApp</a>
-          <a href={SITE.phoneHref} className="btn btn--ghost-light">Call {SITE.phone}</a>
+          <Link href={CONSULT_HREF} className="btn btn--primary">Request a Consultation</Link>
+          <a href={whatsappLink(msg)} className="btn btn--ghost-light" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp HMG</a>
+          <a href={SITE.phoneHref} className="btn btn--ghost-light">Call HMG</a>
         </div>
       </div>
     </section>
   );
 }
 
-export function ProcessSteps({ steps = PROCESS }: { steps?: readonly { n: string; title: string; body: string }[] }) {
+/** Compact, shared four-step process. Each step carries a complete accessible label. */
+export function ProcessCompact({ steps = PROCESS, dark = false }: { steps?: readonly { n: string; title: string; body: string }[]; dark?: boolean }) {
   return (
-    <ol className="steps" data-scroll-path>
-      <li className="steps__track" aria-hidden="true" />
-      {steps.map((p) => (
-        <li key={p.n} className="step" data-step>
-          <span className="step__node" aria-hidden="true"><span>{p.n}</span></span>
-          <h3 className="step__title"><span className="sr-only">Step {Number(p.n)}: </span>{p.title}</h3>
-          <p className="step__body">{p.body}</p>
+    <ol className={`pc${dark ? " pc--dark" : ""}`} aria-label="How engagement works">
+      {steps.map((p, i) => (
+        <li key={p.n} className="pc__step">
+          <span className="pc__n" aria-hidden="true">{i + 1}</span>
+          <div>
+            <h3 className="pc__t"><span className="sr-only">{`Step ${i + 1} of ${steps.length}: `}</span>{p.title}</h3>
+            <p className="pc__b">{p.body}</p>
+          </div>
         </li>
       ))}
     </ol>
@@ -102,7 +104,7 @@ export function ProcessSteps({ steps = PROCESS }: { steps?: readonly { n: string
 
 export function ServiceCard({ s, i = 0, detailed = false }: { s: Service; i?: number; detailed?: boolean }) {
   return (
-    <li className="scard" data-reveal style={{ ["--i" as string]: i % 3 }}>
+    <li className="scard">
       <Link href={ROUTES.service(s.slug)} className="scard__link">
         <div className="scard__art"><ServiceArt motif={s.motif} /></div>
         <div className="scard__body">
@@ -122,7 +124,7 @@ export function ServiceCard({ s, i = 0, detailed = false }: { s: Service; i?: nu
 
 export function InsightCard({ a, i = 0, showDate = true }: { a: Article; i?: number; showDate?: boolean }) {
   return (
-    <li className="icard" data-reveal style={{ ["--i" as string]: i % 3 }}>
+    <li className="icard">
       <Link href={ROUTES.article(a.slug)} className="icard__link">
         <div className="icard__cover"><CoverArt kind={a.kind} /></div>
         <div className="icard__body">

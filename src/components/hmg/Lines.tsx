@@ -1,6 +1,6 @@
 import type { ElementType } from "react";
 
-/** Heading whose lines rise out of a mask when revealed. */
+/** Section heading. Lines are joined; wrapping is left to the browser (text-wrap: balance). */
 export function Lines({
   lines,
   as: Tag = "h2",
@@ -13,16 +13,8 @@ export function Lines({
   id?: string;
 }) {
   return (
-    <Tag className={`mask-h ${className}`} data-reveal id={id}>
-      {lines.map((l, i) => (
-        <span key={i}>
-          <span className="mask-h__l">
-            <span className="mask-h__t" style={{ ["--i" as string]: i }}>
-              {l}
-            </span>
-          </span>{" "}
-        </span>
-      ))}
+    <Tag className={`mask-h ${className}`} id={id}>
+      {lines.join(" ")}
     </Tag>
   );
 }

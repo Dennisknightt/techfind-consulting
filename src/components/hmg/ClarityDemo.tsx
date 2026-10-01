@@ -5,10 +5,10 @@ import { useEffect, useRef, useState } from "react";
 /* All figures are fictional and illustrative. */
 
 type TabId = "cash" | "compliance" | "obligations";
-const TABS: { id: TabId; label: string; short: string }[] = [
-  { id: "cash", label: "Cash flow", short: "Cash flow" },
-  { id: "compliance", label: "Compliance", short: "Compliance" },
-  { id: "obligations", label: "Upcoming obligations", short: "Obligations" },
+const TABS: { id: TabId; label: string }[] = [
+  { id: "cash", label: "Cash flow" },
+  { id: "compliance", label: "Compliance" },
+  { id: "obligations", label: "Upcoming obligations" },
 ];
 
 const READ: Record<TabId, { happening: string; attention: string; action: string; hmg: string }> = {
@@ -45,14 +45,14 @@ function CashVisual() {
   const low = s[6] < 200;
   return (
     <div className="cd__vis">
-      <svg viewBox="0 0 400 156" className="cd__chart" role="img" aria-label={`Illustrative 13-week cash balance. Week 7 is KES ${s[6]} thousand, ${low ? "below" : "above"} the KES 200 thousand buffer.`}>
+      <svg key={String(plan)} viewBox="0 0 400 156" className="cd__chart" role="img" aria-label={`Illustrative 13-week cash balance. Week 7 is KES ${s[6]} thousand, ${low ? "below" : "above"} the KES 200 thousand buffer.`}>
         <defs>
           <linearGradient id="cd-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#45C1AD" stopOpacity=".28" /><stop offset="1" stopColor="#45C1AD" stopOpacity="0" /></linearGradient>
         </defs>
         <rect x="24" y={py(200)} width="352" height={150 - py(200)} fill="#E0A63B" fillOpacity=".1" />
         <line x1="24" x2="376" y1={py(200)} y2={py(200)} stroke="#8A5A00" strokeDasharray="4 4" strokeOpacity=".7" />
-        <path key={`a${plan}`} d={`${line(s)} L${px(12)} 150 L${px(0)} 150 Z`} fill="url(#cd-g)" className="cd__area" />
-        <path key={`l${plan}`} d={line(s)} fill="none" stroke="#0E7C6B" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" pathLength={1} className="cd__line" />
+        <path d={`${line(s)} L${px(12)} 150 L${px(0)} 150 Z`} fill="url(#cd-g)" />
+        <path d={line(s)} fill="none" stroke="#0E7C6B" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
         <g className="cd__mark" style={{ transform: `translate(${px(6)}px, ${py(s[6])}px)` }}>
           <circle r="11" fill={low ? "#E0A63B" : "#45C1AD"} fillOpacity=".3" />
           <circle r="5.5" fill="#FBFAF7" stroke={low ? "#B97A00" : "#0E7C6B"} strokeWidth="3" />
@@ -175,8 +175,8 @@ export function ClarityDemo() {
     refs.current[next]?.focus();
   }
   return (
-    <div className="cd" data-reveal>
-      <div className="cd__tabs" role="tablist" aria-label="Insight examples" onKeyDown={onKey} style={{ ["--t" as string]: tab }}>
+    <div className="cd">
+      <div className="cd__tabs" role="tablist" aria-label="Insight examples" onKeyDown={onKey}>
         {TABS.map((t, i) => (
           <button
             key={t.id}
@@ -188,29 +188,36 @@ export function ClarityDemo() {
             aria-controls={`cd-panel-${t.id}`}
             tabIndex={tab === i ? 0 : -1}
             className="cd__tab"
-            onClick={() => setTab(i)}
+            onClick={(e) => { setTab(i); e.currentTarget.scrollIntoView({ block: "nearest", inline: "nearest" }); }}
           >
-            <span className="cd__tab-l">{t.label}</span>
-            <span className="cd__tab-s" aria-hidden="true">{t.short}</span>
+            {t.label}
           </button>
         ))}
-        <span className="cd__ind" aria-hidden="true" />
       </div>
       {TABS.map((t, i) => {
         const V = VIS[t.id];
         const r = READ[t.id];
         return (
           <div key={t.id} role="tabpanel" id={`cd-panel-${t.id}`} aria-labelledby={`cd-tab-${t.id}`} hidden={tab !== i} className="cd__panel" tabIndex={0}>
+            <dl className="cd__read cd__read--primary">
+              <div className="cd__r cd__r--h"><dt>What is happening</dt><dd>{r.happening}</dd></div>
+              <div className="cd__r cd__r--n"><dt>Recommended action</dt><dd>{r.action}</dd></div>
+            </dl>
             <div className="cd__left">
               <p className="cd__ill">Illustrative example · fictional figures</p>
               <V />
             </div>
-            <dl className="cd__read">
-              <div className="cd__r cd__r--h"><dt>What is happening</dt><dd>{r.happening}</dd></div>
+            <dl className="cd__read cd__read--secondary">
               <div className="cd__r cd__r--a"><dt>What needs attention</dt><dd>{r.attention}</dd></div>
-              <div className="cd__r cd__r--n"><dt>Recommended next action</dt><dd>{r.action}</dd></div>
               <div className="cd__r cd__r--m"><dt>How HMG helps</dt><dd>{r.hmg}</dd></div>
             </dl>
+            <details className="cd__more">
+              <summary>What needs attention and how HMG helps</summary>
+              <dl className="cd__read">
+                <div className="cd__r cd__r--a"><dt>What needs attention</dt><dd>{r.attention}</dd></div>
+                <div className="cd__r cd__r--m"><dt>How HMG helps</dt><dd>{r.hmg}</dd></div>
+              </dl>
+            </details>
           </div>
         );
       })}

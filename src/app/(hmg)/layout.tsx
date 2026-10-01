@@ -5,6 +5,7 @@ import { Header } from "@/components/hmg/Header";
 import { Footer } from "@/components/hmg/Footer";
 import { Motion } from "@/components/hmg/Motion";
 import { ActionBar } from "@/components/hmg/ActionBar";
+import { Analytics } from "@/components/hmg/Analytics";
 import { SITE } from "@/lib/hmg/site";
 import { OG_IMAGE } from "@/lib/hmg/meta";
 
@@ -35,6 +36,10 @@ export const viewport: Viewport = { themeColor: "#062E4F", width: "device-width"
 export default function HmgRootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en-KE" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
+      <head>
+        {/* Enables the short entrance animation only when JS runs; without JS everything renders static. */}
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+      </head>
       <body className="hmg">
         <a href="#main" className="skip">Skip to content</a>
         <Header />
@@ -42,6 +47,7 @@ export default function HmgRootLayout({ children }: { children: React.ReactNode 
         <Footer />
         <ActionBar />
         <Motion />
+        <Analytics />
       </body>
     </html>
   );

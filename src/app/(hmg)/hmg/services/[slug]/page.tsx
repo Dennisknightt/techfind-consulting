@@ -4,7 +4,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { WhatsAppIcon } from "@/components/hmg/Logo";
 import { ServiceArt } from "@/components/hmg/ServiceMotifs";
-import { CtaBand, Faq, faqLd, InsightCard, JsonLd, PageHero, ProcessSteps, SectionHead } from "@/components/hmg/ui";
+import { CtaBand, Faq, faqLd, InsightCard, JsonLd, PageHero, ProcessCompact, SectionHead } from "@/components/hmg/ui";
 import { ARTICLES, getService, SERVICES } from "@/lib/hmg/content";
 import { abs, CONSULT_HREF, ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
 
@@ -36,7 +36,7 @@ export default async function ServicePage({ params }: Props) {
       <JsonLd data={faqLd(s.faqs)} />
       <PageHero eyebrow={s.title} title={s.outcome} lead={s.lead} crumbs={crumbs} art={<div className="phero__svc"><ServiceArt motif={s.motif} /></div>}>
         <div className="hero__cta">
-          <Link href={CONSULT_HREF} className="btn btn--primary" data-magnetic>Book a Consultation</Link>
+          <Link href={CONSULT_HREF} className="btn btn--primary">Request a Consultation</Link>
           <a href={whatsappLink(waMsg)} className="btn btn--ghost" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp HMG</a>
         </div>
         <p className="phero__who"><strong>Who it is for:</strong> {s.whoFor}</p>
@@ -46,7 +46,7 @@ export default async function ServicePage({ params }: Props) {
         <div className="wrap cols">
           <SectionHead id="prob-h" eyebrow="Sound familiar?" lines={["The problems", "we solve."]} />
           <ul className="probs">
-            {s.problems.map((p, i) => <li key={p} data-reveal style={{ ["--i" as string]: i % 2 }}>{p}</li>)}
+            {s.problems.map((p, i) => <li key={p}>{p}</li>)}
           </ul>
         </div>
       </section>
@@ -56,7 +56,7 @@ export default async function ServicePage({ params }: Props) {
           <SectionHead id="hand-h" eyebrow="What HMG handles" lines={["Handled for you,", "end to end."]} />
           <ul className="tiles tiles--3">
             {s.handles.map((h, i) => (
-              <li key={h.t} className="tile" data-reveal style={{ ["--i" as string]: i % 3 }}><h3>{h.t}</h3><p>{h.d}</p></li>
+              <li key={h.t} className="tile"><h3>{h.t}</h3><p>{h.d}</p></li>
             ))}
           </ul>
         </div>
@@ -66,15 +66,22 @@ export default async function ServicePage({ params }: Props) {
         <div className="wrap cols">
           <SectionHead id="out-h" eyebrow="Expected outcomes" lines={["What changes", "for your business."]} />
           <ul className="checks">
-            {s.outcomes.map((o) => <li key={o} data-reveal>{o}</li>)}
+            {s.outcomes.map((o) => <li key={o}>{o}</li>)}
           </ul>
         </div>
       </section>
 
-      <section className="sec sec--navy" aria-labelledby="eng-h">
-        <div className="wrap">
-          <SectionHead id="eng-h" eyebrow="How we engage" lines={["Simple to start."]} />
-          <ProcessSteps />
+      <section className="sec sec--cream" aria-labelledby="eng-h">
+        <div className="wrap cols">
+          <div>
+            <h2 id="eng-h" className="subh">How we engage</h2>
+            <ProcessCompact />
+          </div>
+          <div className="prep">
+            <h2 className="subh">What to prepare</h2>
+            <p className="prep__lead">Having these ready helps us scope the work. Share what you have — we will help with the rest.</p>
+            <ul className="checks">{s.prepare.map((x) => <li key={x}>{x}</li>)}</ul>
+          </div>
         </div>
       </section>
 
