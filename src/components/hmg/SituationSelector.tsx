@@ -2,10 +2,22 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { BookOpen, ClipboardCheck, Compass, FileWarning, Repeat, ShieldCheck, Users, Wallet, type LucideIcon } from "lucide-react";
 import { getService, SITUATIONS } from "@/lib/hmg/content";
 import { CONSULT_HREF, ROUTES, whatsappLink } from "@/lib/hmg/site";
 
 type SitId = (typeof SITUATIONS)[number]["id"];
+
+const ICONS: Record<SitId, LucideIcon> = {
+  kra: FileWarning,
+  books: BookOpen,
+  audit: ClipboardCheck,
+  cash: Wallet,
+  payroll: Users,
+  check: ShieldCheck,
+  ongoing: Repeat,
+  unsure: Compass,
+};
 
 /** Pick what is happening (multi-select) → the relevant HMG services, with the reason for each. */
 export function SituationSelector({ headingId = "sit-h" }: { headingId?: string }) {
@@ -30,23 +42,28 @@ export function SituationSelector({ headingId = "sit-h" }: { headingId?: string 
   return (
     <div className="sit">
       <div className="sit__ask">
-        <p className="sit__hint" id={`${headingId}-hint`}>Select everything that applies.</p>
-        <div className="sit__opts" role="group" aria-labelledby={headingId} aria-describedby={`${headingId}-hint`}>
-          {SITUATIONS.map((s) => (
-            <button key={s.id} type="button" className="sit__opt" aria-pressed={sel.includes(s.id)} onClick={() => toggle(s.id)}>
-              <span className="sit__box" aria-hidden="true">
-                <svg viewBox="0 0 16 16" width="12" height="12"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>
-              </span>
-              {s.label}
-            </button>
-          ))}
+        <p className="sit__hint" id={`${headingId}-hint`}>Select everything that applies — you can choose more than one.</p>
+        <div className="sit__tiles" role="group" aria-labelledby={headingId} aria-describedby={`${headingId}-hint`}>
+          {SITUATIONS.map((s) => {
+            const Icon = ICONS[s.id];
+            const on = sel.includes(s.id);
+            return (
+              <button key={s.id} type="button" className="sit__tile" aria-pressed={on} onClick={() => toggle(s.id)}>
+                <span className="sit__icon" aria-hidden="true"><Icon size={22} strokeWidth={1.8} /></span>
+                <span className="sit__label">{s.label}</span>
+                <span className="sit__check" aria-hidden="true">
+                  <svg viewBox="0 0 16 16" width="12" height="12"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
+                </span>
+              </button>
+            );
+          })}
         </div>
       </div>
       <div className="sit__out" aria-live="polite">
         {!sel.length && (
           <div className="sit__empty">
             <p className="sit__empty-t">Your recommendation will appear here.</p>
-            <p>Choose one or more situations on the left.</p>
+            <p>Choose one or more situations above.</p>
           </div>
         )}
         {unsure && (

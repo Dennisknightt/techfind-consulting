@@ -1,6 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import {
+  AlarmClock, BookOpen, Building, Building2, Calendar, CalendarClock, CalendarDays, CalendarRange, ClipboardCheck, Compass, FileWarning,
+  HandHeart, Landmark, Mail, MessageSquare, Phone, Repeat, Rocket, Search, ShieldCheck, Store, TrendingUp, User, Users, Wallet, type LucideIcon,
+} from "lucide-react";
 import { CHANNELS, isValidPhone, labelOf, NEEDS, PROFILES, SITUATION_OPTS, URGENCY } from "@/lib/hmg/enquiry";
 import { ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
 import Link from "next/link";
@@ -14,14 +18,23 @@ type Answers = {
 const EMPTY: Answers = { needs: [], profile: "", situation: [], other: "", urgency: "", channels: [], name: "", phone: "", email: "", company: "", consent: false };
 
 const STEPS = [
-  { key: "needs", title: "What do you need help with?", hint: "Select all that apply." },
+  { key: "needs", title: "What do you need help with?", hint: "Select all that apply — you can choose more than one." },
   { key: "profile", title: "What best describes you?", hint: "Choose one." },
-  { key: "situation", title: "What is happening now?", hint: "Select all that apply." },
+  { key: "situation", title: "What is happening now?", hint: "Select all that apply — you can choose more than one." },
   { key: "urgency", title: "How urgent is it?", hint: "Choose one." },
-  { key: "channels", title: "How should HMG reach you?", hint: "Select all that apply." },
+  { key: "channels", title: "How should HMG reach you?", hint: "Select all that apply — you can choose more than one." },
   { key: "details", title: "Your contact details", hint: "We use these only to respond to this request." },
 ] as const;
 const TOTAL = STEPS.length;
+
+/** One icon per option, per step. */
+const ICONS: Record<string, Record<string, LucideIcon | "whatsapp">> = {
+  needs: { tax: Landmark, accounting: BookOpen, audit: ClipboardCheck, advisory: TrendingUp, payroll: Users, health: ShieldCheck, urgent: FileWarning, unsure: Compass },
+  profile: { individual: User, startup: Rocket, sme: Store, corporation: Building2, ngo: HandHeart, other: Building },
+  situation: { kra: CalendarClock, books: BookOpen, compliance: ShieldCheck, audit: ClipboardCheck, cash: Wallet, payroll: Users, growth: TrendingUp, ongoing: Repeat, other: MessageSquare },
+  urgency: { "48h": AlarmClock, week: CalendarDays, "2weeks": CalendarRange, month: Calendar, exploring: Search },
+  channels: { phone: Phone, whatsapp: "whatsapp", email: Mail },
+};
 
 type Errs = Partial<Record<keyof Answers, string>>;
 
@@ -174,11 +187,12 @@ export function EnquiryFlow() {
             <fieldset className="qf__fs" aria-describedby={`qf-${key}-hint qf-${key}-err`}>
               <legend><h2 className="qf__q" ref={headRef} tabIndex={-1}>{s.title}</h2></legend>
               <p className="qf__hint" id={`qf-${key}-hint`}>{s.hint}</p>
-              <div className={`qf__opts${list.length > 6 ? " qf__opts--2" : ""}`}>
+              <div className={`qf__tiles${list.length <= 3 ? " qf__tiles--3" : ""}`}>
                 {list.map((o) => {
                   const on = multi ? (a[key] as string[]).includes(o.id) : a[key] === o.id;
+                  const Icon = ICONS[key][o.id];
                   return (
-                    <label key={o.id} className={`qf__opt${on ? " is-on" : ""}`}>
+                    <label key={o.id} className={`qf__tile${on ? " is-on" : ""}${multi ? "" : " qf__tile--single"}`}>
                       <input
                         type={multi ? "checkbox" : "radio"}
                         name={`qf-${key}`}
@@ -186,10 +200,13 @@ export function EnquiryFlow() {
                         checked={on}
                         onChange={() => (multi ? toggle(key as "needs" | "situation" | "channels", o.id) : set(key as "profile" | "urgency", o.id))}
                       />
-                      <span className={multi ? "qf__box" : "qf__radio"} aria-hidden="true">
-                        {multi && <svg viewBox="0 0 16 16" width="12" height="12"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+                      <span className="sit__icon" aria-hidden="true">
+                        {Icon === "whatsapp" ? <WhatsAppIcon size={22} /> : Icon ? <Icon size={22} strokeWidth={1.8} /> : null}
                       </span>
-                      {o.label}
+                      <span className="qf__tlabel">{o.label}</span>
+                      <span className="sit__check" aria-hidden="true">
+                        {multi ? <svg viewBox="0 0 16 16" width="12" height="12"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg> : <i className="qf__dot" />}
+                      </span>
                     </label>
                   );
                 })}
