@@ -1,26 +1,23 @@
 import type { Metadata } from "next";
-import Link from "next/link";
-import { SITE } from "@/lib/hmg/site";
+import { pageMeta } from "@/lib/hmg/meta";
+import { PageHero } from "@/components/hmg/ui";
+import { ROUTES, SITE } from "@/lib/hmg/site";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = pageMeta({
   title: "Privacy notice",
   description: "How HMG Group Africa collects, uses and protects personal information submitted through this website.",
-  alternates: { canonical: "/hmg/privacy" },
-};
+  path: ROUTES.privacy,
+});
 
 export default function Privacy() {
   return (
     <article className="post">
-      <header className="post__head wrap">
-        <nav aria-label="Breadcrumb" className="post__crumb"><Link href="/hmg">← Back to home</Link></nav>
-        <h1 className="post__h">Privacy notice</h1>
-        <p className="post__lead">How we handle the information you share with {SITE.name}.</p>
-      </header>
+      <PageHero eyebrow="Privacy" title="Privacy notice" lead={`How we handle the information you share with ${SITE.name}.`} crumbs={[{ name: "Home", href: ROUTES.home }, { name: "Privacy notice", href: ROUTES.privacy }]} />
       <div className="wrap post__grid post__grid--single">
         <div className="post__body">
           <section>
             <h2>What we collect</h2>
-            <p>When you submit the consultation form or contact us directly, we collect your name, email, phone number, company (optional) and the details you choose to share about your enquiry.</p>
+            <p>When you request a callback or contact us directly, we collect your name, phone number, and — if you choose to share them — your email address, company and a short description of your enquiry.</p>
           </section>
           <section>
             <h2>How we use it</h2>
@@ -34,7 +31,7 @@ export default function Privacy() {
             <h2>Contact</h2>
             <p>{SITE.name}, {SITE.address.line}. Phone <a href={SITE.phoneHref}>{SITE.phone}</a>.</p>
           </section>
-          <p className="fine">This is a summary notice for the website and should be reviewed by HMG&apos;s legal advisers before publication.</p>
+          
         </div>
       </div>
     </article>

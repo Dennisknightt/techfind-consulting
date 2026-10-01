@@ -1,43 +1,75 @@
 "use client";
 
 import Link from "next/link";
-import { useId, useRef, useState } from "react";
-import { ENQUIRY_SERVICES, enquirySchema } from "@/lib/hmg/enquiry";
-import { SITE, whatsappLink } from "@/lib/hmg/site";
+import { useEffect, useId, useRef, useState } from "react";
+import { contactFormSchema, ENQUIRY_SERVICES, enquirySchema } from "@/lib/hmg/enquiry";
+import { ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
+import { WhatsAppIcon } from "./Logo";
 
 type Status = "idle" | "loading" | "success" | "error";
 type Errors = Partial<Record<string, string>>;
 
-export function ContactForm() {
+const FIELD_ORDER = ["name", "phone", "email", "company", "service", "message", "consent"];
+
+export function ContactForm({ variant = "full", defaultService = "" }: { variant?: "full" | "callback"; defaultService?: string }) {
+  const full = variant === "full";
   const uid = useId();
   const formRef = useRef<HTMLFormElement>(null);
+  const mounted = useRef(0);
   const [status, setStatus] = useState<Status>("idle");
+  const [errCode, setErrCode] = useState("");
   const [errors, setErrors] = useState<Errors>({});
-  const [serverError, setServerError] = useState("");
   const [ok, setOk] = useState<Record<string, boolean>>({});
-
+  const [snapshot, setSnapshot] = useState<Record<string, unknown>>({});
   const id = (f: string) => `${uid}-${f}`;
+  const schema = full ? contactFormSchema : enquirySchema;
+
+  useEffect(() => {
+    mounted.current = performance.now();
+  }, []);
+
+  function read(): Record<string, unknown> {
+    const fd = new FormData(formRef.current!);
+    return {
+      name: fd.get("name") ?? "",
+      phone: fd.get("phone") ?? "",
+      email: fd.get("email") ?? "",
+      company: fd.get("company") ?? "",
+      service: fd.get("service") ?? "",
+      message: fd.get("message") ?? "",
+      consent: fd.get("consent") === "on",
+      website: fd.get("website") ?? "",
+      elapsed: Math.round(performance.now() - mounted.current),
+      source: full ? "contact" : "callback",
+    };
+  }
 
   function validate(data: Record<string, unknown>): Errors {
-    const r = enquirySchema.safeParse(data);
+    const r = schema.safeParse(data);
     if (r.success) return {};
     const out: Errors = {};
     for (const i of r.error.issues) out[String(i.path[0])] ??= i.message;
     return out;
   }
 
-  function read(): Record<string, unknown> {
-    const fd = new FormData(formRef.current!);
-    return {
-      name: fd.get("name"),
-      email: fd.get("email"),
-      phone: fd.get("phone"),
-      company: fd.get("company") ?? "",
-      service: fd.get("service"),
-      message: fd.get("message"),
-      consent: fd.get("consent") === "on",
-      website: fd.get("website") ?? "",
-    };
+  // Errors appear on blur (once a field has content) and clear while typing —
+  // never on blur — so the layout cannot shift between a press and its release.
+  function onBlur(e: React.FocusEvent<HTMLFormElement>) {
+    const name = (e.target as unknown as HTMLInputElement).name;
+    if (!name || name === "website") return;
+    const data = read();
+    const msg = validate(data)[name];
+    if (msg && data[name] !== "") setErrors((p) => ({ ...p, [name]: msg }));
+    setOk((o) => ({ ...o, [name]: !msg && !!data[name] }));
+  }
+
+  function onInput(e: React.FormEvent<HTMLFormElement>) {
+    const name = (e.target as HTMLInputElement).name;
+    if (!name || !errors[name]) return;
+    if (!validate(read())[name]) {
+      setErrors((p) => ({ ...p, [name]: undefined }));
+      setOk((o) => ({ ...o, [name]: true }));
+    }
   }
 
   async function onSubmit(e: React.FormEvent) {
@@ -47,53 +79,57 @@ export function ContactForm() {
     const errs = validate(data);
     setErrors(errs);
     if (Object.keys(errs).length) {
-      const f = formRef.current;
-      if (f) { f.classList.remove("form--shake"); void f.offsetWidth; f.classList.add("form--shake"); }
-      setStatus("idle");
-      const first = Object.keys(errs)[0];
+      const first = FIELD_ORDER.find((f) => errs[f]);
       formRef.current?.querySelector<HTMLElement>(`[name="${first}"]`)?.focus();
+      const f = formRef.current;
+      if (f && !window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
+        f.classList.remove("form--shake");
+        void f.offsetWidth;
+        f.classList.add("form--shake");
+      }
       return;
     }
+    setSnapshot(data);
     setStatus("loading");
-    setServerError("");
+    setErrCode("");
     try {
-      const res = await fetch("/api/hmg/enquiry", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(data),
-      });
+      const res = await fetch("/api/hmg/enquiry", { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify(data) });
       const json = await res.json().catch(() => ({}));
       if (!res.ok || !json.ok) {
         if (json.fields) setErrors(json.fields);
-        throw new Error(json.error ?? "Something went wrong.");
+        setErrCode(json.code ?? "unknown");
+        setStatus("error");
+        return;
       }
       setStatus("success");
-    } catch (err) {
-      setServerError(err instanceof Error ? err.message : "Something went wrong.");
+    } catch {
+      setErrCode("network");
       setStatus("error");
     }
   }
 
-  function blur(e: React.FocusEvent<HTMLFormElement>) {
-    const name = (e.target as unknown as HTMLInputElement).name;
-    if (!name || name === "website") return;
-    const errs = validate(read());
-    setErrors((prev) => ({ ...prev, [name]: errs[name] }));
-    const val = read()[name];
-    setOk((o) => ({ ...o, [name]: !errs[name] && !!val }));
-  }
+  const waFromForm = () => {
+    const d = snapshot;
+    const parts = [
+      "Hello HMG, I'd like a callback.",
+      d.name && `Name: ${d.name}`,
+      d.phone && `Phone: ${d.phone}`,
+      d.company && `Company: ${d.company}`,
+      d.service && `Service: ${d.service}`,
+      d.message && `Details: ${d.message}`,
+    ].filter(Boolean);
+    return whatsappLink(parts.join("\n"));
+  };
 
   if (status === "success") {
     return (
-      <div className="form form--done" role="status">
+      <div className="form form--done" role="status" tabIndex={-1} ref={(el) => el?.focus()}>
         <span className="form__tick" aria-hidden="true">
           <svg viewBox="0 0 24 24" width="28" height="28"><path d="M5 12.5l4.5 4.5L19 7.5" fill="none" stroke="currentColor" strokeWidth="2.6" strokeLinecap="round" strokeLinejoin="round" /></svg>
         </span>
-        <h3 className="form__done-title">Thank you. Your enquiry is with HMG.</h3>
-        <p>A consultant will review it and follow up during working hours ({SITE.hours}). If it is urgent, message us on WhatsApp.</p>
-        <a className="btn btn--ghost-dark" href={whatsappLink("Hello HMG, I have just sent an enquiry through the website.")} target="_blank" rel="noopener noreferrer">
-          Continue on WhatsApp
-        </a>
+        <h3 className="form__done-title">Thank you — your request is with HMG.</h3>
+        <p>A consultant will call you back during working hours ({SITE.hours}). If it is urgent, message us on WhatsApp.</p>
+        <a className="btn btn--ghost" href={waFromForm()} target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> Continue on WhatsApp</a>
       </div>
     );
   }
@@ -104,95 +140,94 @@ export function ContactForm() {
     "aria-invalid": errors[name] ? (true as const) : undefined,
     "aria-describedby": `${id(name)}-err`,
   });
-  // The error slot is always rendered so validating on blur never shifts the layout
-  // (a shifting form can swallow the very click that caused the blur).
+  // Always rendered (empty when valid) so validation never shifts the layout.
   const err = (name: string) => (
-    <p className="form__err" id={`${id(name)}-err`}>
-      {errors[name]}
-    </p>
+    <p className="form__err" id={`${id(name)}-err`} aria-live="polite">{errors[name]}</p>
   );
+  const fcls = (name: string, extra = "") => `form__f${extra}${ok[name] ? " form__f--ok" : ""}`;
 
   return (
-    <form ref={formRef} className="form" onSubmit={onSubmit} onBlur={blur} noValidate aria-busy={status === "loading"}>
-      <h3 className="form__title">Book a consultation</h3>
-      <p className="form__lead">Tell us what you need. A consultant will come back to you personally.</p>
+    <form ref={formRef} className={`form${full ? "" : " form--compact"}`} onSubmit={onSubmit} onBlur={onBlur} onInput={onInput} onChange={onInput} noValidate aria-busy={status === "loading"} aria-labelledby={`${uid}-title`}>
+      <h3 className="form__title" id={`${uid}-title`}>{full ? "Request a callback" : "Prefer a call back?"}</h3>
+      <p className="form__lead">{full ? "Share a few details. A consultant will call you to understand your needs." : "Leave your number and we will call you during working hours."}</p>
 
       <div className="form__grid">
-        <div className={`form__f${ok.name ? " form__f--ok" : ""}`}>
+        <div className={fcls("name")}>
           <label htmlFor={id("name")}>Full name</label>
           <input type="text" autoComplete="name" {...field("name")} />
           {err("name")}
         </div>
-        <div className={`form__f${ok.email ? " form__f--ok" : ""}`}>
-          <label htmlFor={id("email")}>Email</label>
-          <input type="email" autoComplete="email" inputMode="email" {...field("email")} />
-          {err("email")}
-        </div>
-        <div className={`form__f${ok.phone ? " form__f--ok" : ""}`}>
-          <label htmlFor={id("phone")}>Phone / WhatsApp</label>
-          <input type="tel" autoComplete="tel" inputMode="tel" placeholder="+254 7XX XXX XXX" {...field("phone")} />
+        <div className={fcls("phone")}>
+          <label htmlFor={id("phone")}>Phone or WhatsApp</label>
+          <input type="tel" autoComplete="tel" inputMode="tel" placeholder="07XX XXX XXX" {...field("phone")} />
           {err("phone")}
         </div>
-        <div className="form__f">
-          <label htmlFor={id("company")}>
-            Company <span className="form__opt">(optional)</span>
-          </label>
-          <input type="text" autoComplete="organization" {...field("company")} />
-        </div>
-        <div className={`form__f form__f--wide${ok.service ? " form__f--ok" : ""}`}>
-          <label htmlFor={id("service")}>What do you need help with?</label>
-          <select defaultValue="" {...field("service")}>
-            <option value="" disabled>
-              Select a service
-            </option>
-            {ENQUIRY_SERVICES.map((s) => (
-              <option key={s} value={s}>
-                {s}
-              </option>
-            ))}
+        {full && (
+          <>
+            <div className={fcls("email")}>
+              <label htmlFor={id("email")}>Email <span className="form__opt">(optional)</span></label>
+              <input type="email" autoComplete="email" inputMode="email" {...field("email")} />
+              {err("email")}
+            </div>
+            <div className={fcls("company")}>
+              <label htmlFor={id("company")}>Company <span className="form__opt">(optional)</span></label>
+              <input type="text" autoComplete="organization" {...field("company")} />
+              {err("company")}
+            </div>
+          </>
+        )}
+        <div className={fcls("service", " form__f--wide")}>
+          <label htmlFor={id("service")}>Service required</label>
+          <select defaultValue={defaultService} {...field("service")}>
+            <option value="" disabled>Select a service</option>
+            {ENQUIRY_SERVICES.map((s) => <option key={s} value={s}>{s}</option>)}
           </select>
           {err("service")}
         </div>
-        <div className={`form__f form__f--wide${ok.message ? " form__f--ok" : ""}`}>
-          <label htmlFor={id("message")}>Your situation</label>
-          <textarea rows={4} placeholder="e.g. We are preparing for our first audit and need our books cleaned up." {...field("message")} />
-          {err("message")}
-        </div>
+        {full && (
+          <div className={fcls("message", " form__f--wide")}>
+            <label htmlFor={id("message")}>Short description</label>
+            <textarea rows={3} placeholder="e.g. We received a KRA notice about last year's VAT." {...field("message")} />
+            {err("message")}
+          </div>
+        )}
       </div>
 
-      {/* honeypot: hidden from people and assistive tech */}
       <div className="form__hp" aria-hidden="true">
-        <label>
-          Website <input type="text" name="website" tabIndex={-1} autoComplete="off" />
-        </label>
+        <label>Website <input type="text" name="website" tabIndex={-1} autoComplete="off" /></label>
       </div>
 
       <div className="form__consent">
         <input type="checkbox" {...field("consent")} />
-        <label htmlFor={id("consent")}>I agree that HMG may contact me about this enquiry.</label>
+        <label htmlFor={id("consent")}>I agree that HMG may contact me about this request. See the <Link href={ROUTES.privacy}>privacy notice</Link>.</label>
       </div>
       {err("consent")}
 
       {status === "error" && (
         <div className="form__alert" role="alert">
-          <strong>We could not send that.</strong> {serverError}{" "}
-          <a href={whatsappLink()} target="_blank" rel="noopener noreferrer">Message us on WhatsApp</a> or call{" "}
-          <a href={SITE.phoneHref}>{SITE.phone}</a>.
+          {errCode === "not_configured" ? (
+            <>
+              <strong>Online requests are not connected yet.</strong> Your details have not been sent. Please reach us directly — it only takes a moment:
+            </>
+          ) : errCode === "invalid" ? (
+            <><strong>Please check the highlighted fields.</strong></>
+          ) : errCode === "rate_limited" ? (
+            <><strong>Too many attempts.</strong> Please wait a few minutes, or contact us directly:</>
+          ) : (
+            <><strong>We could not send your request.</strong> Please try again, or contact us directly:</>
+          )}
+          {errCode !== "invalid" && (
+            <div className="form__alt">
+              <a className="btn btn--sm btn--wa" href={waFromForm()} target="_blank" rel="noopener noreferrer"><WhatsAppIcon size={16} /> Send these details on WhatsApp</a>
+              <a className="btn btn--sm btn--ghost" href={SITE.phoneHref}>Call {SITE.phone}</a>
+            </div>
+          )}
         </div>
       )}
 
-      <button type="submit" className="btn btn--primary btn--block" disabled={status === "loading"} data-magnetic>
-        {status === "loading" ? (
-          <>
-            <span className="spinner" aria-hidden="true" /> Sending…
-          </>
-        ) : (
-          "Send enquiry"
-        )}
+      <button type="submit" className="btn btn--primary btn--block" disabled={status === "loading"}>
+        {status === "loading" ? (<><span className="spinner" aria-hidden="true" /> Sending…</>) : "Request a Callback"}
       </button>
-      <p className="form__fine">
-        We use your details only to respond to this enquiry. See our <Link href="/hmg/privacy">privacy notice</Link>.
-      </p>
     </form>
   );
 }

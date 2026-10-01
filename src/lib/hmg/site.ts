@@ -1,5 +1,5 @@
 /**
- * Single source of truth for HMG Group Africa's identity and contact details.
+ * Single source of truth for HMG Group Africa's identity, contact details and routes.
  * The site is mounted under HMG_BASE; change it (and move the route folder) to
  * serve HMG from a domain root.
  */
@@ -8,10 +8,13 @@ export const HMG_BASE = "/hmg";
 export const SITE = {
   name: "HMG Group Africa",
   legalName: "HMG Group Africa",
-  url: process.env.NEXT_PUBLIC_HMG_URL ?? "https://hmggroup.africa",
+  // Canonical origin. hmggroup.africa currently redirects to an unrelated site,
+  // so the live Vercel host is the safe default until the domain is restored.
+  url: (process.env.NEXT_PUBLIC_HMG_URL ?? "https://hmg-group-africa.vercel.app").replace(/\/$/, ""),
   tagline: "Financial clarity. Confident growth.",
+  positioning: "HMG helps businesses remain compliant, understand their numbers and make confident financial decisions.",
   description:
-    "Tax, accounting, audit and advisory expertise for businesses building their next chapter across Africa. Nairobi-based, KRA-savvy, personally responsive.",
+    "Nairobi-based tax, accounting, audit and advisory firm. HMG helps businesses stay compliant with KRA, understand their numbers and make confident financial decisions.",
   founded: 2020,
   phone: "+254 703 126 677",
   phoneHref: "tel:+254703126677",
@@ -24,10 +27,13 @@ export const SITE = {
     country: "KE",
     line: "Akai Plaza, Garden Estate Road, Nairobi",
   },
+  mapUrl: "https://www.google.com/maps/search/?api=1&query=Akai+Plaza+Garden+Estate+Road+Nairobi",
   hours: "Monday–Friday, 8:00 AM–5:00 PM",
   social: {
+    // Verified public company page.
     linkedin: "https://www.linkedin.com/company/hmg-group-africa",
-    facebook: "https://www.facebook.com/hmggroupafrica",
+    // HMG TO SUPPLY: the official Facebook page URL. Hidden until set.
+    facebook: null as string | null,
   },
 } as const;
 
@@ -35,14 +41,25 @@ export function whatsappLink(message = "Hello HMG, I would like to discuss my bu
   return `https://wa.me/${SITE.whatsappNumber}?text=${encodeURIComponent(message)}`;
 }
 
-export const hmgPath = (hash = "") => `${HMG_BASE}${hash}`;
+export const ROUTES = {
+  home: HMG_BASE,
+  about: `${HMG_BASE}/about`,
+  services: `${HMG_BASE}/services`,
+  service: (slug: string) => `${HMG_BASE}/services/${slug}`,
+  insights: `${HMG_BASE}/insights`,
+  article: (slug: string) => `${HMG_BASE}/insights/${slug}`,
+  contact: `${HMG_BASE}/contact`,
+  privacy: `${HMG_BASE}/privacy`,
+} as const;
+
+export const CONSULT_HREF = `${ROUTES.contact}#consultation`;
 
 export const NAV = [
-  { label: "Home", href: hmgPath("") },
-  { label: "About", href: hmgPath("#about") },
-  { label: "Services", href: hmgPath("#services") },
-  { label: "Insights", href: hmgPath("#insights") },
-  { label: "Contact", href: hmgPath("#contact") },
+  { label: "Home", href: ROUTES.home },
+  { label: "About", href: ROUTES.about },
+  { label: "Services", href: ROUTES.services },
+  { label: "Insights", href: ROUTES.insights },
+  { label: "Contact", href: ROUTES.contact },
 ] as const;
 
-export const CONSULT_HREF = hmgPath("#consultation");
+export const abs = (path: string) => `${SITE.url}${path}`;

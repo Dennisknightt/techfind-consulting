@@ -1,18 +1,38 @@
 # HMG Group Africa site (`/hmg`)
 
-A standalone corporate site for HMG Group Africa living in its own route group so it never shares chrome, fonts or CSS with the Techfind marketing site or the OS.
+A multi-page corporate site in its own route group (`src/app/(hmg)`), separate from the Techfind marketing site and the OS.
 
-- Routes: `src/app/(hmg)/hmg/*` → `/hmg`, `/hmg/insights/[slug]`, `/hmg/privacy`, `/hmg/sitemap.xml`, OG image.
-- Root layout + tokens: `src/app/(hmg)/layout.tsx`, `src/app/(hmg)/hmg.css` (brand palette, Fraunces + Figtree).
-- Components: `src/components/hmg/*` (illustrations are hand-built SVG; `Motion.tsx` is the only scroll/animation controller, no animation library).
-- Content and contact details: `src/lib/hmg/content.ts`, `src/lib/hmg/site.ts` (change `HMG_BASE` and move the route folder to serve from a domain root).
-- Enquiry form → `POST /api/hmg/enquiry` (zod-validated, rate-limited, honeypot). Set `HMG_ENQUIRY_WEBHOOK` to forward leads to a CRM/Zapier/Make URL; without it submissions are logged only.
-- `NEXT_PUBLIC_HMG_URL` sets the canonical origin used in metadata, sitemap and JSON-LD.
-- `src/app/robots.ts` is deployment-wide: it blocks `/app`, `/admin`, `/api`, `/login`, `/pay` and points to the HMG sitemap.
-- Decision-insight figures are fictional and labelled "Illustrative"; LinkedIn/Facebook URLs in `site.ts` should be confirmed.
+## Routes
+| Route | Notes |
+|---|---|
+| `/hmg` | Home: hero, outcomes, services preview, clarity demo (tabs), why HMG, verified facts, process, 3 featured insights, CTA + callback form |
+| `/hmg/about` | Story, mission, philosophy, process, team (data-driven), who we serve, Nairobi office, relationships |
+| `/hmg/services` | Guided service selector + all services |
+| `/hmg/services/[slug]` | 6 static pages: problems, what HMG handles, outcomes, process, FAQs (+ FAQPage schema), related insights |
+| `/hmg/insights`, `/hmg/insights/[slug]` | Filterable library; articles with date, author, share, related, disclaimer, Article + Breadcrumb schema |
+| `/hmg/contact` | Contact ways, map link, full callback form |
+| `/hmg/privacy` | Privacy notice |
+| `/hmg/sitemap.xml`, `/robots.txt`, `/hmg/og.png` | SEO + social image |
 
-## Motion and interaction layer
-- `InsightLab.tsx`: six interactive illustrative widgets (compliance status, cash-flow trend with scenario + week slider, obligations timeline, tax-readiness checklist, health overview, concern-driven attention panel). Everything works without animation; values snap under reduced motion.
-- `Motion.tsx`: reveals, counters, scroll-linked process path, magnetic buttons, scroll-progress hairline, and `[data-loop]` which pauses looping animations when off-screen. `HeroArt.tsx` cycles its live signal chip only while on screen and the tab is visible.
-- `FloatActions.tsx`: WhatsApp button (desktop) / contextual action bar (phones); hides over the contact section and the open menu.
-- `useActiveSection.ts`: drives the active nav item. `(hmg)/template.tsx`: page-enter transition.
+## Where things live
+- Content: `src/lib/hmg/content.ts` (services, articles, process, outcomes) · contact/routes: `src/lib/hmg/site.ts` · per-page metadata: `src/lib/hmg/meta.ts`
+- Credibility content and placeholders: `src/lib/hmg/credentials.ts`
+- Components: `src/components/hmg/*` · styles: `src/app/(hmg)/hmg.css`
+
+## Motion rules
+Content is visible by default. `Motion.tsx` marks only below-the-fold `[data-reveal]` elements as pending (`.rv`), reveals them before they reach the screen, and shows anything reached by a fast jump almost instantly. With JS disabled or reduced motion, nothing is hidden. Looping animations pause off-screen.
+
+## Enquiry form — integration point
+`POST /api/hmg/enquiry` validates (zod), rate-limits, and checks a honeypot and minimum fill time. Set **`HMG_ENQUIRY_WEBHOOK`** (Zapier/Make/n8n/CRM JSON webhook) to deliver leads. Without it the endpoint returns 503 and the form says so, offering WhatsApp (pre-filled with the visitor's details) and phone. It never shows a false success.
+
+## Environment
+- `NEXT_PUBLIC_HMG_URL` — canonical origin (defaults to the Vercel host; `hmggroup.africa` currently redirects to an unrelated site).
+- `HMG_ENQUIRY_WEBHOOK` — lead delivery.
+- `NEXT_PUBLIC_HMG_SHOW_PLACEHOLDERS=1` — preview empty credibility slots while editing.
+
+## Content HMG must supply (not invented)
+- Team: names, roles, profiles, qualifications, photos (`public/hmg/team/`), LinkedIn links
+- Professional registrations (e.g. ICPAK, KRA tax agent) and qualifications
+- Whether HMG holds the licence to sign statutory audits (`PENDING.signsStatutoryAudits`) — audit copy changes automatically
+- Industries served, client testimonials with written permission
+- Official Facebook URL (`SITE.social.facebook`; hidden until set)

@@ -1,10 +1,10 @@
 import { ImageResponse } from "next/og";
 
-export const alt = "HMG Group Africa — Financial clarity. Confident growth.";
-export const size = { width: 1200, height: 630 };
-export const contentType = "image/png";
+// Stable social-sharing image at /hmg/og.png (1200×630), rendered once at build time.
+export const dynamic = "force-static";
+const size = { width: 1200, height: 630 };
 
-export default function OG() {
+export function GET() {
   return new ImageResponse(
     (
       <div style={{ width: "100%", height: "100%", display: "flex", background: "#062E4F", color: "#FBFAF7", padding: 80, position: "relative", flexDirection: "column", justifyContent: "space-between" }}>
