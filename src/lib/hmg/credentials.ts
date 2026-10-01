@@ -14,11 +14,14 @@ export const VERIFIED = {
   office: "Akai Plaza, Garden Estate Road, Nairobi",
   audiences: ["Individuals", "Startups", "SMEs", "Corporations", "NGOs"],
   serviceLines: 6,
+  /** Supplied by HMG. */
+  reach: "Kenya and Africa",
 } as const;
 
 export interface TeamMember {
   name: string;
   role: string;
+  expertise?: string; // area of expertise
   profile: string; // 1–2 sentences
   qualification?: string; // verified only, e.g. "CPA (K)"
   photo?: string; // /public path, square, ≥ 600px, e.g. /hmg/team/jane-doe.jpg
@@ -48,7 +51,27 @@ export const OPTIONAL = {
   numbers: [] as { label: string; value: string }[],
   testimonials: [] as Testimonial[],
   team: [] as TeamMember[],
+  /** Real photography (HMG consultants, reviews, work settings) — with permission. */
+  photos: [] as { src: string; alt: string; caption?: string }[],
 };
+
+/**
+ * Client-approved case studies only. Use anonymous sector-based descriptions
+ * where the client has not agreed to be named. Never invent figures.
+ * Sections showing case studies stay hidden while this list is empty.
+ */
+export interface CaseStudy {
+  id: string;
+  sector: string; // e.g. "Nairobi-based logistics SME"
+  service: string; // service slug
+  challenge: string;
+  did: string[];
+  changed: string[];
+  before: string; // one-line "before" state
+  after: string; // one-line "after" state
+  approvedByClient: true;
+}
+export const CASE_STUDIES: CaseStudy[] = [];
 
 /**
  * Regulated-service authorisations. These switch public wording between

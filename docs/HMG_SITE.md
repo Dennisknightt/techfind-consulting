@@ -28,8 +28,15 @@ Content never depends on JavaScript or IntersectionObserver to be visible. The o
 - Primary buttons fill with ink on hover.
 - All of it is disabled without JS (`.js` class), under prefers-reduced-motion, and in browsers without scroll-timeline support.
 
+## Homepage flow
+Hero → navy problem statement → verified trust → interactive service selector (multi-select situations → recommended services) → services showcase (two featured + compact rows) → financial-clarity demo (Cash flow / Tax / Payroll / Compliance) → case studies* → team preview* → Why HMG → featured insights (one lead + two) → consultation CTA.
+*Rendered only when HMG supplies approved content in `credentials.ts` (`CASE_STUDIES`, `OPTIONAL.team`).
+
+## Contact qualification flow
+`EnquiryFlow.tsx`: opening screen → needs (multi) → client type → situation (multi, "Something else" reveals text) → urgency → contact channels → details → review (with edit links) → "Request My Consultation". Step changes are announced and focus moves to each step heading; answers persist when going back. `?need=<service-slug>` preselects a service. Success (only after server confirmation) shows reference number, services, contact preference, hours and a WhatsApp action.
+
 ## Enquiry form — destinations
-`POST /api/hmg/enquiry` validates (zod; Kenyan and international phone numbers), rate-limits per IP, and checks a honeypot and minimum fill time. It delivers to every configured destination and succeeds if at least one accepts:
+`POST /api/hmg/enquiry` validates (zod), rate-limits per IP, checks a honeypot and minimum fill time, and builds a structured CRM lead: reference number, services, primary service, assigned team (KRA notices/urgent issues route to Tax & KRA), client type, situation, urgency, `urgent` flag + `priority`, follow-up `dueBy` (business days in EAT by urgency; urgent = within hours), follow-up task text and a notify block. It delivers to every configured destination and succeeds if at least one accepts:
 - `HMG_ENQUIRY_WEBHOOK` — JSON POST to HMG's CRM inbound webhook or Zapier/Make/n8n
 - `RESEND_API_KEY` + `HMG_ENQUIRY_TO` (comma-separated; optional `HMG_ENQUIRY_FROM`) — email via Resend
 

@@ -1,7 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/hmg/meta";
 import Link from "next/link";
-import { WhyArt } from "@/components/hmg/WhyArt";
 import { TeamSection, TrustFacts } from "@/components/hmg/Trust";
 import { CtaBand, JsonLd, orgLd, PageHero, SectionHead } from "@/components/hmg/ui";
 import { OPTIONAL, VERIFIED } from "@/lib/hmg/credentials";
@@ -35,9 +34,8 @@ export default function About() {
       <PageHero
         eyebrow="About HMG"
         title="A finance partner that helps you see what to do next."
-        lead={`Founded in Nairobi in ${VERIFIED.founded}, HMG Group Africa helps businesses stay compliant, understand their numbers and make confident financial decisions.`}
+        lead={`Founded in Nairobi in ${VERIFIED.founded}, HMG Group Africa helps businesses across Kenya and Africa stay compliant, understand their numbers and make confident financial decisions.`}
         crumbs={crumbs}
-        art={<WhyArt />}
       >
         <Link href={CONSULT_HREF} className="btn btn--primary">Request a Consultation</Link>
       </PageHero>
@@ -87,7 +85,7 @@ export default function About() {
 
       <section className="sec" aria-labelledby="nbo-h">
         <div className="wrap cols">
-          <SectionHead id="nbo-h" eyebrow="Our Nairobi presence" lines={["Local knowledge,", "close at hand."]} lead="Our office is at Akai Plaza on Garden Estate Road. Meet us in person, or work with us by phone, WhatsApp and email." />
+          <SectionHead id="nbo-h" eyebrow="Our Nairobi presence" lines={["Nairobi-based, serving Kenya and Africa."]} lead="Our office is at Akai Plaza on Garden Estate Road, Nairobi. Meet us in person, or work with us by phone, WhatsApp and email wherever your business operates." />
           <div className="addr">
             <p className="addr__t">{SITE.name}</p>
             <p>{SITE.address.line}</p>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { pageMeta } from "@/lib/hmg/meta";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { CaseStudies } from "@/components/hmg/CaseStudies";
 import { WhatsAppIcon } from "@/components/hmg/Logo";
 import { ServiceArt } from "@/components/hmg/ServiceMotifs";
 import { CtaBand, Faq, faqLd, InsightCard, JsonLd, PageHero, ProcessCompact, SectionHead } from "@/components/hmg/ui";
@@ -36,7 +37,7 @@ export default async function ServicePage({ params }: Props) {
       <JsonLd data={faqLd(s.faqs)} />
       <PageHero eyebrow={s.title} title={s.outcome} lead={s.lead} crumbs={crumbs} art={<div className="phero__svc"><ServiceArt motif={s.motif} /></div>}>
         <div className="hero__cta">
-          <Link href={CONSULT_HREF} className="btn btn--primary">Request a Consultation</Link>
+          <Link href={`${ROUTES.contact}?need=${s.slug}#consultation`} className="btn btn--primary">Request a Consultation</Link>
           <a href={whatsappLink(waMsg)} className="btn btn--ghost" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp HMG</a>
         </div>
         <p className="phero__who"><strong>Who it is for:</strong> {s.whoFor}</p>
@@ -91,6 +92,8 @@ export default async function ServicePage({ params }: Props) {
           <Faq items={s.faqs} />
         </div>
       </section>
+
+      <CaseStudies service={s.slug} title={`${s.title} in practice`} />
 
       {related.length > 0 && (
         <section className="sec sec--cream" aria-labelledby="rel-h">

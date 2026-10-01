@@ -30,9 +30,15 @@ export function HeroArt() {
     document.addEventListener("visibilitychange", sync);
     return () => { io.disconnect(); document.removeEventListener("visibilitychange", sync); };
   }, []);
+  // Cycle through the signals once, then rest on the first — no endless motion.
+  const ticks = useRef(0);
   useEffect(() => {
-    if (!live) return;
-    const id = window.setInterval(() => setI((n) => (n + 1) % SIGNALS.length), 3800);
+    if (!live || ticks.current >= SIGNALS.length) return;
+    const id = window.setInterval(() => {
+      ticks.current += 1;
+      setI(ticks.current % SIGNALS.length);
+      if (ticks.current >= SIGNALS.length) window.clearInterval(id);
+    }, 3200);
     return () => window.clearInterval(id);
   }, [live]);
   const sig = SIGNALS[i];
@@ -87,7 +93,6 @@ export function HeroArt() {
             <circle cx={x} cy={y} r="5.5" fill="#FBFAF7" stroke="#45C1AD" strokeWidth="3" />
           </g>
         ))}
-        <circle className="ha-pulse" cx="450" cy="190" r="11" fill="none" stroke="#45C1AD" strokeWidth="2" />
         <g className="ha-fade" style={{ ["--d" as string]: "2.1s" }}>
           <rect x="262" y="150" width="172" height="34" rx="17" fill="#FBFAF7" />
           <circle cx="280" cy="167" r="5" fill={sig.c} style={{ transition: "fill .4s" }} />

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { pageMeta } from "@/lib/hmg/meta";
-import { ContactForm } from "@/components/hmg/ContactForm";
+import { EnquiryFlow } from "@/components/hmg/EnquiryFlow";
 import { WhatsAppIcon } from "@/components/hmg/Logo";
 import { JsonLd, orgLd, PageHero } from "@/components/hmg/ui";
 import { ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
@@ -16,9 +16,12 @@ export default function Contact() {
   return (
     <>
       <JsonLd data={{ ...orgLd, "@type": ["ProfessionalService", "AccountingService"], contactPoint: { "@type": "ContactPoint", telephone: SITE.phone, email: SITE.email, contactType: "customer service", areaServed: "KE", availableLanguage: ["English", "Swahili"] } }} />
-      <PageHero eyebrow="Contact" title="Let’s talk about your business." lead="Call, WhatsApp or email us — or request a callback and a consultant will contact you during working hours." crumbs={crumbs} />
+      <PageHero eyebrow="Contact" title="Let’s talk about your business." lead="Answer a few quick questions and the right HMG consultant will contact you. Prefer to talk now? Call, WhatsApp or email us." crumbs={crumbs} />
       <section className="sec sec--tight contact" aria-label="Contact details and consultation form">
         <div className="wrap contact__grid">
+          <div id="consultation" className="contact__form">
+            <EnquiryFlow />
+          </div>
           <div className="contact__info">
             <ul className="cways">
               <li>
@@ -55,9 +58,6 @@ export default function Contact() {
                 <text x="196" y="72" fontSize="10" fill="#3F5A70">Garden Estate Rd</text>
               </svg>
             </div>
-          </div>
-          <div id="consultation" className="contact__form">
-            <ContactForm variant="full" />
           </div>
         </div>
       </section>

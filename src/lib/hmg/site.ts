@@ -13,8 +13,9 @@ export const SITE = {
   url: (process.env.NEXT_PUBLIC_HMG_URL ?? "https://hmg-group-africa.vercel.app").replace(/\/$/, ""),
   tagline: "Financial clarity. Confident growth.",
   positioning: "HMG helps businesses remain compliant, understand their numbers and make confident financial decisions.",
+  credibility: ["Nairobi-based", "Kenyan regulatory expertise", "Serving businesses across Kenya and Africa"],
   description:
-    "Nairobi-based tax, accounting, audit and advisory firm. HMG helps businesses stay compliant with KRA, understand their numbers and make confident financial decisions.",
+    "Nairobi-based tax, accounting, audit and advisory firm serving businesses across Kenya and Africa. HMG helps you stay compliant with KRA, understand your numbers and make confident financial decisions.",
   founded: 2020,
   phone: "+254 703 126 677",
   phoneHref: "tel:+254703126677",

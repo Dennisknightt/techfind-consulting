@@ -185,7 +185,7 @@ export const orgLd = {
   telephone: SITE.phone,
   email: SITE.email,
   address: { "@type": "PostalAddress", streetAddress: SITE.address.street, addressLocality: "Nairobi", addressCountry: "KE" },
-  areaServed: [{ "@type": "Country", name: "Kenya" }],
+  areaServed: [{ "@type": "Country", name: "Kenya" }, { "@type": "Continent", name: "Africa" }],
   openingHoursSpecification: [{ "@type": "OpeningHoursSpecification", dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"], opens: "08:00", closes: "17:00" }],
   sameAs: [SITE.social.linkedin, SITE.social.facebook].filter(Boolean),
 };

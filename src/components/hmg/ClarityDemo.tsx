@@ -4,11 +4,12 @@ import { useEffect, useRef, useState } from "react";
 
 /* All figures are fictional and illustrative. */
 
-type TabId = "cash" | "compliance" | "obligations";
+type TabId = "cash" | "tax" | "payroll" | "compliance";
 const TABS: { id: TabId; label: string }[] = [
   { id: "cash", label: "Cash flow" },
+  { id: "tax", label: "Tax" },
+  { id: "payroll", label: "Payroll" },
   { id: "compliance", label: "Compliance" },
-  { id: "obligations", label: "Upcoming obligations" },
 ];
 
 const READ: Record<TabId, { happening: string; attention: string; action: string; hmg: string }> = {
@@ -24,11 +25,17 @@ const READ: Record<TabId, { happening: string; attention: string; action: string
     action: "Approve payroll this week, request compliant invoices from both suppliers and sign off the annual return.",
     hmg: "Keeps a compliance calendar for every tax head and prepares each filing ahead of its date.",
   },
-  obligations: {
-    happening: "Four statutory payments fall due in the next 100 days, totalling over KES 1.3 million.",
+  tax: {
+    happening: "Four tax payments fall due in the next 100 days, totalling over KES 1.3 million.",
     attention: "PAYE (KES 412k) lands in 6 days and VAT (KES 268k) in 17 — close together in a tight month.",
     action: "Reserve cash for both now and refresh the profit projection before instalment tax is due.",
-    hmg: "Shows each obligation with its amount and preparation date, so cash is planned rather than found.",
+    hmg: "Tracks each obligation with its amount and preparation date, so tax is planned rather than found.",
+  },
+  payroll: {
+    happening: "This month’s payroll for 14 staff is four of five steps ready.",
+    attention: "A leaver’s final dues are not yet calculated, so the run cannot be approved.",
+    action: "Confirm the leaver’s last working day and approve the run by Thursday.",
+    hmg: "Prepares payroll and statutory deductions from the data you approve, and reconciles every return.",
   },
 };
 
@@ -137,7 +144,7 @@ function ObligationsVisual() {
   const o = OBL[k];
   return (
     <div className="cd__vis">
-      <div className="ob" role="group" aria-label="Upcoming obligations">
+      <div className="ob" role="group" aria-label="Upcoming tax obligations">
         <span className="ob__rail" aria-hidden="true" />
         {OBL.map((x, j) => (
           <button key={x.id} type="button" className={`ob__pt${j === k ? " is-on" : ""}${x.days <= 7 ? " is-soon" : ""}`} aria-pressed={j === k} onClick={() => setK(j)}>
@@ -157,7 +164,38 @@ function ObligationsVisual() {
   );
 }
 
-const VIS: Record<TabId, () => React.JSX.Element> = { cash: CashVisual, compliance: ComplianceVisual, obligations: ObligationsVisual };
+const PAY = ["Joiners and changes captured", "Allowances confirmed", "Variances reviewed", "Statutory deductions calculated", "Leaver final dues calculated"];
+
+function PayrollVisual() {
+  const [done, setDone] = useState(false);
+  const n = done ? 5 : 4;
+  return (
+    <div className="cd__vis">
+      <div className="cd__status">
+        <p className={`pill ${done ? "pill--ok" : "pill--warn"}`} role="status">
+          <span className="pill__dot" aria-hidden="true" />
+          <span key={String(done)} className="pill__txt">{done ? "Ready to approve" : "4 of 5 steps ready"}</span>
+        </p>
+        <button type="button" className="btn btn--sm btn--ghost" onClick={() => setDone((d) => !d)}>{done ? "Reset" : "Complete last step"}</button>
+      </div>
+      <div className="pay__bar" aria-hidden="true"><span style={{ transform: `scaleX(${n / 5})` }} /></div>
+      <ul className="cd__list">
+        {PAY.map((t, i) => {
+          const ok = i < 4 || done;
+          return (
+            <li key={t} className={ok ? "is-ok" : ""}>
+              <span className="cd__mk" aria-hidden="true">{ok ? <svg viewBox="0 0 16 16" width="12" height="12"><path d="M3 8.5l3.2 3.2L13 4.8" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" /></svg> : "!"}</span>
+              <span className="cd__lbl">{t}</span>
+              <span className="cd__st">{ok ? "Done" : "Outstanding"}<span className="sr-only">{ok ? " — complete" : " — needs attention"}</span></span>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+const VIS: Record<TabId, () => React.JSX.Element> = { cash: CashVisual, tax: ObligationsVisual, payroll: PayrollVisual, compliance: ComplianceVisual };
 
 export function ClarityDemo() {
   const [tab, setTab] = useState(0);
@@ -200,22 +238,21 @@ export function ClarityDemo() {
         return (
           <div key={t.id} role="tabpanel" id={`cd-panel-${t.id}`} aria-labelledby={`cd-tab-${t.id}`} hidden={tab !== i} className="cd__panel" tabIndex={0}>
             <dl className="cd__read cd__read--primary">
-              <div className="cd__r cd__r--h"><dt>What is happening</dt><dd>{r.happening}</dd></div>
-              <div className="cd__r cd__r--n"><dt>Recommended action</dt><dd>{r.action}</dd></div>
+              <div className="cd__r cd__r--h"><dt><span className="cd__num">1</span>What is happening</dt><dd>{r.happening}</dd></div>
+              <div className="cd__r cd__r--a"><dt><span className="cd__num">2</span>What needs attention</dt><dd>{r.attention}</dd></div>
+              <div className="cd__r cd__r--n"><dt><span className="cd__num">3</span>Recommended next action</dt><dd>{r.action}</dd></div>
             </dl>
             <div className="cd__left">
               <p className="cd__ill">Illustrative example · fictional figures</p>
               <V />
             </div>
             <dl className="cd__read cd__read--secondary">
-              <div className="cd__r cd__r--a"><dt>What needs attention</dt><dd>{r.attention}</dd></div>
-              <div className="cd__r cd__r--m"><dt>How HMG helps</dt><dd>{r.hmg}</dd></div>
+              <div className="cd__r cd__r--m"><dt><span className="cd__num">4</span>How HMG helps</dt><dd>{r.hmg}</dd></div>
             </dl>
             <details className="cd__more">
-              <summary>What needs attention and how HMG helps</summary>
+              <summary>View full explanation</summary>
               <dl className="cd__read">
-                <div className="cd__r cd__r--a"><dt>What needs attention</dt><dd>{r.attention}</dd></div>
-                <div className="cd__r cd__r--m"><dt>How HMG helps</dt><dd>{r.hmg}</dd></div>
+                <div className="cd__r cd__r--m"><dt><span className="cd__num">4</span>How HMG helps</dt><dd>{r.hmg}</dd></div>
               </dl>
             </details>
           </div>

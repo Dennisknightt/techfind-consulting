@@ -255,6 +255,27 @@ export const SERVICES: Service[] = [
 
 export const getService = (slug: string) => SERVICES.find((s) => s.slug === slug);
 
+/** Situations for the interactive service selector → recommended services, with the reason shown. */
+export const SITUATIONS = [
+  { id: "kra", label: "I received a KRA notice", services: ["tax-kra-advisory"], why: "KRA notices carry deadlines. We review what is being asked and help you prepare a documented response." },
+  { id: "books", label: "My books are behind", services: ["accounting-bookkeeping"], why: "A catch-up plan brings your records current, then a monthly routine keeps them that way." },
+  { id: "audit", label: "An audit is approaching", services: ["audit-assurance"], why: "Schedules, reconciliations and evidence prepared before auditors arrive." },
+  { id: "cash", label: "Cash flow is unclear", services: ["financial-advisory"], why: "A rolling cash forecast shows pressure points weeks before they arrive." },
+  { id: "payroll", label: "Payroll is taking too much time", services: ["payroll-management"], why: "Monthly payroll and statutory deductions prepared from the data you approve." },
+  { id: "check", label: "I want to check my compliance", services: ["tax-health-checks"], why: "A structured review of past filings and records, with a prioritised plan." },
+  { id: "ongoing", label: "I need ongoing financial support", services: ["accounting-bookkeeping", "financial-advisory"], why: "Regular books and management reporting, with advice on the decisions ahead." },
+  { id: "unsure", label: "I am not sure where to start", services: [], why: "" },
+] as const;
+
+export const PROBLEM_QUESTIONS = [
+  { q: "Are we compliant?", d: "Every tax head, every deadline, one clear status." },
+  { q: "Where is the cash going?", d: "What came in, what went out, and what is coming next." },
+  { q: "What needs attention?", d: "The few items that matter this month, ranked." },
+  { q: "What decision should we make next?", d: "A recommendation, an owner and a date." },
+] as const;
+
+export const FEATURED_SERVICES = ["tax-kra-advisory", "accounting-bookkeeping"];
+
 export const OUTCOMES = [
   { id: "comply", title: "Stay compliant", body: "KRA and statutory dates tracked and prepared ahead of time, so filing is not a last-minute scramble." },
   { id: "understand", title: "Understand your finances", body: "Current, reconciled books and a monthly view in plain language, not just a stack of reports." },
