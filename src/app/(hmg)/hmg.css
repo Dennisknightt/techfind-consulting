@@ -687,6 +687,45 @@ svg text { font-family: var(--font-sans-stack); }
   }
 }
 @keyframes rule-draw { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-@keyframes ink-rise { from { opacity: .35; transform: translateY(22px); } to { opacity: 1; transform: none; } }
+@keyframes ink-rise { from { opacity: .35; translate: 0 22px; } to { opacity: 1; translate: 0 0; } }
 @keyframes bar-grow { from { transform: scaleY(.15); } to { transform: none; } }
-@keyframes badge-pop { from { transform: scale(.6); } 70% { transform: scale(1.08); } to { transform: none; } }
+@keyframes badge-pop { from { scale: .6; } 70% { scale: 1.08; } to { scale: 1; } }
+
+
+/* ── Site-wide scroll choreography (restrained; position-tied; never hides content) ── */
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    /* text groups fade and rise into place */
+    .js :is(.sec__lead, .prose > p, .prose-s, .post__body > section, .post__take, .share, .disclaimer, .note, .addr, .mission, .sel__out, .ctab__lead, .ctab__actions, .fcta__actions, .post__cta, .prep__lead) {
+      animation: ink-fade linear both; animation-timeline: view(); animation-range: entry 0% entry 75%;
+    }
+    /* gentle stagger across card rows (same row enters together otherwise) */
+    .js :is(.sgrid, .igrid, .tiles, .team) > :nth-child(3n+2) { animation-range: entry 8% entry 88%; }
+    .js :is(.sgrid, .igrid, .tiles, .team) > :nth-child(3n+3) { animation-range: entry 16% entry 96%; }
+    .js .trust__item:nth-child(2) { animation-range: entry 6% entry 86%; }
+    .js .trust__item:nth-child(3) { animation-range: entry 12% entry 92%; }
+    .js .trust__item:nth-child(4) { animation-range: entry 18% entry 98%; }
+    /* problems slide in from the left, outcomes from the right — a ledger being balanced */
+    .js .probs li { animation-name: ink-left; }
+    .js .checks li { animation-name: ink-right; }
+    /* card pictorials settle from a soft zoom as they arrive */
+    .js :is(.scard__art .svc-art, .icard__cover .cover-art) { animation: art-settle linear both; animation-timeline: view(); animation-range: entry 0% cover 45%; }
+    /* light parallax on large illustrations */
+    .js :is(.why__art, .phero__art, .post__cover) { animation: parallax linear both; animation-timeline: view(); animation-range: cover 0% cover 100%; }
+    /* hero copy eases back as you scroll past it */
+    .js :is(.hero__copy, .phero__copy) { animation: ease-out-exit linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
+    .js .hero__art { animation: parallax-slow linear both; animation-timeline: view(); animation-range: exit 0% exit 100%; }
+    /* footer columns rise in */
+    .js :is(.ftr__grid > *, .ftr__base) { animation: ink-fade linear both; animation-timeline: view(); animation-range: entry 0% entry 70%; }
+    .js .ftr__grid > :nth-child(2) { animation-range: entry 6% entry 76%; }
+    .js .ftr__grid > :nth-child(3) { animation-range: entry 12% entry 82%; }
+    .js .ftr__grid > :nth-child(4) { animation-range: entry 18% entry 88%; }
+  }
+}
+@keyframes ink-fade { from { opacity: .35; translate: 0 14px; } to { opacity: 1; translate: 0 0; } }
+@keyframes ink-left { from { opacity: .35; translate: -28px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes ink-right { from { opacity: .35; translate: 28px 0; } to { opacity: 1; translate: 0 0; } }
+@keyframes art-settle { from { scale: 1.12; } to { scale: 1; } }
+@keyframes parallax { from { translate: 0 28px; } to { translate: 0 -28px; } }
+@keyframes parallax-slow { from { translate: 0 0; } to { translate: 0 -40px; } }
+@keyframes ease-out-exit { from { opacity: 1; translate: 0 0; } to { opacity: .55; translate: 0 -24px; } }
