@@ -92,7 +92,7 @@ export function Header() {
     <header className={`hdr${scrolled ? " hdr--scrolled" : ""}${open ? " hdr--open" : ""}`}>
       <div className="wrap hdr__bar">
         <Link href={ROUTES.home} className="hdr__logo">
-          <Logo />
+          <Logo priority />
         </Link>
 
         <nav className="hdr__nav" aria-label="Primary">

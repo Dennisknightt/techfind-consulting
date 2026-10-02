@@ -1,23 +1,17 @@
-export function LogoMark({ size = 36 }: { size?: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 40 40" aria-hidden="true" focusable="false">
-      <rect width="40" height="40" rx="10" className="f-navy" />
-      <path d="M9 31V17a6 6 0 0 1 12 0v14Z" className="f-mint" />
-      <path d="M21 31V12a6 6 0 0 1 12 0v19Z" className="f-teal" />
-      <path d="M9 31h24" stroke="#FBFAF7" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
+import Image from "next/image";
+import logo from "../../../public/hmg/brand/hmg-logo.png";
+import logoWhite from "../../../public/hmg/brand/hmg-logo-white.png";
 
-export function Logo({ light = false }: { light?: boolean }) {
+/** HMG Group Africa's own logo (mark + wordmark). `light` = white version for navy backgrounds. */
+export function Logo({ light = false, priority = false }: { light?: boolean; priority?: boolean }) {
   return (
-    <span className={`logo${light ? " logo--light" : ""}`}>
-      <LogoMark />
-      <span className="logo__text">
-        <span className="logo__name">HMG</span>{" "}
-        <span className="logo__sub">Group Africa</span>
-      </span>
-    </span>
+    <Image
+      src={light ? logoWhite : logo}
+      alt="HMG Group Africa"
+      className="logo-img"
+      priority={priority}
+      sizes="160px"
+    />
   );
 }
 

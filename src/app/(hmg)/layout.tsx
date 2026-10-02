@@ -26,12 +26,12 @@ export const metadata: Metadata = {
     images: [OG_IMAGE],
   },
   twitter: { card: "summary_large_image", title: "HMG Group Africa — Financial clarity. Confident growth.", description: SITE.description },
-  icons: { icon: [{ url: "/hmg/logo.svg", type: "image/svg+xml" }] },
+  icons: { icon: [{ url: "/hmg/brand/icon-32.png", sizes: "32x32", type: "image/png" }, { url: "/hmg/brand/icon-512.png", sizes: "512x512", type: "image/png" }], apple: [{ url: "/hmg/brand/apple-touch-icon.png", sizes: "180x180" }] },
   robots: { index: true, follow: true },
   formatDetection: { telephone: false },
 };
 
-export const viewport: Viewport = { themeColor: "#062E4F", width: "device-width", initialScale: 1 };
+export const viewport: Viewport = { themeColor: "#0A2A47", width: "device-width", initialScale: 1 };
 
 export default function HmgRootLayout({ children }: { children: React.ReactNode }) {
   return (

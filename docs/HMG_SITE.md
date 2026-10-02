@@ -28,6 +28,10 @@ Content never depends on JavaScript or IntersectionObserver to be visible. The o
 - Primary buttons fill with ink on hover.
 - All of it is disabled without JS (`.js` class), under prefers-reduced-motion, and in browsers without scroll-timeline support.
 
+## Brand
+- Logo: HMG's supplied logo, cleaned to transparent PNGs in `public/hmg/brand/` — `hmg-logo.png` (navy/slate, for light backgrounds), `hmg-logo-white.png` (for navy), `hmg-mark.png`, favicons and apple-touch icon. The tagline in the supplied file reads "ADVSORY" (typo), so the site uses the mark + wordmark without it; request a corrected master/SVG from HMG.
+- Colours sampled from the logo: navy `#0A2A47` (primary, buttons, headings) and slate `#5A6066` (secondary text, labels, "Confident growth."). Teal/mint remain only inside illustrations and financial charts as a data accent.
+
 ## Homepage flow
 Hero → navy problem statement → verified trust → interactive service selector (multi-select situations → recommended services) → services showcase (two featured + compact rows) → financial-clarity demo (Cash flow / Tax / Payroll / Compliance) → case studies* → team preview* → Why HMG → featured insights (one lead + two) → consultation CTA.
 *Rendered only when HMG supplies approved content in `credentials.ts` (`CASE_STUDIES`, `OPTIONAL.team`).

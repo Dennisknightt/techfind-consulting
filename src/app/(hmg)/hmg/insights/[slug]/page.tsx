@@ -42,7 +42,7 @@ export default async function ArticlePage({ params }: Props) {
           dateModified: a.published,
           articleSection: a.category,
           author: { "@type": "Organization", name: ARTICLE_AUTHOR, url: abs(ROUTES.about) },
-          publisher: { "@type": "Organization", name: SITE.name, logo: { "@type": "ImageObject", url: abs("/hmg/logo.svg") } },
+          publisher: { "@type": "Organization", name: SITE.name, logo: { "@type": "ImageObject", url: abs("/hmg/brand/hmg-logo.png") } },
           mainEntityOfPage: abs(url),
           image: abs("/hmg/og.png"),
         }}
