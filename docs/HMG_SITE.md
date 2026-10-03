@@ -28,6 +28,17 @@ Content never depends on JavaScript or IntersectionObserver to be visible. The o
 - Primary buttons fill with ink on hover.
 - All of it is disabled without JS (`.js` class), under prefers-reduced-motion, and in browsers without scroll-timeline support.
 
+## Looping motion (Before HMG → After HMG)
+- Home hero (`HeroArt.tsx`): a 10 s loop. A jagged amber cash line, flagged ledger rows, short bars and "Before HMG · 3 items flagged" turn into the rising teal line, rows ticked in sequence, grown bars and "After HMG · books reconciled".
+- Problem section (`ProblemStatement.tsx`): a Before/After HMG panel cycles tax status, books, cash and next step. Screen readers get both states as text. Marked illustrative.
+- Every inner page hero and CTA band: a travelling data point along the hairline (`Pulse` in `ui.tsx`).
+- Service hero art: stamp pulse, rows shimmer, line or ring redraws. Clarity demo: the week-7 marker breathes. Why HMG: the sun drifts. Contact: a soft halo on Start.
+- Rules:
+  - A loop runs only while on screen (`[data-loop]` → `.is-live` via `Motion.tsx`; the hero has its own observer).
+  - Loops use transform and opacity only.
+  - With no JS, reduced motion or paused, the static "after" state shows.
+- "Pause animations" (`MotionToggle.tsx`) sits in the hero corner and the footer. It sets `html.motion-paused`, which is remembered in localStorage (`hmg-motion`). Hovering or focusing the Before/After panel holds it.
+
 ## Brand
 - Logo: HMG's supplied logo, cleaned to transparent PNGs in `public/hmg/brand/` — `hmg-logo.png` (navy/slate, for light backgrounds), `hmg-logo-white.png` (for navy), `hmg-mark.png`, favicons and apple-touch icon. The tagline in the supplied file reads "ADVSORY" (typo), so the site uses the mark + wordmark without it; request a corrected master/SVG from HMG.
 - Colours sampled from the logo: navy `#0A2A47` (primary, buttons, headings) and slate `#5A6066` (secondary text, labels, "Confident growth."). Teal/mint remain only inside illustrations and financial charts as a data accent.

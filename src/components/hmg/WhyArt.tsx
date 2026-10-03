@@ -16,8 +16,10 @@ export function WhyArt() {
       </defs>
       <g clipPath="url(#wa-clip)">
         <rect width="600" height="560" fill="url(#wa-sky)" />
+        <g className="wa-sun">
         <circle cx="400" cy="250" r="92" className="f-mint" />
         <circle cx="400" cy="250" r="122" fill="none" stroke="#B9EADB" strokeOpacity=".4" strokeDasharray="2 8" />
+        </g>
         {/* skyline */}
         <g fill="#092B46">
           <rect x="0" y="290" width="70" height="120" />

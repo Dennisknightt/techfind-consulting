@@ -11,7 +11,8 @@ import { SituationSelector } from "@/components/hmg/SituationSelector";
 import { TeamSection, TrustFacts } from "@/components/hmg/Trust";
 import { TypeInk } from "@/components/hmg/TypeInk";
 import { WhyArt } from "@/components/hmg/WhyArt";
-import { JsonLd, orgLd, SectionHead } from "@/components/hmg/ui";
+import { JsonLd, orgLd, Pulse, SectionHead } from "@/components/hmg/ui";
+import { MotionToggle } from "@/components/hmg/MotionToggle";
 import { ARTICLES, FEATURED_ARTICLES, SERVICES, WHY } from "@/lib/hmg/content";
 import { pageMeta } from "@/lib/hmg/meta";
 import { abs, CONSULT_HREF, ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
@@ -46,7 +47,7 @@ export default function HmgHome() {
             </div>
             <p className="hero__cred">{SITE.credibility.map((c) => <span key={c}>{c}</span>)}</p>
           </div>
-          <div className="hero__art"><HeroArt /></div>
+          <div className="hero__art"><HeroArt /><MotionToggle className="mtoggle--art" /></div>
         </div>
       </section>
 
@@ -100,7 +101,7 @@ export default function HmgHome() {
             <p className="eyebrow">Why HMG</p>
             <h2 id="why-h" className="why__h">Finance should move your business forward.</h2>
             <p className="sec__lead">More than reports: a clear picture of where you stand, and a consultant who helps you act on it.</p>
-            <div className="why__art"><WhyArt /></div>
+            <div className="why__art" data-loop><WhyArt /></div>
           </div>
           <ol className="why__list">
             {WHY.map((w, i) => (
@@ -150,6 +151,7 @@ export default function HmgHome() {
 
       {/* 11 · Consultation CTA */}
       <section className="sec sec--navy fcta" aria-labelledby="fcta-h">
+        <Pulse />
         <div className="wrap fcta__inner">
           <h2 id="fcta-h" className="fcta__h">Your next smart move starts with clarity.</h2>
           <p className="sec__lead">Tell us what you are dealing with and an HMG consultant will get back to you during working hours, {SITE.hours}.</p>

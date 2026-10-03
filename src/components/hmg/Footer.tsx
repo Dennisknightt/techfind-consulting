@@ -1,3 +1,4 @@
+import { MotionToggle } from "./MotionToggle";
 import Link from "next/link";
 import { SERVICES } from "@/lib/hmg/content";
 import { ROUTES, SITE } from "@/lib/hmg/site";
@@ -52,6 +53,7 @@ export function Footer() {
       <div className="wrap ftr__base">
         <p>© {new Date().getFullYear()} {SITE.legalName}. All rights reserved.</p>
         <p>Content on this site is general guidance, not individual tax, legal or accounting advice.</p>
+        <MotionToggle className="mtoggle--dark" />
       </div>
     </footer>
   );

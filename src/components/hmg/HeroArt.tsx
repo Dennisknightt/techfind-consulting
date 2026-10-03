@@ -2,24 +2,20 @@
 
 import { useEffect, useRef, useState } from "react";
 
-const SIGNALS = [
-  { t: "Cash position: clear", c: "#45C1AD" },
-  { t: "PAYE due in 6 days", c: "#E0A63B" },
-  { t: "eTIMS: 2 supplier gaps", c: "#E0A63B" },
-  { t: "VAT filed on time", c: "#45C1AD" },
-];
-
 /**
- * Hero composition: an arched "window" onto business progress, a ledger sheet
- * and ascending planes. Purely geometric; illustrative figures only.
+ * Hero composition: an arched "window" onto the business, a ledger sheet and
+ * ascending bars. While on screen it loops gently between two states:
+ *   Before HMG — a jagged amber cash line, flagged ledger rows, short bars
+ *   After HMG  — a steady rising line, rows ticked off one by one, bars grown
+ * The static (no-JS / reduced-motion / paused) state is "after".
+ * All figures are illustrative.
  */
 export function HeroArt() {
   const rows = Array.from({ length: 7 });
   const ref = useRef<SVGSVGElement>(null);
   const [live, setLive] = useState(false);
-  const [i, setI] = useState(0);
 
-  // Only animate while on screen, the tab is visible and motion is allowed.
+  // Loop only while on screen, the tab is visible and motion is allowed.
   useEffect(() => {
     const el = ref.current;
     if (!el || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
@@ -30,18 +26,6 @@ export function HeroArt() {
     document.addEventListener("visibilitychange", sync);
     return () => { io.disconnect(); document.removeEventListener("visibilitychange", sync); };
   }, []);
-  // Cycle through the signals once, then rest on the first — no endless motion.
-  const ticks = useRef(0);
-  useEffect(() => {
-    if (!live || ticks.current >= SIGNALS.length) return;
-    const id = window.setInterval(() => {
-      ticks.current += 1;
-      setI(ticks.current % SIGNALS.length);
-      if (ticks.current >= SIGNALS.length) window.clearInterval(id);
-    }, 3200);
-    return () => window.clearInterval(id);
-  }, [live]);
-  const sig = SIGNALS[i];
 
   return (
     <svg
@@ -49,7 +33,7 @@ export function HeroArt() {
       className={`hero-art${live ? " is-live" : ""}`}
       viewBox="0 0 560 640"
       role="img"
-      aria-label="Illustration: an arched window with a rising teal line chart, a ledger sheet showing reconciled entries and three ascending bars"
+      aria-label="Illustration of a business before and after HMG: an uneven cash line and flagged ledger entries become a steady rising line, reconciled entries and growing bars"
     >
       <defs>
         <linearGradient id="ha-area" x1="0" y1="0" x2="0" y2="1">
@@ -71,32 +55,49 @@ export function HeroArt() {
         {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
           <line key={i} x1="70" x2="490" y1={120 + i * 70} y2={120 + i * 70} stroke="#FBFAF7" strokeOpacity=".08" />
         ))}
-        <path className="ha-fade" style={{ ["--d" as string]: "1.5s" }} d="M70 500 L150 452 L225 470 L300 360 L375 300 L450 190 L490 150 V640 H70Z" fill="url(#ha-area)" />
-        <path
-          className="ha-growth"
-          style={{ ["--d" as string]: "0.9s" }}
-          pathLength={1}
-          d="M70 500 L150 452 L225 470 L300 360 L375 300 L450 190 L490 150"
-          fill="none"
-          stroke="#45C1AD"
-          strokeWidth="3.5"
-          strokeLinejoin="round"
-          strokeLinecap="round"
-        />
-        {[
-          [150, 452],
-          [300, 360],
-          [450, 190],
-        ].map(([x, y], i) => (
-          <g key={i} className="ha-pop" style={{ ["--d" as string]: `${1.6 + i * 0.2}s` }}>
-            <circle cx={x} cy={y} r="11" fill="#45C1AD" fillOpacity=".25" />
-            <circle cx={x} cy={y} r="5.5" fill="#FBFAF7" stroke="#45C1AD" strokeWidth="3" />
-          </g>
-        ))}
+
+        {/* BEFORE: uneven, unplanned cash */}
+        <g className="loop-before">
+          <path d="M70 430 L130 470 L190 410 L250 500 L310 440 L370 520 L430 455 L490 500" fill="none" stroke="#E0A63B" strokeWidth="3" strokeDasharray="6 7" strokeLinecap="round" strokeLinejoin="round" />
+          <circle cx="370" cy="520" r="7" fill="#E0A63B" />
+        </g>
+
+        {/* AFTER: steady, rising, planned */}
+        <g className="loop-after">
+          <path className="ha-fade" style={{ ["--d" as string]: "1.5s" }} d="M70 500 L150 452 L225 470 L300 360 L375 300 L450 190 L490 150 V640 H70Z" fill="url(#ha-area)" />
+          <path
+            className="ha-growth"
+            pathLength={1}
+            d="M70 500 L150 452 L225 470 L300 360 L375 300 L450 190 L490 150"
+            fill="none"
+            stroke="#45C1AD"
+            strokeWidth="3.5"
+            strokeLinejoin="round"
+            strokeLinecap="round"
+          />
+          {[
+            [150, 452],
+            [300, 360],
+            [450, 190],
+          ].map(([x, y], i) => (
+            <g key={i} className="ha-pop" style={{ ["--d" as string]: `${1.6 + i * 0.2}s` }}>
+              <circle cx={x} cy={y} r="11" fill="#45C1AD" fillOpacity=".25" />
+              <circle cx={x} cy={y} r="5.5" fill="#FBFAF7" stroke="#45C1AD" strokeWidth="3" />
+            </g>
+          ))}
+        </g>
+
+        {/* status chip: Before HMG ↔ After HMG */}
         <g className="ha-fade" style={{ ["--d" as string]: "2.1s" }}>
-          <rect x="262" y="150" width="172" height="34" rx="17" fill="#FBFAF7" />
-          <circle cx="280" cy="167" r="5" fill={sig.c} style={{ transition: "fill .4s" }} />
-          <text key={i} className="ha-sig" x="292" y="171.5" fontSize="12" fontWeight="600" fill="#092B46">{sig.t}</text>
+          <rect x="250" y="150" width="200" height="34" rx="17" fill="#FBFAF7" />
+          <g className="loop-before">
+            <circle cx="268" cy="167" r="5" fill="#E0A63B" />
+            <text x="280" y="171.5" fontSize="11.5" fontWeight="700" fill="#7A4F00">Before HMG · 3 items flagged</text>
+          </g>
+          <g className="loop-after">
+            <circle cx="268" cy="167" r="5" fill="#45C1AD" />
+            <text x="280" y="171.5" fontSize="11.5" fontWeight="700" fill="#0A2A47">After HMG · books reconciled</text>
+          </g>
         </g>
       </g>
 
@@ -106,7 +107,7 @@ export function HeroArt() {
           <rect x="14" y="396" width="262" height="216" rx="8" className="f-cream" />
           <rect x="14" y="396" width="262" height="36" rx="8" className="f-warm" />
           <text x="30" y="419" fontSize="11" fontWeight="700" letterSpacing="1.6" className="f-ink">GENERAL LEDGER</text>
-          <text x="262" y="419" fontSize="10" textAnchor="end" fill="#3F5A70">Illustrative</text>
+          <text x="262" y="419" fontSize="10" textAnchor="end" fill="#5A6066">Illustrative</text>
           {rows.map((_, i) => {
             const y = 454 + i * 22;
             return (
@@ -114,7 +115,15 @@ export function HeroArt() {
                 <line x1="30" x2="260" y1={y + 8} y2={y + 8} stroke="#092B46" strokeOpacity=".12" strokeDasharray="1 3" />
                 <rect x="30" y={y - 4} width={[70, 54, 86, 62, 76, 48, 66][i]} height="6" rx="3" fill="#092B46" fillOpacity=".55" />
                 <rect x={200 - (i % 3) * 8} y={y - 4} width={44 + (i % 3) * 8} height="6" rx="3" fill="#092B46" fillOpacity=".3" />
-                {i % 2 === 0 && <path className="ha-draw" pathLength={1} style={{ ["--d" as string]: `${1.3 + i * 0.22}s` }} d={`M${252} ${y - 2} l3 3 l6 -7`} fill="none" stroke="#0E7C6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />}
+                {/* before: flagged; after: ticked — rows flip in sequence */}
+                <g className="loop-before" style={{ ["--r" as string]: i }}>
+                  <circle cx="256" cy={y - 1} r="5.5" fill="#E0A63B" />
+                  <rect x="255.2" y={y - 4.5} width="1.6" height="4" rx=".8" fill="#0A2A47" />
+                  <circle cx="256" cy={y + 1.6} r=".9" fill="#0A2A47" />
+                </g>
+                <g className="loop-after" style={{ ["--r" as string]: i }}>
+                  <path className="ha-draw" pathLength={1} d={`M${252} ${y - 2} l3 3 l6 -7`} fill="none" stroke="#0E7C6B" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </g>
               </g>
             );
           })}
@@ -122,14 +131,18 @@ export function HeroArt() {
         </g>
       </g>
 
-      {/* ascending planes */}
-      {[
-        { x: 400, h: 70, c: "f-mint", d: "1.1s" },
-        { x: 434, h: 110, c: "f-teal", d: "1.25s" },
-        { x: 468, h: 160, c: "f-cream", d: "1.4s" },
-      ].map((b) => (
-        <rect key={b.x} className={`${b.c} ha ha-rise`} style={{ ["--d" as string]: b.d }} x={b.x} y={640 - b.h} width="28" height={b.h} rx="6" />
-      ))}
+      {/* ascending bars: short before, grown after */}
+      <g className="loop-bars">
+        {[
+          { x: 400, h: 70, c: "f-mint", d: "1.1s" },
+          { x: 434, h: 110, c: "f-teal", d: "1.25s" },
+          { x: 468, h: 160, c: "f-cream", d: "1.4s" },
+        ].map((b, i) => (
+          <g key={b.x} className="loop-bar" style={{ ["--r" as string]: i }}>
+            <rect className={`${b.c} ha ha-rise`} style={{ ["--d" as string]: b.d }} x={b.x} y={640 - b.h} width="28" height={b.h} rx="6" />
+          </g>
+        ))}
+      </g>
       <line x1="0" x2="560" y1="639" y2="639" className="s-navy" strokeWidth="2" />
     </svg>
   );

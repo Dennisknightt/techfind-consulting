@@ -51,7 +51,7 @@ function CashVisual() {
   const s = plan ? PLAN : CUR;
   const low = s[6] < 200;
   return (
-    <div className="cd__vis">
+    <div className="cd__vis" data-loop>
       <svg key={String(plan)} viewBox="0 0 400 156" className="cd__chart" role="img" aria-label={`Illustrative 13-week cash balance. Week 7 is KES ${s[6]} thousand, ${low ? "below" : "above"} the KES 200 thousand buffer.`}>
         <defs>
           <linearGradient id="cd-g" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#45C1AD" stopOpacity=".28" /><stop offset="1" stopColor="#45C1AD" stopOpacity="0" /></linearGradient>
@@ -61,6 +61,7 @@ function CashVisual() {
         <path d={`${line(s)} L${px(12)} 150 L${px(0)} 150 Z`} fill="url(#cd-g)" />
         <path d={line(s)} fill="none" stroke="#0E7C6B" strokeWidth="3.2" strokeLinecap="round" strokeLinejoin="round" />
         <g className="cd__mark" style={{ transform: `translate(${px(6)}px, ${py(s[6])}px)` }}>
+          <circle className="cd__pulse" r="11" fill="none" stroke={low ? "#E0A63B" : "#45C1AD"} strokeWidth="2" />
           <circle r="11" fill={low ? "#E0A63B" : "#45C1AD"} fillOpacity=".3" />
           <circle r="5.5" fill="#FBFAF7" stroke={low ? "#B97A00" : "#0E7C6B"} strokeWidth="3" />
         </g>

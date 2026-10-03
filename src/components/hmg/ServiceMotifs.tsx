@@ -47,7 +47,7 @@ export function ServiceArt({ motif }: { motif: ServiceMotif }) {
       {motif === "advisory" && (
         <g>
           <line x1="40" x2="290" y1="132" y2="132" className="s-navy" strokeWidth="2" />
-          <path d="M40 120 C90 120 100 70 150 76 S220 120 290 44" fill="none" className="s-teal svc-line" strokeWidth="4" strokeLinecap="round" />
+          <path d="M40 120 C90 120 100 70 150 76 S220 120 290 44" fill="none" className="s-teal svc-line" pathLength={1} strokeWidth="4" strokeLinecap="round" />
           <path d="M40 130 C100 128 120 100 170 104 S240 100 290 90" fill="none" className="s-navy" strokeOpacity=".45" strokeWidth="2" strokeDasharray="3 6" />
           <circle cx="150" cy="76" r="7" className="f-warm s-teal" strokeWidth="3" />
           <circle cx="290" cy="44" r="7" className="f-navy" />

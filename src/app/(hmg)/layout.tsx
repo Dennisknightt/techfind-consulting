@@ -38,7 +38,7 @@ export default function HmgRootLayout({ children }: { children: React.ReactNode 
     <html lang="en-KE" className={`${serif.variable} ${sans.variable}`} suppressHydrationWarning>
       <head>
         {/* Enables the short entrance animation only when JS runs; without JS everything renders static. */}
-        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js')" }} />
+        <script dangerouslySetInnerHTML={{ __html: "document.documentElement.classList.add('js');try{if(localStorage.getItem('hmg-motion')==='paused')document.documentElement.classList.add('motion-paused')}catch(e){}" }} />
       </head>
       <body className="hmg">
         <a href="#main" className="skip">Skip to content</a>

@@ -143,9 +143,11 @@ export function EnquiryFlow() {
       <div className="qf qf--intro">
         <h2 className="qf__title">Let’s find the right person to help.</h2>
         <p className="qf__lead">Answer a few quick questions and an HMG consultant will contact you with a clear understanding of what you need.</p>
-        <button type="button" className="btn btn--primary" onClick={() => { startedAt.current = performance.now(); setStarted(true); }}>
-          Start — takes under one minute
-        </button>
+        <span className="halo" data-loop>
+          <button type="button" className="btn btn--primary" onClick={() => { startedAt.current = performance.now(); setStarted(true); }}>
+            Start — takes under one minute
+          </button>
+        </span>
         <p className="qf__alt">Prefer to talk now? <a href={SITE.phoneHref}>Call {SITE.phone}</a> or <a href={whatsappLink()} target="_blank" rel="noopener noreferrer">WhatsApp HMG</a>.</p>
       </div>
     );

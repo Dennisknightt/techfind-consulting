@@ -47,6 +47,11 @@ export function SectionHead({ eyebrow, lines, lead, id, children }: { eyebrow: s
   );
 }
 
+/** A hairline with a data point travelling along it; decorative, loops only while on screen. */
+export function Pulse() {
+  return <div className="pline" data-loop aria-hidden="true"><span /></div>;
+}
+
 export function PageHero({ eyebrow, title, lead, crumbs, children, art }: { eyebrow: string; title: string; lead: string; crumbs?: { name: string; href: string }[]; children?: React.ReactNode; art?: React.ReactNode }) {
   return (
     <section className={`phero${art ? " phero--art" : ""}`} aria-labelledby="page-h">
@@ -62,6 +67,7 @@ export function PageHero({ eyebrow, title, lead, crumbs, children, art }: { eyeb
         </div>
         {art && <div className="phero__art enter">{art}</div>}
       </div>
+      <Pulse />
     </section>
   );
 }
@@ -70,6 +76,7 @@ export function CtaBand({ title = "Your next smart move starts with clarity.", l
   const msg = service ? `Hello HMG, I would like to discuss ${service}.` : undefined;
   return (
     <section className="ctab" aria-labelledby="ctab-h">
+      <Pulse />
       <div className="wrap ctab__grid">
         <div>
           <h2 id="ctab-h" className="ctab__h">{title}</h2>

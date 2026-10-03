@@ -35,7 +35,7 @@ export default async function ServicePage({ params }: Props) {
     <>
       <JsonLd data={{ "@context": "https://schema.org", "@type": "Service", name: s.title, serviceType: s.title, description: s.seoDescription, url: abs(url), areaServed: { "@type": "Country", name: "Kenya" }, provider: { "@id": `${SITE.url}/#org`, "@type": "ProfessionalService", name: SITE.name } }} />
       <JsonLd data={faqLd(s.faqs)} />
-      <PageHero eyebrow={s.title} title={s.outcome} lead={s.lead} crumbs={crumbs} art={<div className="phero__svc"><ServiceArt motif={s.motif} /></div>}>
+      <PageHero eyebrow={s.title} title={s.outcome} lead={s.lead} crumbs={crumbs} art={<div className="phero__svc" data-loop><ServiceArt motif={s.motif} /></div>}>
         <div className="hero__cta">
           <Link href={`${ROUTES.contact}?need=${s.slug}#consultation`} className="btn btn--primary">Request a Consultation</Link>
           <a href={whatsappLink(waMsg)} className="btn btn--ghost" target="_blank" rel="noopener noreferrer"><WhatsAppIcon /> WhatsApp HMG</a>
