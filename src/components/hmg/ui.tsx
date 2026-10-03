@@ -49,7 +49,7 @@ export function SectionHead({ eyebrow, lines, lead, id, children }: { eyebrow: s
 
 /** A hairline with a data point travelling along it; decorative, loops only while on screen. */
 export function Pulse() {
-  return <div className="pline" data-loop aria-hidden="true"><span /></div>;
+  return <div className="pline" data-loop aria-hidden="true"><span /><span /></div>;
 }
 
 export function PageHero({ eyebrow, title, lead, crumbs, children, art }: { eyebrow: string; title: string; lead: string; crumbs?: { name: string; href: string }[]; children?: React.ReactNode; art?: React.ReactNode }) {

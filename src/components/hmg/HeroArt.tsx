@@ -7,7 +7,7 @@ import { useEffect, useRef, useState } from "react";
  * ascending bars. While on screen it loops gently between two states:
  *   Before HMG — a jagged amber cash line, flagged ledger rows, short bars
  *   After HMG  — a steady rising line, rows ticked off one by one, bars grown
- * The static (no-JS / reduced-motion / paused) state is "after".
+ * The static (no-JS / reduced-motion) state is "after".
  * All figures are illustrative.
  */
 export function HeroArt() {

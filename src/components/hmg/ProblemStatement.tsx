@@ -16,7 +16,7 @@ const SHIFT = [
 
 /**
  * Before HMG / After HMG panel. Loops between the two states while on screen;
- * the static state (no JS, reduced motion, paused) is "after". Both states are
+ * the static state (no JS, reduced motion) is "after". Both states are
  * in the accessible text.
  */
 function BeforeAfter() {

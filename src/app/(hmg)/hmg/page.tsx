@@ -12,7 +12,6 @@ import { TeamSection, TrustFacts } from "@/components/hmg/Trust";
 import { TypeInk } from "@/components/hmg/TypeInk";
 import { WhyArt } from "@/components/hmg/WhyArt";
 import { JsonLd, orgLd, Pulse, SectionHead } from "@/components/hmg/ui";
-import { MotionToggle } from "@/components/hmg/MotionToggle";
 import { ARTICLES, FEATURED_ARTICLES, SERVICES, WHY } from "@/lib/hmg/content";
 import { pageMeta } from "@/lib/hmg/meta";
 import { abs, CONSULT_HREF, ROUTES, SITE, whatsappLink } from "@/lib/hmg/site";
@@ -47,7 +46,7 @@ export default function HmgHome() {
             </div>
             <p className="hero__cred">{SITE.credibility.map((c) => <span key={c}>{c}</span>)}</p>
           </div>
-          <div className="hero__art"><HeroArt /><MotionToggle className="mtoggle--art" /></div>
+          <div className="hero__art"><HeroArt /></div>
         </div>
       </section>
 

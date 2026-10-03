@@ -1,6 +1,7 @@
 /**
  * "Typed in ink" text. Each character appears in turn behind a pen caret while
- * ink rises to fill the outlined letters, then an ink underline sweeps in.
+ * ink rises to fill the outlined letters, then an ink underline sweeps in. It
+ * repeats every 9s: after a hold the ink lifts back to outlines and retypes.
  * Pure CSS (server-rendered); purely visual — wrap with an sr-only copy of the
  * text. Without JS (`.js` class) or with reduced motion it renders as solid text.
  */

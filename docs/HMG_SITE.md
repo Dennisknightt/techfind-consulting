@@ -36,8 +36,10 @@ Content never depends on JavaScript or IntersectionObserver to be visible. The o
 - Rules:
   - A loop runs only while on screen (`[data-loop]` → `.is-live` via `Motion.tsx`; the hero has its own observer).
   - Loops use transform and opacity only.
-  - With no JS, reduced motion or paused, the static "after" state shows.
-- "Pause animations" (`MotionToggle.tsx`) sits in the hero corner and the footer. It sets `html.motion-paused`, which is remembered in localStorage (`hmg-motion`). Hovering or focusing the Before/After panel holds it.
+  - With no JS or reduced motion, the static "after" state shows.
+- Hovering or focusing the Before/After panel holds it.
+- The hero phrase "Confident growth." repeats every 9 s: typed and inked, held, then the ink lifts back to outlines and it retypes.
+- The hairline data points run continuously (two points half a cycle apart).
 
 ## Brand
 - Logo: HMG's supplied logo, cleaned to transparent PNGs in `public/hmg/brand/` — `hmg-logo.png` (navy/slate, for light backgrounds), `hmg-logo-white.png` (for navy), `hmg-mark.png`, favicons and apple-touch icon. The tagline in the supplied file reads "ADVSORY" (typo), so the site uses the mark + wordmark without it; request a corrected master/SVG from HMG.
